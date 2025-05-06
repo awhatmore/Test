@@ -229,7 +229,7 @@
         },
         move: {
           enable: true,
-          speed: 2,
+          speed: 0.5,
           direction: "none"
         }
       },
@@ -352,7 +352,7 @@
     }
   }
 </script>
-Later, you'll want to replace eva
+
 
  
 </body>
