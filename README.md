@@ -115,24 +115,43 @@
     </div>
 
     <!-- Number Buttons -->
-<div class="calculator-buttons">
+<style>
+  .calculator {
+    display: grid;
+    grid-template-columns: repeat(3, 60px);
+    gap: 5px;
+  }
+
+  button {
+    width: 60px;
+    height: 60px;
+    font-size: 1.2em;
+  }
+
+  .wide {
+    grid-column: span 2;
+  }
+</style>
+
+<div class="calculator">
   <button onclick="appendCalc('1')">1</button>
   <button onclick="appendCalc('2')">2</button>
-  <button onclick="appendCalc('3')">3</button><br>
+  <button onclick="appendCalc('3')">3</button>
 
   <button onclick="appendCalc('4')">4</button>
   <button onclick="appendCalc('5')">5</button>
   <button onclick="appendCalc('6')">6</button>
-  <button onclick="backspace()">Backspace</button><br>
 
   <button onclick="appendCalc('7')">7</button>
   <button onclick="appendCalc('8')">8</button>
   <button onclick="appendCalc('9')">9</button>
-  <button onclick="clearCalc()">Clear</button><br>
 
   <button onclick="appendCalc('.')">.</button>
   <button onclick="appendCalc('0')">0</button>
-  <button onclick="calculate()">=</button><br>
+  <button onclick="calculate()">=</button>
+
+  <button class="wide" onclick="backspace()">Backspace</button>
+  <button class="wide" onclick="clearCalc()">Clear</button>
 </div><br>
 
     <!-- Operators -->
