@@ -140,7 +140,7 @@
       <button onclick="appendCalc(' + ')">+</button>
       <button onclick="appendCalc(' - ')">-</button><br>
       <button onclick="appendCalc(' * ')">*</button>
-      <button onclick="appendCalc(' / ')">/</button>
+      <button onclick="appendCalc(' / ')">&nbsp;/&nbsp;</button>
     </div>
 
     <!-- Length Units -->
@@ -229,7 +229,7 @@
         },
         move: {
           enable: true,
-          speed: 0.5,
+          speed: 0.01,
           direction: "none"
         }
       },
