@@ -140,42 +140,71 @@
 </video>
 
 
+
+
+
 <head>
   <meta charset="UTF-8">
-  <title>SDO Video Grid</title>
+  <title>SDO Daily Videos Grid</title>
   <style>
     body {
-      margin: 0;
-      font-family: sans-serif;
-      background: #000;
+      background-color: #000;
       color: #fff;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      text-align: center;
+      margin: 20px;
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
       gap: 10px;
-      padding: 10px;
+      padding: 20px;
     }
-    .grid iframe {
+    video {
       width: 100%;
-      height: 300px;
-      border: none;
+      max-width: 100%;
+      height: auto;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: #111;
     }
   </style>
 </head>
 <body>
-  <h1 style="text-align:center;">Latest 48-Hour Solar Views</h1>
+  <h1>SDO Daily Solar Videos – 2025-05-08</h1>
   <div class="grid">
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0193"></iframe>
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0304"></iframe>
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0171"></iframe>
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0211"></iframe>
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0335"></iframe>
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0094"></iframe>
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=1600"></iframe>
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=1700"></iframe>
+    <video controls>
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0193.mp4" type="video/mp4">
+    </video>
+    <video controls>
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0304.mp4" type="video/mp4">
+    </video>
+    <video controls>
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0171.mp4" type="video/mp4">
+    </video>
+    <video controls>
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0211.mp4" type="video/mp4">
+    </video>
+    <video controls>
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0335.mp4" type="video/mp4">
+    </video>
+    <video controls>
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0094.mp4" type="video/mp4">
+    </video>
+    <video controls>
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_1600.mp4" type="video/mp4">
+    </video>
+    <video controls>
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_1700.mp4" type="video/mp4">
+    </video>
   </div>
 </body>
+
+
 
 
 <head>
