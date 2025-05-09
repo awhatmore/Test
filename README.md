@@ -196,6 +196,19 @@ title="YouTube video player" frameborder="0" allowfullscreen></iframe>
     Your browser does not support the video tag.
   </video>
 
+<video controls width="1024">
+  <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+<br>
+
+<video controls width="1024">
+  <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0193.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+
 </body>
 </html>
   
