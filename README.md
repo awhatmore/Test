@@ -230,38 +230,48 @@ title="YouTube video player" frameborder="0" allowfullscreen></iframe>
   <title>SDO Video Grid</title>
   <style>
     body {
-      margin: 0;
-      font-family: sans-serif;
       background: #000;
       color: #fff;
+      font-family: sans-serif;
+      margin: 0;
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 10px;
-      padding: 10px;
+      padding: 20px;
     }
-    .grid iframe {
-      width: 100%;
-      height: 300px;
-      border: none;
+    .card {
+      background: #111;
+      padding: 10px;
+      border: 1px solid #333;
+      text-align: center;
+      border-radius: 10px;
+    }
+    .card a {
+      color: #0cf;
+      text-decoration: none;
+    }
+    .card a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <h1 style="text-align:center;">Latest 48-Hour Solar Views</h1>
+  <h1 style="text-align:center;">Latest 48-Hour SDO Views</h1>
   <div class="grid">
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0193"></iframe>
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0304"></iframe>
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0171"></iframe>
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0211"></iframe>
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0335"></iframe>
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0094"></iframe>
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=1600"></iframe>
-    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=1700"></iframe>
+    <div class="card"><a href="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0193" target="_blank">SDO 0193 Å</a></div>
+    <div class="card"><a href="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0304" target="_blank">SDO 0304 Å</a></div>
+    <div class="card"><a href="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0171" target="_blank">SDO 0171 Å</a></div>
+    <div class="card"><a href="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0211" target="_blank">SDO 0211 Å</a></div>
+    <div class="card"><a href="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0335" target="_blank">SDO 0335 Å</a></div>
+    <div class="card"><a href="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0094" target="_blank">SDO 0094 Å</a></div>
+    <div class="card"><a href="https://sdo.gsfc.nasa.gov/data/latest48.php?q=1600" target="_blank">SDO 1600 Å</a></div>
+    <div class="card"><a href="https://sdo.gsfc.nasa.gov/data/latest48.php?q=1700" target="_blank">SDO 1700 Å</a></div>
   </div>
 </body>
 </html>
+
 
 
 
