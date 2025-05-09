@@ -176,6 +176,26 @@
   <iframe width="560" height="315" src="https://youtube.com/shorts/0uXyi8jxBsc" 
 title="YouTube video player" frameborder="0" allowfullscreen></iframe>
 
+
+<head>
+  <title>NASA Sun Videos</title>
+</head>
+<body style="background-color: black; color: white; text-align: center;">
+
+  <h2>Live Sun Observation (48-Hour Loop)</h2>
+  <video width="720" height="720" controls autoplay loop muted>
+    <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+
+  <h3>Latest Sun Video</h3>
+  <video width="720" height="720" controls autoplay loop muted>
+    <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+
+</body>
+</html>
   
   <section id="calculator">
   <h2>Smart Unit Calculator</h2>
