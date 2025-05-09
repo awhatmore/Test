@@ -185,9 +185,9 @@
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-      gap: 10px;
-      padding: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+      gap: 20px;
+      padding: 30px;
     }
     video {
       width: 100%;
@@ -202,32 +202,34 @@
 <body>
   <h1>SDO Daily Solar Videos – 2025-05-08</h1>
   <div class="grid">
-    <video controls>
+    <video autoplay muted loop playsinline>
       <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0193.mp4" type="video/mp4">
     </video>
-    <video controls>
+    <video autoplay muted loop playsinline>
       <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0304.mp4" type="video/mp4">
     </video>
-    <video controls>
+    <video autoplay muted loop playsinline>
       <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0171.mp4" type="video/mp4">
     </video>
-    <video controls>
+    <video autoplay muted loop playsinline>
       <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0211.mp4" type="video/mp4">
     </video>
-    <video controls>
+    <video autoplay muted loop playsinline>
       <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0335.mp4" type="video/mp4">
     </video>
-    <video controls>
+    <video autoplay muted loop playsinline>
       <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0094.mp4" type="video/mp4">
     </video>
-    <video controls>
+    <video autoplay muted loop playsinline>
       <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_1600.mp4" type="video/mp4">
     </video>
-    <video controls>
+    <video autoplay muted loop playsinline>
       <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_1700.mp4" type="video/mp4">
     </video>
   </div>
 </body>
+
+
 
 
 
