@@ -106,87 +106,6 @@
     <a href="#contact">Contact</a>
   </nav>
 
-  <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Sun Video Playback</title>
-  <style>
-    body {
-      margin: 0;
-      background-color: black;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    #youtubePlayer, #nasaPlayer {
-      width: 100%;
-      height: 100%;
-      max-width: 720px;
-    }
-  </style>
-</head>
-<body>
-
-
-
-<iframe width="658" height="370" src="https://www.youtube.com/embed/IISnuevAmZo" title="joined sun video 1024 0094 01" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
-</body>
-</html>
-
-
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/IISnuevAmZo" 
-title="YouTube video player" frameborder="0" allowfullscreen></iframe>
-
-
-
-
-<video id="solarVideo" controls autoplay width="1024">
-  <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-
-<script>
-  const video = document.getElementById('solarVideo');
-  video.onended = () => {
-    video.src = "https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0193.mp4";
-    video.play();
-  };
-</script>
-
-
-
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>SDO Combined Video</title>
-</head>
-<body>
-
-  <h2>SDO Solar Video Playback</h2>
-
-  <video id="solarVideo" controls autoplay width="1024">
-    <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-
-  <script>
-    const video = document.getElementById('solarVideo');
-
-    video.onended = () => {
-      video.src = "https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0193.mp4";
-      video.load();
-      video.play();
-    };
-  </script>
-
-</body>
-</html>
-
 
 
 
@@ -223,8 +142,7 @@ title="YouTube video player" frameborder="0" allowfullscreen></iframe>
 
 
 
-<!DOCTYPE html>
-<html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>SDO Video Grid</title>
@@ -270,7 +188,6 @@ title="YouTube video player" frameborder="0" allowfullscreen></iframe>
     <div class="card"><a href="https://sdo.gsfc.nasa.gov/data/latest48.php?q=1700" target="_blank">SDO 1700 Å</a></div>
   </div>
 </body>
-</html>
 
 
 
