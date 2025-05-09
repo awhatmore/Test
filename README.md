@@ -1,10 +1,12 @@
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Whatmore Industries</title>
   <style>
+    /* Combine all your styles here: */
+    /* General page layout */
     html, body {
       margin: 0;
       padding: 0;
@@ -30,17 +32,6 @@
       position: relative;
     }
 
-    header h1 {
-      font-size: 1.6rem;
-      margin: 0;
-    }
-
-    header p {
-      font-size: 1.0rem;
-      color: #aaa;
-      margin-top: 0.5rem;
-    }
-
     nav {
       display: flex;
       justify-content: center;
@@ -63,7 +54,7 @@
 
     main {
       padding: 2rem 1rem;
-      max-width: 800px;
+      max-width: 1000px;
       margin: auto;
       position: relative;
       z-index: 1;
@@ -81,12 +72,69 @@
       color: #666;
     }
 
-    a {
-      color: #00ffff;
+    /* Video grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 10px;
+    }
+
+    video {
+      width: 100%;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: #111;
+    }
+
+    .card {
+      background: #111;
+      padding: 10px;
+      border: 1px solid #333;
+      text-align: center;
+      border-radius: 10px;
+    }
+
+    .card a {
+      color: #0cf;
+      text-decoration: none;
+    }
+
+    .card a:hover {
+      text-decoration: underline;
+    }
+
+    /* Calculator */
+    #calculator {
+      background:#222;
+      padding:1rem;
+      border-radius:0.9rem;
+    }
+
+    #display {
+      background:#000;
+      padding:0.5rem 1rem;
+      margin-bottom:1rem;
+      color:#0f0;
+      font-weight:bold;
+    }
+
+    .calculator {
+      display: grid;
+      grid-template-columns: repeat(3, 60px);
+      gap: 5px;
+    }
+
+    button {
+      width: 60px;
+      height: 60px;
+      font-size: 1.2em;
+    }
+
+    .wide {
+      grid-column: span 2;
     }
 
     @media (max-width: 600px) {
-      header h1 { font-size: 2rem; }
       nav { flex-wrap: wrap; gap: 1rem; }
     }
   </style>
@@ -106,21 +154,19 @@
     <a href="#contact">Contact</a>
   </nav>
 
+  <main>
+    <section id="about">
+      <h2>About</h2>
+      <p>Coming soon...</p>
+    </section>
 
-
-
-
-<head>
-  <title>NASA Sun Videos</title>
-</head>
-<body style="background-color: black; color: white; text-align: center;">
-
-  <h2>Live Sun Observation (48-Hour Loop)</h2>
-  <video width="720" height="720" controls autoplay loop muted>
-    <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video
-
+    <section id="sun-live">
+      <h2>Live Sun Observation</h2>
+      <video width="720" height="720" controls autoplay loop muted>
+        <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </section>
 
 <head>
   <meta charset="UTF-8">
