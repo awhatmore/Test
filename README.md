@@ -209,22 +209,22 @@
       <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0304.mp4" type="video/mp4">
     </video>
     <video autoplay muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0171.mp4" type="video/mp4">
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0171.mp4" type="video/mp4">
     </video>
     <video autoplay muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0211.mp4" type="video/mp4">
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0211.mp4" type="video/mp4">
     </video>
     <video autoplay muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0335.mp4" type="video/mp4">
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0335.mp4" type="video/mp4">
     </video>
     <video autoplay muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0094.mp4" type="video/mp4">
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0094.mp4" type="video/mp4">
     </video>
     <video autoplay muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_1600.mp4" type="video/mp4">
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_1600.mp4" type="video/mp4">
     </video>
     <video autoplay muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_1700.mp4" type="video/mp4">
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_1700.mp4" type="video/mp4">
     </video>
   </div>
 </body>
