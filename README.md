@@ -129,45 +129,7 @@
 </head>
 <body>
 
-  <!-- YouTube Embed -->
-  <div id="youtubePlayer">
-    <iframe id="ytFrame" width="100%" height="100%" 
-      src="https://www.youtube.com/embed/0uXyi8jxBsc?autoplay=1&mute=0&playsinline=1&rel=0" 
-      frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
-    </iframe>
-  </div>
 
-  <!-- NASA Video (hidden until YouTube ends) -->
-  <video id="nasaPlayer" controls style="display:none;" preload="auto">
-    <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0094.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-
-  <script>
-    const UPLOAD_TIME_STRING = "2025-05-08T22:00:00"; // Change this to your actual upload time
-    const uploadTime = new Date(UPLOAD_TIME_STRING);
-    const now = new Date();
-
-    // 48 hours in 21 seconds → 0.4375 seconds per real hour
-    const hoursSinceUpload = (now - uploadTime) / 1000 / 3600;
-    const nasaStartTime = hoursSinceUpload * 0.4375;
-
-    const ytFrame = document.getElementById('ytFrame');
-    const ytContainer = document.getElementById('youtubePlayer');
-    const nasaPlayer = document.getElementById('nasaPlayer');
-
-    // Assume YouTube Shorts video is about 60 seconds, so switch after 65s
-    setTimeout(() => {
-      ytContainer.style.display = 'none';
-      nasaPlayer.style.display = 'block';
-
-      nasaPlayer.addEventListener('loadedmetadata', function onLoaded() {
-        nasaPlayer.currentTime = nasaStartTime;
-        nasaPlayer.removeEventListener('loadedmetadata', onLoaded);
-        nasaPlayer.play();
-      });
-    }, 65000); // 65 seconds
-  </script>
 
 <iframe width="658" height="370" src="https://www.youtube.com/embed/IISnuevAmZo" title="joined sun video 1024 0094 01" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
