@@ -106,6 +106,76 @@
     <a href="#contact">Contact</a>
   </nav>
 
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sun Video Playback</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #youtubePlayer, #nasaPlayer {
+      width: 100%;
+      height: 100%;
+      max-width: 720px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- YouTube Embed -->
+  <div id="youtubePlayer">
+    <iframe id="ytFrame" width="100%" height="100%" 
+      src="https://www.youtube.com/embed/0uXyi8jxBsc?autoplay=1&mute=0&playsinline=1&rel=0" 
+      frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
+    </iframe>
+  </div>
+
+  <!-- NASA Video (hidden until YouTube ends) -->
+  <video id="nasaPlayer" controls style="display:none;" preload="auto">
+    <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0094.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+
+  <script>
+    const UPLOAD_TIME_STRING = "2025-05-08T22:00:00"; // Change this to your actual upload time
+    const uploadTime = new Date(UPLOAD_TIME_STRING);
+    const now = new Date();
+
+    // 48 hours in 21 seconds → 0.4375 seconds per real hour
+    const hoursSinceUpload = (now - uploadTime) / 1000 / 3600;
+    const nasaStartTime = hoursSinceUpload * 0.4375;
+
+    const ytFrame = document.getElementById('ytFrame');
+    const ytContainer = document.getElementById('youtubePlayer');
+    const nasaPlayer = document.getElementById('nasaPlayer');
+
+    // Assume YouTube Shorts video is about 60 seconds, so switch after 65s
+    setTimeout(() => {
+      ytContainer.style.display = 'none';
+      nasaPlayer.style.display = 'block';
+
+      nasaPlayer.addEventListener('loadedmetadata', function onLoaded() {
+        nasaPlayer.currentTime = nasaStartTime;
+        nasaPlayer.removeEventListener('loadedmetadata', onLoaded);
+        nasaPlayer.play();
+      });
+    }, 65000); // 65 seconds
+  </script>
+
+</body>
+</html>
+
+
+  <iframe width="560" height="315" src="https://youtube.com/shorts/0uXyi8jxBsc" 
+title="YouTube video player" frameborder="0" allowfullscreen></iframe>
+
   
   <section id="calculator">
   <h2>Smart Unit Calculator</h2>
