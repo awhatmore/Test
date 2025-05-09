@@ -197,6 +197,38 @@ title="YouTube video player" frameborder="0" allowfullscreen></iframe>
 
 
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SDO Combined Video</title>
+</head>
+<body>
+
+  <h2>SDO Solar Video Playback</h2>
+
+  <video id="solarVideo" controls autoplay width="1024">
+    <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+
+  <script>
+    const video = document.getElementById('solarVideo');
+
+    video.onended = () => {
+      video.src = "https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0193.mp4";
+      video.load();
+      video.play();
+    };
+  </script>
+
+</body>
+</html>
+
+
+
+
+
 <head>
   <title>NASA Sun Videos</title>
 </head>
