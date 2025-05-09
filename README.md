@@ -203,7 +203,7 @@
       width: 100%;
       height: auto;
       border: 2px solid #333;
-      border-radius: 8px;
+      border-radius: 18px;
       background: #111;
     }
   </style>
