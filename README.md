@@ -119,28 +119,7 @@
   <video width="720" height="720" controls autoplay loop muted>
     <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
     Your browser does not support the video tag.
-  </video>
-
-  <h3>Latest Sun Video</h3>
-  <video width="720" height="720" controls autoplay loop muted>
-    <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-
-<video controls width="1024">
-  <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-
-<br>
-
-<video controls width="1024">
-  <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0193.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-
-
-
+  </video
 
 
 <head>
