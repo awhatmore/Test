@@ -52,13 +52,14 @@
       text-decoration: underline;
     }
 
-    main {
-      padding: 2rem 1rem;
-      max-width: 1000px;
-      margin: auto;
-      position: relative;
-      z-index: 1;
-    }
+main {
+  padding: 2rem 1rem;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
 
     section {
       margin-bottom: 3rem;
