@@ -252,6 +252,118 @@
 
 
 
+
+<head>
+  <meta charset="UTF-8">
+  <title>SDO Daily Videos Grid</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      color: #fff;
+      font-family: sans-serif;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 10px;
+      font-size: 1.5rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(50vw, 1fr)); /* Max 2 per row */
+      gap: 10px;
+      padding: 10px;
+      box-sizing: border-box;
+      height: calc(100vh - 50px); /* account for title */
+      overflow-y: auto;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: #111;
+    }
+  </style>
+</head>
+<body>
+  <h1>SDO Daily Solar Videos – Synced + Large</h1>
+  <div class="grid">
+    <video muted playsinline preload="auto">
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
+    </video>
+    <video muted playsinline preload="auto">
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0304.mp4" type="video/mp4">
+    </video>
+    <video muted playsinline preload="auto">
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0171.mp4" type="video/mp4">
+    </video>
+    <video muted playsinline preload="auto">
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0211.mp4" type="video/mp4">
+    </video>
+  </div>
+
+  <script>
+    const videos = document.querySelectorAll("video");
+    let readyCount = 0;
+
+    videos.forEach(video => {
+      video.addEventListener("canplaythrough", () => {
+        readyCount++;
+        if (readyCount === videos.length) {
+          // Sync play all at once
+          videos.forEach(v => {
+            v.currentTime = 0;
+            v.play();
+          });
+
+          syncLoops();
+        }
+      });
+    });
+
+    function syncLoops() {
+      const loopTime = videos[0].duration;
+
+      function loopCheck() {
+        const now = videos[0].currentTime;
+        if (now >= loopTime - 0.05) {
+          videos.forEach(v => {
+            v.pause();
+            v.currentTime = 0;
+          });
+          // Wait one frame, then restart all
+          requestAnimationFrame(() => {
+            videos.forEach(v => v.play());
+          });
+        }
+        requestAnimationFrame(loopCheck);
+      }
+
+      loopCheck();
+    }
+  </script>
+</body>
+
+
+
+
+
+
+
+
+
+
+
+
 <head>
   <meta charset="UTF-8">
   <title>SDO Video Grid</title>
