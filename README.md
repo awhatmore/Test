@@ -203,10 +203,10 @@
   <h1>SDO Daily Solar Videos – 2025-05-08</h1>
   <div class="grid">
     <video autoplay muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0193.mp4" type="video/mp4">
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
     </video>
     <video autoplay muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0304.mp4" type="video/mp4">
+      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0304.mp4" type="video/mp4">
     </video>
     <video autoplay muted loop playsinline>
       <source src="https://sdo.gsfc.nasa.gov/assets/img/dailymov/2025/05/08/20250508_1024_0171.mp4" type="video/mp4">
