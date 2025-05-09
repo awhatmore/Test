@@ -5,8 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Whatmore Industries</title>
   <style>
-    /* Combine all your styles here: */
     /* General page layout */
+    html {
+      box-sizing: border-box;
+    }
+
+    *, *::before, *::after {
+      box-sizing: inherit;
+    }
+
     html, body {
       margin: 0;
       padding: 0;
@@ -52,14 +59,14 @@
       text-decoration: underline;
     }
 
-main {
-  padding: 2rem 1rem;
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  position: relative;
-  z-index: 1;
-}
+    main {
+      padding: 2rem 1rem;
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      position: relative;
+      z-index: 1;
+    }
 
     section {
       margin-bottom: 3rem;
@@ -73,7 +80,6 @@ main {
       color: #666;
     }
 
-    /* Video grid */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
@@ -104,19 +110,18 @@ main {
       text-decoration: underline;
     }
 
-    /* Calculator */
     #calculator {
-      background:#222;
-      padding:1rem;
-      border-radius:0.9rem;
+      background: #222;
+      padding: 1rem;
+      border-radius: 0.9rem;
     }
 
     #display {
-      background:#000;
-      padding:0.5rem 1rem;
-      margin-bottom:1rem;
-      color:#0f0;
-      font-weight:bold;
+      background: #000;
+      padding: 0.5rem 1rem;
+      margin-bottom: 1rem;
+      color: #0f0;
+      font-weight: bold;
     }
 
     .calculator {
@@ -136,10 +141,14 @@ main {
     }
 
     @media (max-width: 600px) {
-      nav { flex-wrap: wrap; gap: 1rem; }
+      nav {
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
     }
   </style>
 </head>
+
 <body>
   <div id="particles-js"></div>
 
