@@ -259,6 +259,52 @@ title="YouTube video player" frameborder="0" allowfullscreen></iframe>
 </video>
 
 
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SDO Video Grid</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #000;
+      color: #fff;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 10px;
+      padding: 10px;
+    }
+    .grid iframe {
+      width: 100%;
+      height: 300px;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center;">Latest 48-Hour Solar Views</h1>
+  <div class="grid">
+    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0193"></iframe>
+    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0304"></iframe>
+    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0171"></iframe>
+    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0211"></iframe>
+    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0335"></iframe>
+    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0094"></iframe>
+    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=1600"></iframe>
+    <iframe src="https://sdo.gsfc.nasa.gov/data/latest48.php?q=1700"></iframe>
+  </div>
+</body>
+</html>
+
+
+
+
+
 </body>
 </html>
   
