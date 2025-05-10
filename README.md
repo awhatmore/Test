@@ -170,14 +170,6 @@
       <p>Coming soon...</p>
     </section>
 
-    <section id="sun-live">
-      <h2>Live Sun Observation</h2>
-      <video width="720" height="720" controls autoplay loop muted>
-        <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
-    </section>
-
 <head>
   <meta charset="UTF-8">
   <title>SDO Daily Videos Grid</title>
@@ -194,11 +186,20 @@
       margin: 20px;
     }
     .grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 equal columns */
+  grid-template-rows: repeat(2, 1fr);    /* 2 equal rows */
+  gap: 20px;
+  padding: 30px;
+}
+    /*
+    .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(960px, 1fr));
       gap: 20px;
       padding: 30px;
     }
+    */
     video {
       width: 100%;
       height: auto;
