@@ -188,9 +188,11 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr); /* 4 equal columns */
-  grid-template-rows: auto;    /* Let the rows grow based on content */
+  grid-template-rows: repeat(2, 1fr);    /* 2 equal rows */
   gap: 20px;
   padding: 30px;
+  max-width: 100%; /* Ensure it takes full width */
+  box-sizing: border-box;
 }
     /*
     .grid {
@@ -211,6 +213,7 @@
 </head>
 <body>
   <h1>SDO Daily Solar Videos – Latest</h1>
+<div class="grid-container">
   <div class="grid">
     <video muted loop playsinline>
       <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
