@@ -130,27 +130,43 @@
   <h2>SDO Daily Solar Videos – Latest</h2>
   <div class="grid">
     <div class="video-container">
-      <video muted loop playsinline>
+      <video muted autoplay loop playsinline>
         <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
+        Your browser does not support the video tag.
       </video>
-      <video muted loop playsinline>
+    </div>
+    <div class="video-container">
+      <video muted autoplay loop playsinline>
         <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0304.mp4" type="video/mp4">
+        Your browser does not support the video tag.
       </video>
+    </div>
+      <div class="video-container">
       <video muted loop playsinline>
         <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0171.mp4" type="video/mp4">
       </video>
+    </div>
+      <div class="video-container">
       <video muted loop playsinline>
         <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0211.mp4" type="video/mp4">
       </video>
+    </div>
+      <div class="video-container">
       <video muted loop playsinline>
         <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0335.mp4" type="video/mp4">
-      </video>
+      </video>      
+    </div>
+      <div class="video-container">
       <video muted loop playsinline>
         <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0094.mp4" type="video/mp4">
-      </video>
+      </video>      
+    </div>
+      <div class="video-container">
       <video muted loop playsinline>
         <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_1600.mp4" type="video/mp4">
-      </video>
+      </video>      
+    </div>
+      <div class="video-container">
       <video muted loop playsinline>
         <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_1700.mp4" type="video/mp4">
       </video>
@@ -159,6 +175,24 @@
 </section>
 
 <script>
+  // Zoom Effect
+  document.querySelectorAll('.video-container').forEach(container => {
+    container.addEventListener('click', () => {
+      // Remove zoomed class from all others
+      document.querySelectorAll('.video-container').forEach(c => c.classList.remove('zoomed'));
+      // Add zoomed class to this one
+      container.classList.add('zoomed');
+    });
+  });
+
+  // Optional: click again to zoom out
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.video-container')) {
+      document.querySelectorAll('.video-container').forEach(c => c.classList.remove('zoomed'));
+    }
+  });
+
+  // Video Syncing
   const videos = document.querySelectorAll("video");
   let readyCount = 0;
 
@@ -198,6 +232,7 @@
     loopCheck();
   }
 </script>
+
 
 <section id="solar-links">
   <h3 style="text-align:center;">Latest 48-Hour SDO Views</h3>
