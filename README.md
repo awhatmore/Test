@@ -9,11 +9,9 @@
     html {
       box-sizing: border-box;
     }
-
     *, *::before, *::after {
       box-sizing: inherit;
     }
-
     html, body {
       margin: 0;
       padding: 0;
@@ -23,14 +21,12 @@
       height: 100%;
       line-height: 1.6;
     }
-
     #particles-js {
       position: fixed;
       width: 100%;
       height: 100%;
       z-index: -1;
     }
-
     header {
       background: transparent;
       text-align: center;
@@ -38,7 +34,6 @@
       z-index: 1;
       position: relative;
     }
-
     nav {
       display: flex;
       justify-content: center;
@@ -49,16 +44,13 @@
       top: 0;
       z-index: 10;
     }
-
     nav a {
       color: #fff;
       text-decoration: none;
     }
-
     nav a:hover {
       text-decoration: underline;
     }
-
     main {
       padding: 2rem 1rem;
       width: 100%;
@@ -67,11 +59,9 @@
       position: relative;
       z-index: 1;
     }
-
     section {
       margin-bottom: 3rem;
     }
-
     footer {
       background: #1e1e1e;
       text-align: center;
@@ -80,19 +70,21 @@
       color: #666;
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-      gap: 10px;
-    }
-
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 equal columns */
+  grid-template-rows: repeat(2, 1fr);    /* 2 equal rows */
+  gap: 20px;
+  padding: 30px;
+  max-width: 100%; /* Ensure it takes full width */
+  box-sizing: border-box;
+}
     video {
       width: 100%;
       border: 2px solid #333;
       border-radius: 8px;
       background: #111;
     }
-
     .card {
       background: #111;
       padding: 10px;
@@ -100,22 +92,18 @@
       text-align: center;
       border-radius: 10px;
     }
-
     .card a {
       color: #0cf;
       text-decoration: none;
     }
-
     .card a:hover {
       text-decoration: underline;
     }
-
     #calculator {
       background: #222;
       padding: 1rem;
       border-radius: 0.9rem;
     }
-
     #display {
       background: #000;
       padding: 0.5rem 1rem;
@@ -123,23 +111,19 @@
       color: #0f0;
       font-weight: bold;
     }
-
     .calculator {
       display: grid;
       grid-template-columns: repeat(3, 60px);
       gap: 5px;
     }
-
     button {
       width: 60px;
       height: 60px;
       font-size: 1.2em;
     }
-
     .wide {
       grid-column: span 2;
     }
-
     @media (max-width: 600px) {
       nav {
         flex-wrap: wrap;
@@ -148,7 +132,6 @@
     }
   </style>
 </head>
-
 <body>
   <div id="particles-js"></div>
 
@@ -169,31 +152,8 @@
       <h2>About</h2>
       <p>Coming soon...</p>
     </section>
+    
 
-<head>
-  <meta charset="UTF-8">
-  <title>SDO Daily Videos Grid</title>
-  <style>
-    body {
-      background-color: #000;
-      color: #fff;
-      font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    h1 {
-      text-align: center;
-      margin: 20px;
-    }
-.grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 equal columns */
-  grid-template-rows: repeat(2, 1fr);    /* 2 equal rows */
-  gap: 20px;
-  padding: 30px;
-  max-width: 100%; /* Ensure it takes full width */
-  box-sizing: border-box;
-}
     /*
     .grid {
       display: grid;
