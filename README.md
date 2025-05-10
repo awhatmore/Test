@@ -185,10 +185,10 @@
       text-align: center;
       margin: 20px;
     }
-    .grid {
+.grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr); /* 4 equal columns */
-  grid-template-rows: repeat(2, 1fr);    /* 2 equal rows */
+  grid-template-rows: auto;    /* Let the rows grow based on content */
   gap: 20px;
   padding: 30px;
 }
