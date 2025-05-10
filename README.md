@@ -5,13 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Whatmore Industries</title>
   <style>
-    /* General page layout */
-    html {
-      box-sizing: border-box;
-    }
-    *, *::before, *::after {
-      box-sizing: inherit;
-    }
     html, body {
       margin: 0;
       padding: 0;
@@ -20,6 +13,10 @@
       color: #eee;
       height: 100%;
       line-height: 1.6;
+      box-sizing: border-box;
+    }
+    *, *::before, *::after {
+      box-sizing: inherit;
     }
     #particles-js {
       position: fixed;
@@ -31,8 +28,8 @@
       background: transparent;
       text-align: center;
       padding: 3rem 1rem 2rem;
-      z-index: 1;
       position: relative;
+      z-index: 1;
     }
     nav {
       display: flex;
@@ -53,9 +50,6 @@
     }
     main {
       padding: 2rem 1rem;
-      width: 100%;
-      max-width: none;
-      margin: 0;
       position: relative;
       z-index: 1;
     }
@@ -69,61 +63,30 @@
       font-size: 0.9rem;
       color: #666;
     }
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 equal columns */
-  grid-template-rows: repeat(2, 1fr);    /* 2 equal rows */
-  gap: 20px;
-  padding: 30px;
-  max-width: 100%; /* Ensure it takes full width */
-  box-sizing: border-box;
-}
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      padding: 30px;
+      max-width: 100%;
+    }
     video {
       width: 100%;
+      height: auto;
       border: 2px solid #333;
-      border-radius: 8px;
+      border-radius: 18px;
       background: #111;
     }
     .card {
-      background: #111;
-      padding: 10px;
-      border: 1px solid #333;
-      text-align: center;
-      border-radius: 10px;
-    }
-    .card a {
-      color: #0cf;
-      text-decoration: none;
-    }
-    .card a:hover {
-      text-decoration: underline;
-    }
-    #calculator {
-      background: #222;
-      padding: 1rem;
-      border-radius: 0.9rem;
-    }
-    #display {
-      background: #000;
-      padding: 0.5rem 1rem;
-      margin-bottom: 1rem;
-      color: #0f0;
-      font-weight: bold;
-    }
-    .calculator {
-      display: grid;
-      grid-template-columns: repeat(3, 60px);
-      gap: 5px;
-    }
-    button {
-      width: 60px;
-      height: 60px;
-      font-size: 1.2em;
-    }
-    .wide {
-      grid-column: span 2;
-    }
+  background: #222;
+  padding: 1rem;
+  border-radius: 12px;
+  text-align: center;
+  transition: background 0.3s;
+}
+.card:hover {
+  background: #333;
+}
     @media (max-width: 600px) {
       nav {
         flex-wrap: wrap;
@@ -152,28 +115,9 @@
       <h2>About</h2>
       <p>Coming soon...</p>
     </section>
-    
-
-    /*
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(960px, 1fr));
-      gap: 20px;
-      padding: 30px;
-    }
-    */
-    video {
-      width: 100%;
-      height: auto;
-      border: 2px solid #333;
-      border-radius: 18px;
-      background: #111;
-    }
-  </style>
-</head>
-<body>
-  <h1>SDO Daily Solar Videos – Latest</h1>
-<div class="grid-container">
+     
+  <section id="projects">
+  <h2>SDO Daily Solar Videos – Latest</h2>
   <div class="grid">
     <video muted loop playsinline>
       <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
@@ -200,6 +144,7 @@
       <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_1700.mp4" type="video/mp4">
     </video>
   </div>
+  
   <script>
     const videos = document.querySelectorAll("video");
     let readyCount = 0;
@@ -239,55 +184,10 @@
 
       loopCheck();
     }
-  </script>
-</body>
+</script>
 
-
-
-
-
-
-
-
-
-
-
-
-
-<head>
-  <meta charset="UTF-8">
-  <title>SDO Video Grid</title>
-  <style>
-    body {
-      background: #000;
-      color: #fff;
-      font-family: sans-serif;
-      margin: 0;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 10px;
-      padding: 20px;
-    }
-    .card {
-      background: #111;
-      padding: 10px;
-      border: 1px solid #333;
-      text-align: center;
-      border-radius: 10px;
-    }
-    .card a {
-      color: #0cf;
-      text-decoration: none;
-    }
-    .card a:hover {
-      text-decoration: underline;
-    }
-  </style>
-</head>
-<body>
-  <h1 style="text-align:center;">Latest 48-Hour SDO Views</h1>
+<section id="solar-links">
+  <h3 style="text-align:center;">Latest 48-Hour SDO Views</h3>
   <div class="grid">
     <div class="card"><a href="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0193" target="_blank">SDO 0193 Å</a></div>
     <div class="card"><a href="https://sdo.gsfc.nasa.gov/data/latest48.php?q=0304" target="_blank">SDO 0304 Å</a></div>
@@ -298,17 +198,9 @@
     <div class="card"><a href="https://sdo.gsfc.nasa.gov/data/latest48.php?q=1600" target="_blank">SDO 1600 Å</a></div>
     <div class="card"><a href="https://sdo.gsfc.nasa.gov/data/latest48.php?q=1700" target="_blank">SDO 1700 Å</a></div>
   </div>
-</body>
+</section>
 
-
-
-
-
-
-</body>
-</html>
-  
-  <section id="calculator">
+<section id="calculator">
   <h2>Smart Unit Calculator</h2>
   <div style="background:#222; padding:1rem; border-radius:0.9rem; font-size:1rem;">
     <div id="display" style="background:#000; padding:0.5rem 1rem; margin-bottom:1rem; color:#0f0; font-weight:bold;">
@@ -354,15 +246,13 @@
   <button class="wide" onclick="backspace()">Backspace</button>
   <button class="wide" onclick="clearCalc()">Clear</button>
 </div><br>
-
-    <!-- Operators -->
+  <!-- Operators -->
     <div style="margin-bottom: 1rem;">
       <button onclick="appendCalc(' + ')">+</button>
       <button onclick="appendCalc(' - ')">-</button><br>
       <button onclick="appendCalc(' * ')">*</button>
       <button onclick="appendCalc(' / ')">&nbsp;/&nbsp;</button>
     </div>
-
     <!-- Length Units -->
     <div>
       <strong>Length</strong><br>
@@ -377,7 +267,6 @@
       <button onclick="appendCalc(' yd ')">yd</button>
       <button onclick="appendCalc(' mi ')">mi</button>
     </div><br>
-
     <!-- Mass Units -->
     <div>
       <strong>Mass</strong><br>
@@ -389,7 +278,6 @@
       <button onclick="appendCalc(' lb ')">lb</button>
       <button onclick="appendCalc(' st ')">st</button>
     </div><br>
-
     <!-- Time Units -->
     <div>
       <strong>Time</strong><br>
@@ -403,32 +291,24 @@
     </div>
   </div>
 </section>
-
-  <main>
     <section id="about">
       <h2>About</h2>
       <p>I am the founder of Whatmore Industries. I build, test, observe, and connect — from off-grid systems and theoretical models to hands-on fabrication and prototyping. Every line I draw and every circuit I etch aims to serve a greater curiosity: what more is possible?</p>
     </section>
-
     <section id="projects">
       <h2>Projects</h2>
       <p>Explore my work in electromaterials, antenna theory, sustainable design, and beyond. Each project is a story of purpose and discovery.</p>
     </section>
-
     <section id="journal">
       <h2>Journal</h2>
       <p>Thoughts, theories, and breakthroughs — documented in motion. This is where process meets philosophy.</p>
     </section>
-
     <section id="contact">
       <h2>Contact</h2>
       <p>To collaborate, ask questions, or propose a mission — reach out directly at <a href="mailto:contact@whatmoreindustries.io">contact@whatmoreindustries.io</a>.</p>
     </section>
   </main>
 
-  <footer>
-    &copy; 2025 Whatmore Industries. All rights reserved.
-  </footer>
 
   <!-- Particles.js -->
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
@@ -575,6 +455,9 @@
 
 
  
+  <footer>
+    &copy; 2025 Whatmore Industries. All rights reserved.
+  </footer>
 </body>
 </html>
 
