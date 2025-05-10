@@ -44,7 +44,7 @@
       justify-content: center;
       gap: 2rem;
       background: rgba(34, 34, 34, 0.9);
-      padding: 1rem;
+      padding: 0.5rem;
       position: sticky;
       top: 0;
       z-index: 10;
