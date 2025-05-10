@@ -77,6 +77,16 @@
       border-radius: 18px;
       background: #111;
     }
+    .video-container {
+  position: relative;
+  transition: transform 0.3s ease, z-index 0.3s;
+  z-index: 1;
+  cursor: pointer;
+}
+.video-container.zoomed {
+  transform: scale(2.5); /* Adjust to your preferred zoom level */
+  z-index: 999;
+}
     .card {
   background: #222;
   padding: 1rem;
@@ -116,74 +126,77 @@
       <p>Coming soon...</p>
     </section>
      
-  <section id="projects">
+<section id="projects">
   <h2>SDO Daily Solar Videos – Latest</h2>
   <div class="grid">
-    <video muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
-    </video>
-    <video muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0304.mp4" type="video/mp4">
-    </video>
-    <video muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0171.mp4" type="video/mp4">
-    </video>
-    <video muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0211.mp4" type="video/mp4">
-    </video>
-    <video muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0335.mp4" type="video/mp4">
-    </video>
-    <video muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0094.mp4" type="video/mp4">
-    </video>
-    <video muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_1600.mp4" type="video/mp4">
-    </video>
-    <video muted loop playsinline>
-      <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_1700.mp4" type="video/mp4">
-    </video>
+    <div class="video-container">
+      <video muted loop playsinline>
+        <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0193.mp4" type="video/mp4">
+      </video>
+      <video muted loop playsinline>
+        <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0304.mp4" type="video/mp4">
+      </video>
+      <video muted loop playsinline>
+        <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0171.mp4" type="video/mp4">
+      </video>
+      <video muted loop playsinline>
+        <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0211.mp4" type="video/mp4">
+      </video>
+      <video muted loop playsinline>
+        <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0335.mp4" type="video/mp4">
+      </video>
+      <video muted loop playsinline>
+        <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_0094.mp4" type="video/mp4">
+      </video>
+      <video muted loop playsinline>
+        <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_1600.mp4" type="video/mp4">
+      </video>
+      <video muted loop playsinline>
+        <source src="https://sdo.gsfc.nasa.gov/assets/img/latest/mpeg/latest_1024_1700.mp4" type="video/mp4">
+      </video>
+    </div>
   </div>
-  
-  <script>
-    const videos = document.querySelectorAll("video");
-    let readyCount = 0;
+</section>
 
-    videos.forEach(video => {
-      video.addEventListener("canplaythrough", () => {
-        readyCount++;
-        if (readyCount === videos.length) {
-          // Sync play all at once
-          videos.forEach(v => {
-            v.currentTime = 0;
-            v.play();
-          });
+<script>
+  const videos = document.querySelectorAll("video");
+  let readyCount = 0;
 
-          syncLoops();
-        }
-      });
-    });
+  videos.forEach(video => {
+    video.addEventListener("canplaythrough", () => {
+      readyCount++;
+      if (readyCount === videos.length) {
+        // Sync play all at once
+        videos.forEach(v => {
+          v.currentTime = 0;
+          v.play();
+        });
 
-    function syncLoops() {
-      const loopTime = videos[0].duration;
-
-      function loopCheck() {
-        const now = videos[0].currentTime;
-        if (now >= loopTime - 0.05) {
-          videos.forEach(v => {
-            v.pause();
-            v.currentTime = 0;
-          });
-          // Wait one frame, then restart all
-          requestAnimationFrame(() => {
-            videos.forEach(v => v.play());
-          });
-        }
-        requestAnimationFrame(loopCheck);
+        syncLoops();
       }
+    });
+  });
 
-      loopCheck();
+  function syncLoops() {
+    const loopTime = videos[0].duration;
+
+    function loopCheck() {
+      const now = videos[0].currentTime;
+      if (now >= loopTime - 0.05) {
+        videos.forEach(v => {
+          v.pause();
+          v.currentTime = 0;
+        });
+        // Wait one frame, then restart all
+        requestAnimationFrame(() => {
+          videos.forEach(v => v.play());
+        });
+      }
+      requestAnimationFrame(loopCheck);
     }
+
+    loopCheck();
+  }
 </script>
 
 <section id="solar-links">
@@ -452,7 +465,18 @@
     }
   }
 </script>
+<script>
+  document.querySelectorAll('.video-container').forEach(container => {
+    container.addEventListener('click', () => {
+      // Remove zoom from other videos
+      document.querySelectorAll('.video-container.zoomed').forEach(z => {
+        if (z !== container) z.classList.remove('zoomed');
+      });
 
+      container.classList.toggle('zoomed');
+    });
+  });
+</script>
 
  
   <footer>
