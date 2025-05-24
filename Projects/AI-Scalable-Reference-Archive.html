@@ -1,29 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Oxford 3000 - 'A' Words</title>
+  <meta charset="UTF-8" />
+  <title>Oxford 3000 - 'A' and 'AB' Words</title>
   <style>
-    body { font-family: Arial, sans-serif; }
-    .word-list { display: flex; flex-wrap: wrap; }
-    .word-item { width: 200px; margin: 10px; }
-    .word-code { font-weight: bold; }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .container {
+      display: flex;
+      gap: 40px;
+    }
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 150px;
+    }
+    .column h2 {
+      margin-bottom: 12px;
+      border-bottom: 2px solid #333;
+      padding-bottom: 4px;
+    }
+    .word-item {
+      display: flex;
+      align-items: center;
+      font-size: 16px;
+    }
+    .word-code {
+      font-weight: bold;
+      color: #2a5d9f;
+      width: 40px; /* fixed width for alignment */
+      flex-shrink: 0;
+      text-align: right;
+      margin-right: 10px;
+    }
   </style>
 </head>
 <body>
-  <h1>Oxford 3000 - Words Starting with 'A'</h1>
-  <div class="word-list">
-    <div class="word-item"><span class="word-code">a1</span>: a</div>
-    <div class="word-item"><span class="word-code">a2</span>: abandon</div>
-    <div class="word-item"><span class="word-code">a3</span>: ability</div>
-    <div class="word-item"><span class="word-code">a4</span>: able</div>
-    <div class="word-item"><span class="word-code">a5</span>: about</div>
-    <div class="word-item"><span class="word-code">a6</span>: above</div>
-    <div class="word-item"><span class="word-code">a7</span>: abroad</div>
-    <div class="word-item"><span class="word-code">a8</span>: absence</div>
-    <div class="word-item"><span class="word-code">a9</span>: absent</div>
-    <div class="word-item"><span class="word-code">a10</span>: absolute</div>
-    <!-- Add more word items here -->
+  <h1>Oxford 3000 - Words Starting with 'A' and 'AB'</h1>
+  <div class="container">
+    <!-- Column 1: Words starting with 'a' only -->
+    <div class="column" id="a-words">
+      <h2>Words starting with "a"</h2>
+      <div class="word-item"><div class="word-code">a1</div>a</div>
+      <!-- Add more single 'a' letter words if any -->
+    </div>
+
+    <!-- Column 2: Words starting with 'ab' -->
+    <div class="column" id="ab-words">
+      <h2>Words starting with "ab"</h2>
+      <div class="word-item"><div class="word-code">ab1</div>abandon</div>
+      <div class="word-item"><div class="word-code">ab2</div>ability</div>
+      <div class="word-item"><div class="word-code">ab3</div>able</div>
+      <div class="word-item"><div class="word-code">ab4</div>about</div>
+      <div class="word-item"><div class="word-code">ab5</div>above</div>
+      <div class="word-item"><div class="word-code">ab6</div>abroad</div>
+      <div class="word-item"><div class="word-code">ab7</div>absence</div>
+      <div class="word-item"><div class="word-code">ab8</div>absent</div>
+      <div class="word-item"><div class="word-code">ab9</div>absolute</div>
+      <!-- Add more 'ab' words here -->
+    </div>
   </div>
 </body>
 </html>
