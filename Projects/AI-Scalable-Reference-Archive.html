@@ -2,61 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Oxford 3000 - 'A' and 'AB' Words</title>
+  <title>Oxford 3000 - AI Scalable Reference Archive</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
+    body {
+      font-family: Arial, sans-serif;
+    }
+
     .container {
       display: flex;
-      gap: 40px;
+      gap: 40px; /* space between columns */
     }
+
     .column {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      min-width: 150px;
+      width: 200px;
     }
-    .column h2 {
-      margin-bottom: 12px;
-      border-bottom: 2px solid #333;
-      padding-bottom: 4px;
+
+    /* ONLY CENTER THE 'a' and 'ab' HEADINGS */
+    .letter-label {
+      text-align: left;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
     }
+
+    /* KEEP WORDS LEFT ALIGNED */
     .word-item {
-      display: flex;
-      align-items: center;
-      font-size: 16px;
+      text-align: left;
+      margin: 4px 0;
     }
+
     .word-code {
       font-weight: bold;
-      color: #2a5d9f;
-      width: 40px; /* fixed width for alignment */
-      flex-shrink: 0;
-      text-align: right;
-      margin-right: 10px;
+      margin-right: 5px;
+      display: inline-block;
+      width: 40px;
     }
   </style>
 </head>
 <body>
-  <h1>Oxford 3000 - Words Starting with 'A' and 'AB'</h1>
+  <h1>Oxford 3000 - AI Scalable Reference Archive</h1>
+
   <div class="container">
     <!-- Column 1: Words starting with 'a' only -->
     <div class="column" id="a-words">
-      <h2>Words starting with "a"</h2>
-      <div class="word-item"><div class="word-code">a1</div>a</div>
+      <div class="letter-label">A</div> <!-- CENTERED -->
+      <div class="word-item"><span class="word-code">a1</span>a</div>
       <!-- Add more single 'a' letter words if any -->
     </div>
 
     <!-- Column 2: Words starting with 'ab' -->
     <div class="column" id="ab-words">
-      <h2>Words starting with "ab"</h2>
-      <div class="word-item"><div class="word-code">ab1</div>abandon</div>
-      <div class="word-item"><div class="word-code">ab2</div>ability</div>
-      <div class="word-item"><div class="word-code">ab3</div>able</div>
-      <div class="word-item"><div class="word-code">ab4</div>about</div>
-      <div class="word-item"><div class="word-code">ab5</div>above</div>
-      <div class="word-item"><div class="word-code">ab6</div>abroad</div>
-      <div class="word-item"><div class="word-code">ab7</div>absence</div>
-      <div class="word-item"><div class="word-code">ab8</div>absent</div>
-      <div class="word-item"><div class="word-code">ab9</div>absolute</div>
+      <div class="letter-label">AB</div> <!-- CENTERED -->
+      <div class="word-item"><span class="word-code">ab1</span>abandon</div>
+      <div class="word-item"><span class="word-code">ab2</span>ability</div>
+      <div class="word-item"><span class="word-code">ab3</span>able</div>
+      <div class="word-item"><span class="word-code">ab4</span>about</div>
+      <div class="word-item"><span class="word-code">ab5</span>above</div>
+      <div class="word-item"><span class="word-code">ab6</span>abroad</div>
+      <div class="word-item"><span class="word-code">ab7</span>absence</div>
+      <div class="word-item"><span class="word-code">ab8</span>absent</div>
+      <div class="word-item"><span class="word-code">ab9</span>absolute</div>
       <!-- Add more 'ab' words here -->
     </div>
   </div>
