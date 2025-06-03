@@ -1,4 +1,3 @@
-<!-- New HTML page: calculator.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -105,19 +104,24 @@
       mg: 1e-6, g: 1e-3, kg: 1, t: 1000, oz: 0.0283495, lb: 0.453592, st: 6.35029,
       ns: 1e-9, μs: 1e-6, ms: 1e-3, s: 1, min: 60, hr: 3600, day: 86400
     };
+
     let calcStr = '';
-    function appendCalc(val) {
-      calcStr += val;
+
+    function appendCalc(value) {
+      calcStr += value;
       document.getElementById('display').textContent = calcStr;
     }
+
     function clearCalc() {
       calcStr = '';
       document.getElementById('display').textContent = '0';
     }
+
     function backspace() {
       calcStr = calcStr.slice(0, -1);
       document.getElementById('display').textContent = calcStr || '0';
     }
+
     function calculate() {
       try {
         const parsed = calcStr.replace(/([0-9.]+)\s*([a-zμ]+)/gi, (match, val, unit) => {
@@ -130,7 +134,7 @@
         const result = eval(parsed);
         document.getElementById('display').textContent = result + ' (SI)';
         calcStr = result.toString();
-      } catch {
+      } catch (e) {
         document.getElementById('display').textContent = 'Error';
         calcStr = '';
       }
