@@ -1,0 +1,140 @@
+<!-- New HTML page: calculator.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Unit Calculator | Whatmore Industries</title>
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 2rem;
+    }
+    h2 {
+      text-align: center;
+    }
+    #display {
+      background: #000;
+      padding: 0.5rem 1rem;
+      margin-bottom: 1rem;
+      color: #0f0;
+      font-weight: bold;
+    }
+    .calculator {
+      display: grid;
+      grid-template-columns: repeat(3, 60px);
+      gap: 5px;
+    }
+    button {
+      width: 60px;
+      height: 60px;
+      font-size: 1.2em;
+    }
+    .wide {
+      grid-column: span 2;
+    }
+  </style>
+</head>
+<body>
+  <h2>Smart Unit Calculator</h2>
+  <div style="background:#222; padding:1rem; border-radius:0.9rem; font-size:1rem;">
+    <div id="display">0</div>
+    <div class="calculator">
+      <button onclick="appendCalc('1')">1</button>
+      <button onclick="appendCalc('2')">2</button>
+      <button onclick="appendCalc('3')">3</button>
+      <button onclick="appendCalc('4')">4</button>
+      <button onclick="appendCalc('5')">5</button>
+      <button onclick="appendCalc('6')">6</button>
+      <button onclick="appendCalc('7')">7</button>
+      <button onclick="appendCalc('8')">8</button>
+      <button onclick="appendCalc('9')">9</button>
+      <button onclick="appendCalc('.')">.</button>
+      <button onclick="appendCalc('0')">0</button>
+      <button onclick="calculate()">=</button>
+      <button class="wide" onclick="backspace()">Backspace</button>
+      <button class="wide" onclick="clearCalc()">Clear</button>
+    </div><br>
+    <div>
+      <button onclick="appendCalc(' + ')">+</button>
+      <button onclick="appendCalc(' - ')">-</button>
+      <button onclick="appendCalc(' * ')">*</button>
+      <button onclick="appendCalc(' / ')">/</button>
+    </div><br>
+    <div>
+      <strong>Length</strong><br>
+      <button onclick="appendCalc(' nm ')">nm</button>
+      <button onclick="appendCalc(' μm ')">μm</button>
+      <button onclick="appendCalc(' mm ')">mm</button>
+      <button onclick="appendCalc(' cm ')">cm</button>
+      <button onclick="appendCalc(' m ')">m</button>
+      <button onclick="appendCalc(' km ')">km</button><br>
+      <button onclick="appendCalc(' in ')">in</button>
+      <button onclick="appendCalc(' ft ')">ft</button>
+      <button onclick="appendCalc(' yd ')">yd</button>
+      <button onclick="appendCalc(' mi ')">mi</button>
+    </div><br>
+    <div>
+      <strong>Mass</strong><br>
+      <button onclick="appendCalc(' mg ')">mg</button>
+      <button onclick="appendCalc(' g ')">g</button>
+      <button onclick="appendCalc(' kg ')">kg</button>
+      <button onclick="appendCalc(' t ')">t</button>
+      <button onclick="appendCalc(' oz ')">oz</button>
+      <button onclick="appendCalc(' lb ')">lb</button>
+      <button onclick="appendCalc(' st ')">st</button>
+    </div><br>
+    <div>
+      <strong>Time</strong><br>
+      <button onclick="appendCalc(' ns ')">ns</button>
+      <button onclick="appendCalc(' μs ')">μs</button>
+      <button onclick="appendCalc(' ms ')">ms</button>
+      <button onclick="appendCalc(' s ')">s</button>
+      <button onclick="appendCalc(' min ')">min</button>
+      <button onclick="appendCalc(' hr ')">hr</button>
+      <button onclick="appendCalc(' day ')">day</button>
+    </div>
+  </div>
+  <script>
+    const unitFactors = {
+      nm: 1e-9, μm: 1e-6, mm: 1e-3, cm: 1e-2, m: 1, km: 1e3,
+      in: 0.0254, ft: 0.3048, yd: 0.9144, mi: 1609.34,
+      mg: 1e-6, g: 1e-3, kg: 1, t: 1000, oz: 0.0283495, lb: 0.453592, st: 6.35029,
+      ns: 1e-9, μs: 1e-6, ms: 1e-3, s: 1, min: 60, hr: 3600, day: 86400
+    };
+    let calcStr = '';
+    function appendCalc(val) {
+      calcStr += val;
+      document.getElementById('display').textContent = calcStr;
+    }
+    function clearCalc() {
+      calcStr = '';
+      document.getElementById('display').textContent = '0';
+    }
+    function backspace() {
+      calcStr = calcStr.slice(0, -1);
+      document.getElementById('display').textContent = calcStr || '0';
+    }
+    function calculate() {
+      try {
+        const parsed = calcStr.replace(/([0-9.]+)\s*([a-zμ]+)/gi, (match, val, unit) => {
+          if (unitFactors[unit]) {
+            return `(${parseFloat(val) * unitFactors[unit]})`;
+          } else {
+            throw new Error(`Unknown unit: ${unit}`);
+          }
+        });
+        const result = eval(parsed);
+        document.getElementById('display').textContent = result + ' (SI)';
+        calcStr = result.toString();
+      } catch {
+        document.getElementById('display').textContent = 'Error';
+        calcStr = '';
+      }
+    }
+  </script>
+</body>
+</html>
