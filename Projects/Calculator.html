@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Smart Unit Calculator | Whatmore Industries</title>
+  <title>Smart SI Unit Calculator | Whatmore Industries</title>
   <style>
     body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 2rem; }
     h2 { text-align: center; }
@@ -43,8 +43,8 @@
   </style>
 </head>
 <body>
-  <h2>Smart Unit Calculator</h2>
-  <input id="input-box" placeholder="Enter calculation..." autocomplete="off"
+  <h2>Smart SI Unit Calculator</h2>
+  <input id="input-box" placeholder="Enter calculation (e.g. 5 V * 5 A + 5 W)" autocomplete="off"
     onkeydown="if(event.key==='Enter'){calculate(); return false;}">
   <div class="calculator">
     <button onclick="appendCalc('1')">1</button>
@@ -70,10 +70,7 @@
     <button onclick="appendCalc('b')">b</button>
     <button onclick="appendCalc('c')">c</button>
     <button onclick="appendCalc('^')">^</button>
-    <button onclick="appendCalc('(')">(</button>
-    <button onclick="appendCalc(')')">)</button>
   </div>
-
   <div style="margin:1rem 0;">
     <button onclick="appendCalc(' + ')">+</button>
     <button onclick="appendCalc(' - ')">-</button>
@@ -124,96 +121,117 @@
   </div>
   <div id="result-panel"></div>
 
-  <script>
-    // Insert value at cursor/caret position in input
-    function appendCalc(val) {
-      const box = document.getElementById('input-box');
-      if (!box) return;
-      // If input is not focused, focus it
-      if (document.activeElement !== box) box.focus();
-      // Support caret insert (works on desktop & mobile)
-      const start = box.selectionStart ?? box.value.length;
-      const end = box.selectionEnd ?? box.value.length;
-      const text = box.value;
-      box.value = text.slice(0, start) + val + text.slice(end);
-      const caretPos = start + val.length;
-      box.setSelectionRange(caretPos, caretPos);
-      box.focus();
+<script>
+/* --- SI Unit Table --- */
+const BASES = ['kg', 'm', 's', 'A', 'K', 'mol', 'cd'];
+// Exponents for each SI or derived unit:
+const UNIT_TABLE = {
+  m:   {kg:0, m:1, s:0, A:0, K:0, mol:0, cd:0},
+  kg:  {kg:1, m:0, s:0, A:0, K:0, mol:0, cd:0},
+  s:   {kg:0, m:0, s:1, A:0, K:0, mol:0, cd:0},
+  A:   {kg:0, m:0, s:0, A:1, K:0, mol:0, cd:0},
+  K:   {kg:0, m:0, s:0, A:0, K:1, mol:0, cd:0},
+  mol: {kg:0, m:0, s:0, A:0, K:0, mol:1, cd:0},
+  cd:  {kg:0, m:0, s:0, A:0, K:0, mol:0, cd:1},
+  N:   {kg:1, m:1, s:-2, A:0, K:0, mol:0, cd:0},
+  J:   {kg:1, m:2, s:-2, A:0, K:0, mol:0, cd:0},
+  W:   {kg:1, m:2, s:-3, A:0, K:0, mol:0, cd:0},
+  V:   {kg:1, m:2, s:-3, A:-1, K:0, mol:0, cd:0},
+  C:   {kg:0, m:0, s:1, A:1, K:0, mol:0, cd:0},
+  Ω:   {kg:1, m:2, s:-3, A:-2, K:0, mol:0, cd:0},
+  F:   {kg:-1, m:-2, s:4, A:2, K:0, mol:0, cd:0},
+  S:   {kg:-1, m:-2, s:3, A:2, K:0, mol:0, cd:0},
+  H:   {kg:1, m:2, s:-2, A:-2, K:0, mol:0, cd:0},
+  // Add more as needed!
+  VA:  {kg:1, m:2, s:-3, A:0, K:0, mol:0, cd:0}, // treat VA same as W (special for this calc)
+};
+const DERIVED_LOOKUP = Object.fromEntries(
+  Object.entries(UNIT_TABLE).map(([k,v])=>[JSON.stringify(v),k])
+);
+
+/* --- Unit Aliases & Factors --- */
+const UNITS = {
+  // SI base/derived (factor: [multiplier, canonical unit])
+  nm:  [1e-9, 'm'], μm:[1e-6,'m'], mm:[1e-3,'m'], cm:[1e-2,'m'], m:[1,'m'], km:[1e3,'m'],
+  in: [0.0254,'m'], ft:[0.3048,'m'], yd:[0.9144,'m'], mi:[1609.34,'m'],
+  mg:[1e-6,'kg'], g:[1e-3,'kg'], kg:[1,'kg'], t:[1000,'kg'],
+  oz:[0.0283495,'kg'], lb:[0.453592,'kg'], st:[6.35029,'kg'],
+  ns:[1e-9,'s'], μs:[1e-6,'s'], ms:[1e-3,'s'], s:[1,'s'], min:[60,'s'], hr:[3600,'s'], day:[86400,'s'],
+  A:[1,'A'], V:[1,'V'], W:[1,'W'], F:[1,'F'], Ω:[1,'Ω'], C:[1,'C'],
+  N:[1,'N'], J:[1,'J'], S:[1,'S'], H:[1,'H'],
+  VA:[1,'VA'],
+};
+
+/* --- Helper: Exponent Operations --- */
+function cloneExp(e) { return Object.assign({}, e); }
+function zeroExp() { let o={}; BASES.forEach(b=>o[b]=0); return o; }
+function addExp(e1, e2, sign=1) {
+  let out = {};
+  BASES.forEach(b => out[b] = (e1[b]||0) + sign*(e2[b]||0));
+  return out;
+}
+function expEqual(e1, e2) {
+  return BASES.every(b => (e1[b]||0) === (e2[b]||0));
+}
+function expToStr(exp) {
+  return BASES.map(k => {
+    if (!exp[k]) return '';
+    if (exp[k] === 1) return k;
+    if (exp[k] === -1) return k+'⁻¹';
+    return `${k}^${exp[k]}`;
+  }).filter(Boolean).join('·') || '1';
+}
+function expToDerived(exp) {
+  let key = JSON.stringify(exp);
+  return DERIVED_LOOKUP[key] || null;
+}
+
+/* --- Calculator Logic --- */
+function decimalToFraction(value, maxDenom=10000) {
+  if (!isFinite(value)) return value.toString();
+  let num = value, denom = 1, bestNum = 1, bestDenom = 1, bestError = Math.abs(value-1);
+  for (let d=1; d<=maxDenom; d++) {
+    let n = Math.round(value*d);
+    let error = Math.abs(value - n/d);
+    if (error < bestError) {
+      bestNum = n; bestDenom = d; bestError = error;
     }
+    if (bestError < 1e-8) break;
+  }
+  return (bestDenom === 1) ? bestNum.toString() : `${bestNum}/${bestDenom}`;
+}
 
-    const siBase = {
-      kg: {dim: {kg:1}, factor:1}, 
-      m:  {dim: {m:1},  factor:1},
-      s:  {dim: {s:1},  factor:1},
-      A:  {dim: {A:1},  factor:1},
-      K:  {dim: {K:1},  factor:1},
-      mol:{dim:{mol:1}, factor:1},
-      cd: {dim:{cd:1},  factor:1},
-    };
+function appendCalc(val) {
+  const box = document.getElementById('input-box');
+  if (!box) return;
+  const start = box.selectionStart;
+  const end = box.selectionEnd;
+  const text = box.value;
+  // Insert value at caret, or at the end if caret is lost
+  box.value = text.slice(0, start) + val + text.slice(end);
+  const caretPos = start + val.length;
+  box.setSelectionRange(caretPos, caretPos);
+  box.focus();
+}
 
-    const units = {
-      nm: {base:'m', factor:1e-9}, 'μm':{base:'m',factor:1e-6}, mm:{base:'m',factor:1e-3},
-      cm: {base:'m', factor:1e-2}, m:{base:'m',factor:1}, km:{base:'m',factor:1e3},
-      in: {base:'m', factor:0.0254}, ft:{base:'m',factor:0.3048}, yd:{base:'m',factor:0.9144}, mi:{base:'m',factor:1609.34},
-      mg: {base:'kg', factor:1e-6}, g:{base:'kg',factor:1e-3}, kg:{base:'kg',factor:1}, t:{base:'kg',factor:1000},
-      oz: {base:'kg', factor:0.0283495}, lb:{base:'kg',factor:0.453592}, st:{base:'kg',factor:6.35029},
-      ns:{base:'s',factor:1e-9}, 'μs':{base:'s',factor:1e-6}, ms:{base:'s',factor:1e-3},
-      s:{base:'s',factor:1}, min:{base:'s',factor:60}, hr:{base:'s',factor:3600}, day:{base:'s',factor:86400},
-      A:{base:'A',factor:1}, V:{base:'V',factor:1}, W:{base:'W',factor:1}, F:{base:'F',factor:1}, 'Ω':{base:'Ω',factor:1}, C:{base:'C',factor:1}
-    };
+function clearCalc() {
+  document.getElementById('input-box').value = '';
+  document.getElementById('result-panel').innerHTML = '';
+}
 
-    const derivedSI = {
-      N: "kg·m/s²",
-      J: "kg·m²/s²",
-      W: "kg·m²/s³",
-      Pa: "kg/m·s²",
-      V: "kg·m²/s³·A⁻¹",
-      C: "A·s",
-      F: "s⁴·A²/kg·m²",
-      Ω: "kg·m²/s³·A²",
-      S: "s³·A²/kg·m²",
-      H: "kg·m²/s²·A²"
-    };
+function backspace() {
+  const box = document.getElementById('input-box');
+  box.value = box.value.slice(0, -1);
+  box.focus();
+}
 
-    function decimalToFraction(value, maxDenom=10000) {
-      let num = value, denom = 1, bestNum = 1, bestDenom = 1, bestError = Math.abs(value-1);
-      for (let d=1; d<=maxDenom; d++) {
-        let n = Math.round(value*d);
-        let error = Math.abs(value - n/d);
-        if (error < bestError) {
-          bestNum = n; bestDenom = d; bestError = error;
-        }
-        if (bestError < 1e-8) break;
-      }
-      return (bestDenom === 1) ? bestNum.toString() : `${bestNum}/${bestDenom}`;
-    }
-
-    function clearCalc() {
-      document.getElementById('input-box').value = '';
-      document.getElementById('result-panel').innerHTML = '';
-    }
-
-    function backspace() {
-      const box = document.getElementById('input-box');
-      // Remove character before caret
-      const start = box.selectionStart ?? box.value.length;
-      const end = box.selectionEnd ?? box.value.length;
-      if (start === end && start > 0) {
-        box.value = box.value.slice(0, start-1) + box.value.slice(end);
-        box.setSelectionRange(start-1, start-1);
-      } else if (start !== end) {
-        box.value = box.value.slice(0, start) + box.value.slice(end);
-        box.setSelectionRange(start, start);
-      }
-      box.focus();
-    }
-
-    function calculate() {
+// Main function
+function calculate() {
   let panel = document.getElementById('result-panel');
   panel.innerHTML = '';
   let input = document.getElementById('input-box').value.trim();
 
-  // Split on + and - operators, preserve sign with each term
+  // Split terms on + or -, keeping sign
   let termRegex = /([+\-]?[^+\-]+)/g;
   let terms = [];
   let match;
@@ -221,102 +239,110 @@
     let seg = match[0].trim();
     if (seg) terms.push(seg);
   }
-
-  if (terms.length === 0) {
-    panel.innerHTML = `<span style='color:red;'>Could not parse input.<br>Try: 0.5 Nm or 2 m + 3 m</span>`;
+  if (!terms.length) {
+    panel.innerHTML = `<span style='color:red;'>Could not parse input.<br>Try: 5 V * 5 A + 5 W</span>`;
     return;
   }
 
-  // Try to evaluate numeric/unit terms, echo others
-  let evaluatedTerms = [];
-  for (let seg of terms) {
-    // Handle multiplication/division within a segment
-    if (seg.match(/[*\/]/)) {
-      // Split and parse factors
-      let multParts = seg.split(/([*/])/);
-      let val = null, numUnits = [], denUnits = [], lastOp = '*';
-      let symbolic = false, symbolSegs = [];
-      for (let i = 0; i < multParts.length; i++) {
-        let part = multParts[i].trim();
-        if (part === '*' || part === '/') {
-          lastOp = part;
-        } else if (part.length) {
-          // Parse coefficient and unit, or treat as symbolic
-          let m = part.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)?\s*([a-zA-ZμΩ]+)?$/);
-          if (!m) {
-            symbolic = true;
-            symbolSegs.push(part);
-            continue;
-          }
-          let v = m[1] ? parseFloat(m[1]) : 1;
-          let u = m[2] || '';
-          if (val === null) val = v;
-          else val = (lastOp === '*') ? val * v : val / v;
-          if (u) {
-            if (lastOp === '*') numUnits.push(u);
-            else denUnits.push(u);
-          }
-        }
-      }
-      if (symbolic || symbolSegs.length) {
-        evaluatedTerms.push(seg);
-      } else {
-        // Join numerator and denominator units
-        let joinedNum = numUnits.join('');
-        let joinedDen = denUnits.join('');
-        let unitStr = joinedNum + (joinedDen ? '/' + joinedDen : '');
-        // If unitStr is a recognized derived SI (like "VA" or "W"), show both forms
-        let outputStr = (val !== null ? val : '') + (unitStr ? ' ' + unitStr : '');
-        // Power/watt recognition: A*V or VA is W
-        let derived = '';
-        if (unitStr === 'VA' || unitStr === 'W' || unitStr === 'AV') derived = 'W';
-        if (derived && derived !== unitStr) {
-          outputStr += ` (${val} W)`;
-        }
-        evaluatedTerms.push(outputStr.trim());
-      }
-    } else {
-      // Single value/unit or variable
-      let m = seg.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)?\s*([a-zA-ZμΩ][a-zA-Z0-9]*(\^\d+)?)?$/);
-      if (m && (m[1] || m[2])) {
-        let v = m[1] ? parseFloat(m[1]) : '';
-        let u = m[2] || '';
-        evaluatedTerms.push((v !== '' ? v : '') + (u ? ' ' + u : ''));
-      } else {
-        evaluatedTerms.push(seg);
-      }
+  // Evaluate each term to [value, exponent object]
+  function parseFactor(str) {
+    // Ex: 5, 5 m, 5 m^2, m, A^2, ...
+    let m = str.match(/^([+\-]?\d*\.?\d+)?\s*([a-zA-ZμΩ]+)?(?:\^([+\-]?\d+))?$/);
+    let val = m && m[1] ? parseFloat(m[1]) : 1;
+    let unit = m && m[2] ? m[2] : '';
+    let pow = m && m[3] ? parseInt(m[3]) : 1;
+    if (!unit) return [val, zeroExp()];
+    // Reduce alias units to SI base/derived
+    if (UNITS[unit]) {
+      let [f, baseUnit] = UNITS[unit];
+      val *= f ** pow;
+      let baseExp = UNIT_TABLE[baseUnit] || zeroExp();
+      let resultExp = {};
+      BASES.forEach(b => resultExp[b] = (baseExp[b]||0)*pow);
+      return [val, resultExp];
     }
+    // Direct SI/derived
+    if (UNIT_TABLE[unit]) {
+      let baseExp = UNIT_TABLE[unit];
+      let resultExp = {};
+      BASES.forEach(b => resultExp[b] = (baseExp[b]||0)*pow);
+      return [val, resultExp];
+    }
+    // Unknown unit: treat as symbolic (x, y, etc.)
+    let symbolicExp = zeroExp();
+    symbolicExp[unit] = pow;
+    return [val, symbolicExp];
   }
 
-  // Re-join for output
-  let outStr = evaluatedTerms
-    .map((term, i) => {
-      term = term.trim();
-      if (i === 0) return term;
-      if (term.startsWith('-')) return ' - ' + term.slice(1).trim();
-      return ' + ' + term.replace(/^\+/, '').trim();
-    })
-    .join('');
+  // Evaluate a single term (handles * and / inside term)
+  function evalTerm(term) {
+    let multParts = term.split(/([*/])/);
+    let val = null, exp = zeroExp(), lastOp = '*';
+    let symbolic = false, symbolSegs = [];
+    for (let i=0; i<multParts.length; i++) {
+      let part = multParts[i].trim();
+      if (part === '*' || part === '/') {
+        lastOp = part;
+      } else if (part.length) {
+        let [v, e] = parseFactor(part);
+        if (val === null) {
+          val = v;
+          exp = cloneExp(e);
+        } else {
+          if (lastOp === '*') {
+            val *= v;
+            exp = addExp(exp, e, 1);
+          } else {
+            val /= v;
+            exp = addExp(exp, e, -1);
+          }
+        }
+      }
+    }
+    return [val, exp];
+  }
 
-  // Fractional display: only for numeric/unit terms for now
-  let fracTerms = evaluatedTerms.map((t, i) => {
-    let m = t.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)?\s*([a-zA-ZμΩ][a-zA-Z0-9]*(\^\d+)?)?$/);
-    let frac = (m && m[1]) ? decimalToFraction(parseFloat(m[1])) + (m[2] ? ' ' + m[2] : '') : t;
-    frac = frac.trim();
-    if (i === 0) return frac;
-    if (frac.startsWith('-')) return ' - ' + frac.slice(1).trim();
-    return ' + ' + frac.replace(/^\+/, '').trim();
-  }).join('');
+  // Map of stringified exponents to summed values
+  let resultMap = {};
+  for (let seg of terms) {
+    let sign = 1;
+    if (seg.startsWith('-')) { sign = -1; seg = seg.slice(1).trim(); }
+    if (seg.startsWith('+')) { seg = seg.slice(1).trim(); }
+    let [v, exp] = evalTerm(seg);
+    let expKey = JSON.stringify(exp);
+    if (!resultMap[expKey]) resultMap[expKey] = 0;
+    resultMap[expKey] += sign * v;
+  }
 
-  // Output
+  // Build outputs
+  let outRows = [], fracRows = [];
+  for (let expKey in resultMap) {
+    let v = resultMap[expKey];
+    if (!v) continue; // Skip zeros
+    let exp = JSON.parse(expKey);
+    let derived = expToDerived(exp);
+    let baseStr = expToStr(exp);
+    let valueStr = v.toString();
+    let fracStr = decimalToFraction(v);
+
+    let main = derived ? `${valueStr} ${derived}` : `${valueStr} ${baseStr}`;
+    let base = derived ? `${valueStr} ${baseStr}` : '';
+    let frac = derived ? `${fracStr} ${derived}` : `${fracStr} ${baseStr}`;
+    let out = main + (base && base !== main ? ` <span class='unit-breakdown'>(${base})</span>` : '');
+    outRows.push(out);
+    fracRows.push(frac);
+  }
+
+  if (!outRows.length) {
+    panel.innerHTML = `<span style='color:red;'>No nonzero result.</span>`;
+    return;
+  }
+
   panel.innerHTML = `
-    <div class='output-row'><span class='section-label'>Decimal:</span> ${outStr}</div>
-    <div class='output-row'><span class='section-label'>Fraction:</span> ${fracTerms}</div>
+    <div class='output-row'><span class='section-label'>Decimal:</span> ${outRows.join(' + ')}</div>
+    <div class='output-row'><span class='section-label'>Fraction:</span> ${fracRows.join(' + ')}</div>
   `;
 }
-
-
-    // (printOutputs unused)
-  </script>
+</script>
 </body>
 </html>
