@@ -5,29 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Smart Unit Calculator | Whatmore Industries</title>
   <style>
-    body {
-      background: #111;
-      color: #eee;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 2rem;
-    }
+    body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 2rem; }
     h2 { text-align: center; }
+    #input-box {
+      width: 100%;
+      font-size: 1.25rem;
+      padding: 0.5rem 1rem;
+      background: #181818;
+      color: #0f0;
+      border: 1px solid #444;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      box-sizing: border-box;
+    }
     #result-panel {
       background: #222;
       padding: 1rem;
       border-radius: 0.9rem;
       font-size: 1rem;
       margin-top: 1rem;
+      min-height: 60px;
     }
     .section-label { font-weight: bold; color: #0ff; margin-top: 0.5em; }
-    #display {
-      background: #000;
-      padding: 0.5rem 1rem;
-      margin-bottom: 1rem;
-      color: #0f0;
-      font-weight: bold;
-    }
     .calculator {
       display: grid;
       grid-template-columns: repeat(3, 60px);
@@ -45,7 +44,8 @@
 </head>
 <body>
   <h2>Smart Unit Calculator</h2>
-  <div id="display">0</div>
+  <input id="input-box" placeholder="Enter calculation (e.g. 0.5 Nm, 2 m + 3 m)" autocomplete="off"
+    onkeydown="if(event.key==='Enter'){calculate();}">
   <div class="calculator">
     <button onclick="appendCalc('1')">1</button>
     <button onclick="appendCalc('2')">2</button>
@@ -113,7 +113,6 @@
   <div id="result-panel"></div>
 
   <script>
-    // Basic unit definitions and scale factors for demo
     const siBase = {
       kg: {dim: {kg:1}, factor:1}, 
       m:  {dim: {m:1},  factor:1},
@@ -124,23 +123,17 @@
       cd: {dim:{cd:1},  factor:1},
     };
 
-    // Derived and scaled units (a few, can expand)
     const units = {
-      // Length
       nm: {base:'m', factor:1e-9}, 'μm':{base:'m',factor:1e-6}, mm:{base:'m',factor:1e-3},
       cm: {base:'m', factor:1e-2}, m:{base:'m',factor:1}, km:{base:'m',factor:1e3},
       in: {base:'m', factor:0.0254}, ft:{base:'m',factor:0.3048}, yd:{base:'m',factor:0.9144}, mi:{base:'m',factor:1609.34},
-      // Mass
       mg: {base:'kg', factor:1e-6}, g:{base:'kg',factor:1e-3}, kg:{base:'kg',factor:1}, t:{base:'kg',factor:1000},
       oz: {base:'kg', factor:0.0283495}, lb:{base:'kg',factor:0.453592}, st:{base:'kg',factor:6.35029},
-      // Time
       ns:{base:'s',factor:1e-9}, 'μs':{base:'s',factor:1e-6}, ms:{base:'s',factor:1e-3},
       s:{base:'s',factor:1}, min:{base:'s',factor:60}, hr:{base:'s',factor:3600}, day:{base:'s',factor:86400},
-      // Electric
       A:{base:'A',factor:1}, V:{base:'V',factor:1}, W:{base:'W',factor:1}, F:{base:'F',factor:1}, 'Ω':{base:'Ω',factor:1}, C:{base:'C',factor:1}
     };
 
-    // SI Breakdown for derived units
     const derivedSI = {
       N: "kg·m/s²",
       J: "kg·m²/s²",
@@ -154,7 +147,6 @@
       H: "kg·m²/s²·A²"
     };
 
-    // Helper: decimal to fraction
     function decimalToFraction(value, maxDenom=10000) {
       let num = value, denom = 1, bestNum = 1, bestDenom = 1, bestError = Math.abs(value-1);
       for (let d=1; d<=maxDenom; d++) {
@@ -168,67 +160,74 @@
       return (bestDenom === 1) ? bestNum.toString() : `${bestNum}/${bestDenom}`;
     }
 
-    let calcStr = '';
-
     function appendCalc(val) {
-      calcStr += val;
-      document.getElementById('display').textContent = calcStr;
+      const box = document.getElementById('input-box');
+      box.value += val;
+      box.focus();
     }
 
     function clearCalc() {
-      calcStr = '';
-      document.getElementById('display').textContent = '0';
+      document.getElementById('input-box').value = '';
       document.getElementById('result-panel').innerHTML = '';
     }
 
     function backspace() {
-      calcStr = calcStr.slice(0, -1);
-      document.getElementById('display').textContent = calcStr || '0';
+      const box = document.getElementById('input-box');
+      box.value = box.value.slice(0, -1);
+      box.focus();
     }
 
-    // Simple parser for demo: only supports one value+unit at a time!
     function calculate() {
       let panel = document.getElementById('result-panel');
       panel.innerHTML = '';
-      let input = calcStr.trim();
+      let input = document.getElementById('input-box').value.trim();
 
-      // Try to split into value + unit
-      let match = input.match(/^([-+]?\\d*\\.?\\d+|[-+]?\\d+)(?:\\s*)([a-zA-ZμΩ]*)$/);
-      if (!match) {
-        // Try with multiply or add for now, otherwise error
-        let parts = input.split(/\\s*([+\\-*\\/]?)\\s*/).filter(Boolean);
-        if (parts.length >= 3) {
-          // Only support value unit op value unit for now (e.g. 0.5 Nm + 0.25 Nm)
-          try {
-            let [val1, unit1, op, val2, unit2] = parts;
-            val1 = parseFloat(val1);
-            val2 = parseFloat(val2);
-            if (unit1 !== unit2) {
-              panel.innerHTML = `<span style='color:red;'>Error: Units must match for basic arithmetic.</span>`;
-              return;
-            }
-            let result;
-            switch(op) {
-              case '+': result = val1 + val2; break;
-              case '-': result = val1 - val2; break;
-              case '*': result = val1 * val2; break;
-              case '/': result = val1 / val2; break;
-            }
-            printOutputs(result, unit1);
-            return;
-          } catch {
-            panel.innerHTML = `<span style='color:red;'>Parsing error. Try a simpler input.</span>`;
-            return;
-          }
-        }
-        panel.innerHTML = `<span style='color:red;'>Could not parse input.<br>Try: 0.5 Nm or 2 m + 3 m</span>`;
+      // Try number only
+      if (/^[+-]?\d*\.?\d+$/.test(input)) {
+        let value = parseFloat(input);
+        printOutputs(value, '');
         return;
       }
 
-      let value = parseFloat(match[1]);
-      let unit = match[2] || '';
+      // Try value + unit
+      let match = input.match(/^([-+]?\\d*\\.?\\d+|[-+]?\\d+)(?:\\s*)([a-zA-ZμΩ]*)$/);
+      if (match) {
+        let value = parseFloat(match[1]);
+        let unit = match[2] || '';
+        printOutputs(value, unit);
+        return;
+      }
 
-      printOutputs(value, unit);
+      // Try with basic arithmetic (e.g. 2 m + 3 m)
+      let parts = input.split(/\s*([\+\-\*\/])\s*/).filter(Boolean);
+      if (parts.length >= 3) {
+        try {
+          let [val1, op, val2] = [parts[0], parts[1], parts[2]];
+          let m1 = val1.match(/^([-+]?\\d*\\.?\\d+|[-+]?\\d+)(?:\\s*)([a-zA-ZμΩ]*)$/);
+          let m2 = val2.match(/^([-+]?\\d*\\.?\\d+|[-+]?\\d+)(?:\\s*)([a-zA-ZμΩ]*)$/);
+          if (!m1 || !m2) throw new Error('bad input');
+          let v1 = parseFloat(m1[1]), u1 = m1[2]||'';
+          let v2 = parseFloat(m2[1]), u2 = m2[2]||'';
+          if (u1 !== u2) {
+            panel.innerHTML = `<span style='color:red;'>Error: Units must match for basic arithmetic.</span>`;
+            return;
+          }
+          let result;
+          switch(op) {
+            case '+': result = v1 + v2; break;
+            case '-': result = v1 - v2; break;
+            case '*': result = v1 * v2; break;
+            case '/': result = v1 / v2; break;
+          }
+          printOutputs(result, u1);
+          return;
+        } catch {
+          panel.innerHTML = `<span style='color:red;'>Parsing error. Try a simpler input.</span>`;
+          return;
+        }
+      }
+
+      panel.innerHTML = `<span style='color:red;'>Could not parse input.<br>Try: 0.5 Nm or 2 m + 3 m</span>`;
     }
 
     function printOutputs(value, unit) {
@@ -241,7 +240,7 @@
       // Fraction
       html += `<div class='output-row'><span class='section-label'>Fraction:</span> ${decimalToFraction(value)} ${unit}</div>`;
 
-      // Downscale/upscale logic for SI prefixes
+      // Downscale/upscale logic for SI prefixes (simple)
       let base = units[unit] ? units[unit].base : unit;
       let scaledValue = value, scaledUnit = unit;
       if (unit && units[unit]) {
