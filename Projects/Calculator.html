@@ -44,8 +44,8 @@
 </head>
 <body>
   <h2>Smart Unit Calculator</h2>
-  <input id="input-box" placeholder="Enter calculation (e.g. 0.5 Nm, 2 m + 3 m)" autocomplete="off"
-    onkeydown="if(event.key==='Enter'){calculate();}">
+<input id="input-box" placeholder="Enter calculation..." autocomplete="off"
+    onkeydown="if(event.key==='Enter'){calculate(); return false;}">
   <div class="calculator">
     <button onclick="appendCalc('1')">1</button>
     <button onclick="appendCalc('2')">2</button>
@@ -170,11 +170,20 @@
       return (bestDenom === 1) ? bestNum.toString() : `${bestNum}/${bestDenom}`;
     }
 
-    function appendCalc(val) {
-      const box = document.getElementById('input-box');
-      box.value += val;
-      box.focus();
-    }
+function appendCalc(val) {
+  const box = document.getElementById('input-box');
+  if (!box) return;
+  const start = box.selectionStart;
+  const end = box.selectionEnd;
+  const text = box.value;
+  // Insert value at caret, or at the end if caret is lost
+  box.value = text.slice(0, start) + val + text.slice(end);
+  // Move caret after inserted value
+  const caretPos = start + val.length;
+  box.setSelectionRange(caretPos, caretPos);
+  box.focus();
+}
+
 
     function clearCalc() {
       document.getElementById('input-box').value = '';
