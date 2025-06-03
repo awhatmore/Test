@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Smart Unit Calculator | Whatmore Industries</title>
   <style>
     body {
@@ -12,9 +12,15 @@
       margin: 0;
       padding: 2rem;
     }
-    h2 {
-      text-align: center;
+    h2 { text-align: center; }
+    #result-panel {
+      background: #222;
+      padding: 1rem;
+      border-radius: 0.9rem;
+      font-size: 1rem;
+      margin-top: 1rem;
     }
+    .section-label { font-weight: bold; color: #0ff; margin-top: 0.5em; }
     #display {
       background: #000;
       padding: 0.5rem 1rem;
@@ -32,89 +38,147 @@
       height: 60px;
       font-size: 1.2em;
     }
-    .wide {
-      grid-column: span 2;
-    }
+    .wide { grid-column: span 2; }
+    .output-row { margin-bottom: 0.3em; }
+    .unit-breakdown { color: #6cf; font-family: 'Consolas', monospace; }
   </style>
 </head>
 <body>
   <h2>Smart Unit Calculator</h2>
-  <div style="background:#222; padding:1rem; border-radius:0.9rem; font-size:1rem;">
-    <div id="display">0</div>
-    <div class="calculator">
-      <button onclick="appendCalc('1')">1</button>
-      <button onclick="appendCalc('2')">2</button>
-      <button onclick="appendCalc('3')">3</button>
-      <button onclick="appendCalc('4')">4</button>
-      <button onclick="appendCalc('5')">5</button>
-      <button onclick="appendCalc('6')">6</button>
-      <button onclick="appendCalc('7')">7</button>
-      <button onclick="appendCalc('8')">8</button>
-      <button onclick="appendCalc('9')">9</button>
-      <button onclick="appendCalc('.')">.</button>
-      <button onclick="appendCalc('0')">0</button>
-      <button onclick="calculate()">=</button>
-      <button class="wide" onclick="backspace()">Backspace</button>
-      <button class="wide" onclick="clearCalc()">Clear</button>
-    </div><br>
-    <div>
-      <button onclick="appendCalc(' + ')">+</button>
-      <button onclick="appendCalc(' - ')">-</button>
-      <button onclick="appendCalc(' * ')">*</button>
-      <button onclick="appendCalc(' / ')">/</button>
-    </div><br>
-    <div>
-      <strong>Length</strong><br>
-      <button onclick="appendCalc(' nm ')">nm</button>
-      <button onclick="appendCalc(' μm ')">μm</button>
-      <button onclick="appendCalc(' mm ')">mm</button>
-      <button onclick="appendCalc(' cm ')">cm</button>
-      <button onclick="appendCalc(' m ')">m</button>
-      <button onclick="appendCalc(' km ')">km</button><br>
-      <button onclick="appendCalc(' in ')">in</button>
-      <button onclick="appendCalc(' ft ')">ft</button>
-      <button onclick="appendCalc(' yd ')">yd</button>
-      <button onclick="appendCalc(' mi ')">mi</button>
-    </div><br>
-    <div>
-      <strong>Mass</strong><br>
-      <button onclick="appendCalc(' mg ')">mg</button>
-      <button onclick="appendCalc(' g ')">g</button>
-      <button onclick="appendCalc(' kg ')">kg</button>
-      <button onclick="appendCalc(' t ')">t</button>
-      <button onclick="appendCalc(' oz ')">oz</button>
-      <button onclick="appendCalc(' lb ')">lb</button>
-      <button onclick="appendCalc(' st ')">st</button>
-    </div><br>
-    <div>
-      <strong>Time</strong><br>
-      <button onclick="appendCalc(' ns ')">ns</button>
-      <button onclick="appendCalc(' μs ')">μs</button>
-      <button onclick="appendCalc(' ms ')">ms</button>
-      <button onclick="appendCalc(' s ')">s</button>
-      <button onclick="appendCalc(' min ')">min</button>
-      <button onclick="appendCalc(' hr ')">hr</button>
-      <button onclick="appendCalc(' day ')">day</button>
-    </div>
+  <div id="display">0</div>
+  <div class="calculator">
+    <button onclick="appendCalc('1')">1</button>
+    <button onclick="appendCalc('2')">2</button>
+    <button onclick="appendCalc('3')">3</button>
+    <button onclick="appendCalc('4')">4</button>
+    <button onclick="appendCalc('5')">5</button>
+    <button onclick="appendCalc('6')">6</button>
+    <button onclick="appendCalc('7')">7</button>
+    <button onclick="appendCalc('8')">8</button>
+    <button onclick="appendCalc('9')">9</button>
+    <button onclick="appendCalc('.')">.</button>
+    <button onclick="appendCalc('0')">0</button>
+    <button onclick="calculate()">=</button>
+    <button class="wide" onclick="backspace()">Backspace</button>
+    <button class="wide" onclick="clearCalc()">Clear</button>
   </div>
+  <div style="margin:1rem 0;">
+    <button onclick="appendCalc(' + ')">+</button>
+    <button onclick="appendCalc(' - ')">-</button>
+    <button onclick="appendCalc(' * ')">*</button>
+    <button onclick="appendCalc(' / ')">/</button>
+  </div>
+  <div>
+    <strong>Length</strong><br>
+    <button onclick="appendCalc(' nm ')">nm</button>
+    <button onclick="appendCalc(' μm ')">μm</button>
+    <button onclick="appendCalc(' mm ')">mm</button>
+    <button onclick="appendCalc(' cm ')">cm</button>
+    <button onclick="appendCalc(' m ')">m</button>
+    <button onclick="appendCalc(' km ')">km</button>
+    <button onclick="appendCalc(' in ')">in</button>
+    <button onclick="appendCalc(' ft ')">ft</button>
+    <button onclick="appendCalc(' yd ')">yd</button>
+    <button onclick="appendCalc(' mi ')">mi</button>
+  </div>
+  <div>
+    <strong>Mass</strong><br>
+    <button onclick="appendCalc(' mg ')">mg</button>
+    <button onclick="appendCalc(' g ')">g</button>
+    <button onclick="appendCalc(' kg ')">kg</button>
+    <button onclick="appendCalc(' t ')">t</button>
+    <button onclick="appendCalc(' oz ')">oz</button>
+    <button onclick="appendCalc(' lb ')">lb</button>
+    <button onclick="appendCalc(' st ')">st</button>
+  </div>
+  <div>
+    <strong>Time</strong><br>
+    <button onclick="appendCalc(' ns ')">ns</button>
+    <button onclick="appendCalc(' μs ')">μs</button>
+    <button onclick="appendCalc(' ms ')">ms</button>
+    <button onclick="appendCalc(' s ')">s</button>
+    <button onclick="appendCalc(' min ')">min</button>
+    <button onclick="appendCalc(' hr ')">hr</button>
+    <button onclick="appendCalc(' day ')">day</button>
+  </div>
+  <div>
+    <strong>Electricity</strong><br>
+    <button onclick="appendCalc(' A ')">A</button>
+    <button onclick="appendCalc(' V ')">V</button>
+    <button onclick="appendCalc(' W ')">W</button>
+    <button onclick="appendCalc(' F ')">F</button>
+    <button onclick="appendCalc(' Ω ')">Ω</button>
+    <button onclick="appendCalc(' C ')">C</button>
+  </div>
+  <div id="result-panel"></div>
+
   <script>
-    const unitFactors = {
-      nm: 1e-9, μm: 1e-6, mm: 1e-3, cm: 1e-2, m: 1, km: 1e3,
-      in: 0.0254, ft: 0.3048, yd: 0.9144, mi: 1609.34,
-      mg: 1e-6, g: 1e-3, kg: 1, t: 1000, oz: 0.0283495, lb: 0.453592, st: 6.35029,
-      ns: 1e-9, μs: 1e-6, ms: 1e-3, s: 1, min: 60, hr: 3600, day: 86400
+    // Basic unit definitions and scale factors for demo
+    const siBase = {
+      kg: {dim: {kg:1}, factor:1}, 
+      m:  {dim: {m:1},  factor:1},
+      s:  {dim: {s:1},  factor:1},
+      A:  {dim: {A:1},  factor:1},
+      K:  {dim: {K:1},  factor:1},
+      mol:{dim:{mol:1}, factor:1},
+      cd: {dim:{cd:1},  factor:1},
     };
+
+    // Derived and scaled units (a few, can expand)
+    const units = {
+      // Length
+      nm: {base:'m', factor:1e-9}, 'μm':{base:'m',factor:1e-6}, mm:{base:'m',factor:1e-3},
+      cm: {base:'m', factor:1e-2}, m:{base:'m',factor:1}, km:{base:'m',factor:1e3},
+      in: {base:'m', factor:0.0254}, ft:{base:'m',factor:0.3048}, yd:{base:'m',factor:0.9144}, mi:{base:'m',factor:1609.34},
+      // Mass
+      mg: {base:'kg', factor:1e-6}, g:{base:'kg',factor:1e-3}, kg:{base:'kg',factor:1}, t:{base:'kg',factor:1000},
+      oz: {base:'kg', factor:0.0283495}, lb:{base:'kg',factor:0.453592}, st:{base:'kg',factor:6.35029},
+      // Time
+      ns:{base:'s',factor:1e-9}, 'μs':{base:'s',factor:1e-6}, ms:{base:'s',factor:1e-3},
+      s:{base:'s',factor:1}, min:{base:'s',factor:60}, hr:{base:'s',factor:3600}, day:{base:'s',factor:86400},
+      // Electric
+      A:{base:'A',factor:1}, V:{base:'V',factor:1}, W:{base:'W',factor:1}, F:{base:'F',factor:1}, 'Ω':{base:'Ω',factor:1}, C:{base:'C',factor:1}
+    };
+
+    // SI Breakdown for derived units
+    const derivedSI = {
+      N: "kg·m/s²",
+      J: "kg·m²/s²",
+      W: "kg·m²/s³",
+      Pa: "kg/m·s²",
+      V: "kg·m²/s³·A⁻¹",
+      C: "A·s",
+      F: "s⁴·A²/kg·m²",
+      Ω: "kg·m²/s³·A²",
+      S: "s³·A²/kg·m²",
+      H: "kg·m²/s²·A²"
+    };
+
+    // Helper: decimal to fraction
+    function decimalToFraction(value, maxDenom=10000) {
+      let num = value, denom = 1, bestNum = 1, bestDenom = 1, bestError = Math.abs(value-1);
+      for (let d=1; d<=maxDenom; d++) {
+        let n = Math.round(value*d);
+        let error = Math.abs(value - n/d);
+        if (error < bestError) {
+          bestNum = n; bestDenom = d; bestError = error;
+        }
+        if (bestError < 1e-8) break;
+      }
+      return (bestDenom === 1) ? bestNum.toString() : `${bestNum}/${bestDenom}`;
+    }
 
     let calcStr = '';
 
-    function appendCalc(value) {
-      calcStr += value;
+    function appendCalc(val) {
+      calcStr += val;
       document.getElementById('display').textContent = calcStr;
     }
 
     function clearCalc() {
       calcStr = '';
       document.getElementById('display').textContent = '0';
+      document.getElementById('result-panel').innerHTML = '';
     }
 
     function backspace() {
@@ -122,22 +186,88 @@
       document.getElementById('display').textContent = calcStr || '0';
     }
 
+    // Simple parser for demo: only supports one value+unit at a time!
     function calculate() {
-      try {
-        const parsed = calcStr.replace(/([0-9.]+)\s*([a-zμ]+)/gi, (match, val, unit) => {
-          if (unitFactors[unit]) {
-            return `(${parseFloat(val) * unitFactors[unit]})`;
-          } else {
-            throw new Error(`Unknown unit: ${unit}`);
+      let panel = document.getElementById('result-panel');
+      panel.innerHTML = '';
+      let input = calcStr.trim();
+
+      // Try to split into value + unit
+      let match = input.match(/^([-+]?\\d*\\.?\\d+|[-+]?\\d+)(?:\\s*)([a-zA-ZμΩ]*)$/);
+      if (!match) {
+        // Try with multiply or add for now, otherwise error
+        let parts = input.split(/\\s*([+\\-*\\/]?)\\s*/).filter(Boolean);
+        if (parts.length >= 3) {
+          // Only support value unit op value unit for now (e.g. 0.5 Nm + 0.25 Nm)
+          try {
+            let [val1, unit1, op, val2, unit2] = parts;
+            val1 = parseFloat(val1);
+            val2 = parseFloat(val2);
+            if (unit1 !== unit2) {
+              panel.innerHTML = `<span style='color:red;'>Error: Units must match for basic arithmetic.</span>`;
+              return;
+            }
+            let result;
+            switch(op) {
+              case '+': result = val1 + val2; break;
+              case '-': result = val1 - val2; break;
+              case '*': result = val1 * val2; break;
+              case '/': result = val1 / val2; break;
+            }
+            printOutputs(result, unit1);
+            return;
+          } catch {
+            panel.innerHTML = `<span style='color:red;'>Parsing error. Try a simpler input.</span>`;
+            return;
           }
-        });
-        const result = eval(parsed);
-        document.getElementById('display').textContent = result + ' (SI)';
-        calcStr = result.toString();
-      } catch (e) {
-        document.getElementById('display').textContent = 'Error';
-        calcStr = '';
+        }
+        panel.innerHTML = `<span style='color:red;'>Could not parse input.<br>Try: 0.5 Nm or 2 m + 3 m</span>`;
+        return;
       }
+
+      let value = parseFloat(match[1]);
+      let unit = match[2] || '';
+
+      printOutputs(value, unit);
+    }
+
+    function printOutputs(value, unit) {
+      let panel = document.getElementById('result-panel');
+      let html = '';
+
+      // Decimal
+      html += `<div class='output-row'><span class='section-label'>Decimal:</span> ${value} ${unit}</div>`;
+
+      // Fraction
+      html += `<div class='output-row'><span class='section-label'>Fraction:</span> ${decimalToFraction(value)} ${unit}</div>`;
+
+      // Downscale/upscale logic for SI prefixes
+      let base = units[unit] ? units[unit].base : unit;
+      let scaledValue = value, scaledUnit = unit;
+      if (unit && units[unit]) {
+        if (Math.abs(value) >= 1000 && units[base+'m']) {
+          scaledValue = value * units[unit].factor / units[base+'m'].factor;
+          scaledUnit = base + 'm';
+        } else if (Math.abs(value) < 1 && units['m'+unit]) {
+          scaledValue = value * units[unit].factor / units['m'+unit].factor;
+          scaledUnit = 'm' + unit;
+        }
+        if (scaledUnit !== unit) {
+          html += `<div class='output-row'><span class='section-label'>Scaled:</span> ${scaledValue} ${scaledUnit}</div>`;
+        }
+      }
+
+      // SI breakdown
+      let siString = '';
+      if (derivedSI[unit]) {
+        siString = derivedSI[unit];
+      } else if (base && derivedSI[base]) {
+        siString = derivedSI[base];
+      }
+      if (siString) {
+        html += `<div class='output-row'><span class='section-label'>SI breakdown:</span> <span class='unit-breakdown'>${value} ${siString}</span></div>`;
+      }
+      panel.innerHTML = html;
     }
   </script>
 </body>
