@@ -178,57 +178,86 @@
     }
 
     function calculate() {
-      let panel = document.getElementById('result-panel');
-      panel.innerHTML = '';
-      let input = document.getElementById('input-box').value.trim();
+  let panel = document.getElementById('result-panel');
+  panel.innerHTML = '';
+  let input = document.getElementById('input-box').value.trim();
 
-      // Try number only
-      if (/^[+-]?\d*\.?\d+$/.test(input)) {
-        let value = parseFloat(input);
-        printOutputs(value, '');
-        return;
-      }
+  // Try number only
+  if (/^[+-]?\d*\.?\d+$/.test(input)) {
+    let value = parseFloat(input);
+    printOutputs(value, '');
+    return;
+  }
 
-      // Try value + unit
-      let match = input.match(/^([-+]?\\d*\\.?\\d+|[-+]?\\d+)(?:\\s*)([a-zA-ZμΩ]*)$/);
-      if (match) {
-        let value = parseFloat(match[1]);
-        let unit = match[2] || '';
-        printOutputs(value, unit);
-        return;
-      }
+  // Try value + unit
+  let match = input.match(/^([-+]?\d*\.?\d+|[-+]?\d+)\s*([a-zA-ZμΩ]*)$/);
+  if (match) {
+    let value = parseFloat(match[1]);
+    let unit = match[2] || '';
+    printOutputs(value, unit);
+    return;
+  }
 
-      // Try with basic arithmetic (e.g. 2 m + 3 m)
-      let parts = input.split(/\s*([\+\-\*\/])\s*/).filter(Boolean);
-      if (parts.length >= 3) {
-        try {
-          let [val1, op, val2] = [parts[0], parts[1], parts[2]];
-          let m1 = val1.match(/^([-+]?\\d*\\.?\\d+|[-+]?\\d+)(?:\\s*)([a-zA-ZμΩ]*)$/);
-          let m2 = val2.match(/^([-+]?\\d*\\.?\\d+|[-+]?\\d+)(?:\\s*)([a-zA-ZμΩ]*)$/);
-          if (!m1 || !m2) throw new Error('bad input');
-          let v1 = parseFloat(m1[1]), u1 = m1[2]||'';
-          let v2 = parseFloat(m2[1]), u2 = m2[2]||'';
-          if (u1 !== u2) {
-            panel.innerHTML = `<span style='color:red;'>Error: Units must match for basic arithmetic.</span>`;
-            return;
-          }
-          let result;
-          switch(op) {
-            case '+': result = v1 + v2; break;
-            case '-': result = v1 - v2; break;
-            case '*': result = v1 * v2; break;
-            case '/': result = v1 / v2; break;
-          }
-          printOutputs(result, u1);
-          return;
-        } catch {
-          panel.innerHTML = `<span style='color:red;'>Parsing error. Try a simpler input.</span>`;
-          return;
+  // Try with basic arithmetic (now supporting mixed unit/number)
+  let parts = input.split(/\s*([\+\-\*\/])\s*/).filter(Boolean);
+  if (parts.length === 3) {
+    try {
+      let [a, op, b] = [parts[0], parts[1], parts[2]];
+      // Parse left operand
+      let mA = a.match(/^([-+]?\d*\.?\d+|[-+]?\d+)\s*([a-zA-ZμΩ]*)$/);
+      // Parse right operand
+      let mB = b.match(/^([-+]?\d*\.?\d+|[-+]?\d+)\s*([a-zA-ZμΩ]*)$/);
+
+      let vA = mA ? parseFloat(mA[1]) : NaN, uA = mA ? mA[2] : '';
+      let vB = mB ? parseFloat(mB[1]) : NaN, uB = mB ? mB[2] : '';
+
+      let result, unitResult = '';
+
+      // Both numbers, possibly one with unit
+      if (uA && !uB) {
+        switch(op) {
+          case '+': result = vA + vB; unitResult = uA; break;
+          case '-': result = vA - vB; unitResult = uA; break;
+          case '*': result = vA * vB; unitResult = uA; break;
+          case '/': result = vA / vB; unitResult = uA; break;
         }
+      } else if (!uA && uB) {
+        switch(op) {
+          case '+': result = vA + vB; unitResult = uB; break;
+          case '-': result = vA - vB; unitResult = uB; break;
+          case '*': result = vA * vB; unitResult = uB; break;
+          case '/': result = vA / vB; unitResult = uB; break;
+        }
+      } else if (!uA && !uB) {
+        switch(op) {
+          case '+': result = vA + vB; break;
+          case '-': result = vA - vB; break;
+          case '*': result = vA * vB; break;
+          case '/': result = vA / vB; break;
+        }
+        unitResult = '';
+      } else if (uA === uB) {
+        switch(op) {
+          case '+': result = vA + vB; unitResult = uA; break;
+          case '-': result = vA - vB; unitResult = uA; break;
+          case '*': result = vA * vB; unitResult = uA; break;
+          case '/': result = vA / vB; unitResult = uA; break;
+        }
+      } else {
+        panel.innerHTML = `<span style='color:red;'>Error: Units must match or only one operand may have a unit.</span>`;
+        return;
       }
-
-      panel.innerHTML = `<span style='color:red;'>Could not parse input.<br>Try: 0.5 Nm or 2 m + 3 m</span>`;
+      printOutputs(result, unitResult);
+      return;
+    } catch {
+      panel.innerHTML = `<span style='color:red;'>Parsing error. Try a simpler input.</span>`;
+      return;
     }
+  }
+
+  panel.innerHTML = `<span style='color:red;'>Could not parse input.<br>Try: 0.5 Nm or 2 m + 3 m</span>`;
+}
+
 
     function printOutputs(value, unit) {
       let panel = document.getElementById('result-panel');
