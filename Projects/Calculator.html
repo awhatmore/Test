@@ -182,22 +182,13 @@
   panel.innerHTML = '';
   let input = document.getElementById('input-box').value.trim();
 
-  // Split input on + or - (keep operator for each segment)
+  // Split into segments by + or -
+  let regex = /([+\-]?\s*[\d.]+(?:\s*[a-zA-ZμΩ]*)?(?:\s*[*/]\s*[\d.]+(?:\s*[a-zA-ZμΩ]*)?)?)/g;
   let segments = [];
-  let regex = /([-+]?\s*[\d.]+(?:\s*[a-zA-ZμΩ]*)?\s*(?:[*/]\s*[\d.]+(?:\s*[a-zA-ZμΩ]*)?)?)/g;
-  let ops = [], match;
-  let opRegex = /([+\-])/g;
-  let idx = 0, lastIdx = 0;
-
-  // Find all segments and ops
+  let match;
   while ((match = regex.exec(input)) !== null) {
-    segments.push(match[0].trim());
-    idx = regex.lastIndex;
-    if (idx < input.length) {
-      let nextOp = input[idx];
-      if (nextOp === '+' || nextOp === '-') ops.push(nextOp);
-      idx++;
-    }
+    let seg = match[0].trim();
+    if (seg) segments.push(seg);
   }
 
   if (segments.length === 0) {
@@ -208,7 +199,6 @@
   // Parse and compute each segment
   let results = [];
   for (let seg of segments) {
-    seg = seg.trim();
     // Handle multiplication/division in segment
     if (seg.includes('*') || seg.includes('/')) {
       let multParts = seg.split(/([*/])/);
@@ -219,7 +209,7 @@
         if (part === '*' || part === '/') {
           lastOp = part;
         } else if (part.length) {
-          let m = part.match(/^([-+]?\d*\.?\d+|[-+]?\d+)\s*([a-zA-ZμΩ]*)$/);
+          let m = part.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)\s*([a-zA-ZμΩ]*)$/);
           if (!m) {
             panel.innerHTML = `<span style='color:red;'>Parse error in: ${part}</span>`;
             return;
@@ -243,7 +233,7 @@
       results.push({value: val, unit: unit});
     } else {
       // Single number or number + unit
-      let m = seg.match(/^([-+]?\d*\.?\d+|[-+]?\d+)\s*([a-zA-ZμΩ]*)$/);
+      let m = seg.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)\s*([a-zA-ZμΩ]*)$/);
       if (!m) {
         panel.innerHTML = `<span style='color:red;'>Parse error in: ${seg}</span>`;
         return;
@@ -254,12 +244,10 @@
 
   // Combine results: sum like units, print sum for mixed units
   let combined = {};
-  for (let i = 0; i < results.length; i++) {
-    let {value, unit} = results[i];
-    let sign = (i === 0 || !ops[i-1] || ops[i-1] === '+') ? 1 : -1;
+  for (let {value, unit} of results) {
     let key = unit;
     if (!combined[key]) combined[key] = 0;
-    combined[key] += sign * value;
+    combined[key] += value;
   }
 
   // Build output string
@@ -288,6 +276,7 @@
     <div class='output-row'><span class='section-label'>Fraction:</span> ${fracTerms}</div>
   `;
 }
+
 
 
 
