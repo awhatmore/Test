@@ -251,17 +251,26 @@
   }
 
   // Re-join for output
-  let outStr = evaluatedTerms.join(' + ').replace(/\+\s+\-/g, '- ');
+  let outStr = evaluatedTerms
+  .map((term, i) => {
+    // Clean up whitespace and signs
+    term = term.trim();
+    if (i === 0) return term;
+    if (term.startsWith('-')) return ' - ' + term.slice(1).trim();
+    return ' + ' + term.replace(/^\+/, '').trim();
+  })
+  .join('');
 
   // Fractional display: only for numeric/unit terms for now
-  let fracTerms = evaluatedTerms.map(t => {
-    let m = t.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)\s*([a-zA-ZμΩ]*)$/);
-    if (m) {
-      return decimalToFraction(parseFloat(m[1])) + (m[2] ? ' ' + m[2] : '');
-    } else {
-      return t;
-    }
-  }).join(' + ').replace(/\+\s+\-/g, '- ');
+  let fracTerms = evaluatedTerms.map((t, i) => {
+  let m = t.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)\s*([a-zA-ZμΩ]*)$/);
+  let frac = m ? decimalToFraction(parseFloat(m[1])) + (m[2] ? ' ' + m[2] : '') : t;
+  frac = frac.trim();
+  if (i === 0) return frac;
+  if (frac.startsWith('-')) return ' - ' + frac.slice(1).trim();
+  return ' + ' + frac.replace(/^\+/, '').trim();
+}).join('');
+
 
   // Output
   panel.innerHTML = `
