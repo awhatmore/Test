@@ -44,7 +44,7 @@
 </head>
 <body>
   <h2>Smart Unit Calculator</h2>
-<input id="input-box" placeholder="Enter calculation..." autocomplete="off"
+  <input id="input-box" placeholder="Enter calculation..." autocomplete="off"
     onkeydown="if(event.key==='Enter'){calculate(); return false;}">
   <div class="calculator">
     <button onclick="appendCalc('1')">1</button>
@@ -63,14 +63,16 @@
     <button class="wide" onclick="clearCalc()">Clear</button>
   </div>
   <div class="calculator" style="margin-bottom: 8px;">
-  <button onclick="appendCalc('x')">x</button>
-  <button onclick="appendCalc('y')">y</button>
-  <button onclick="appendCalc('z')">z</button>
-  <button onclick="appendCalc('a')">a</button>
-  <button onclick="appendCalc('b')">b</button>
-  <button onclick="appendCalc('c')">c</button>
-  <button onclick="appendCalc('^')">^</button>
-</div>
+    <button onclick="appendCalc('x')">x</button>
+    <button onclick="appendCalc('y')">y</button>
+    <button onclick="appendCalc('z')">z</button>
+    <button onclick="appendCalc('a')">a</button>
+    <button onclick="appendCalc('b')">b</button>
+    <button onclick="appendCalc('c')">c</button>
+    <button onclick="appendCalc('^')">^</button>
+    <button onclick="appendCalc('(')">(</button>
+    <button onclick="appendCalc(')')">)</button>
+  </div>
 
   <div style="margin:1rem 0;">
     <button onclick="appendCalc(' + ')">+</button>
@@ -123,6 +125,22 @@
   <div id="result-panel"></div>
 
   <script>
+    // Insert value at cursor/caret position in input
+    function appendCalc(val) {
+      const box = document.getElementById('input-box');
+      if (!box) return;
+      // If input is not focused, focus it
+      if (document.activeElement !== box) box.focus();
+      // Support caret insert (works on desktop & mobile)
+      const start = box.selectionStart ?? box.value.length;
+      const end = box.selectionEnd ?? box.value.length;
+      const text = box.value;
+      box.value = text.slice(0, start) + val + text.slice(end);
+      const caretPos = start + val.length;
+      box.setSelectionRange(caretPos, caretPos);
+      box.focus();
+    }
+
     const siBase = {
       kg: {dim: {kg:1}, factor:1}, 
       m:  {dim: {m:1},  factor:1},
@@ -170,21 +188,6 @@
       return (bestDenom === 1) ? bestNum.toString() : `${bestNum}/${bestDenom}`;
     }
 
-function appendCalc(val) {
-  const box = document.getElementById('input-box');
-  if (!box) return;
-  const start = box.selectionStart;
-  const end = box.selectionEnd;
-  const text = box.value;
-  // Insert value at caret, or at the end if caret is lost
-  box.value = text.slice(0, start) + val + text.slice(end);
-  // Move caret after inserted value
-  const caretPos = start + val.length;
-  box.setSelectionRange(caretPos, caretPos);
-  box.focus();
-}
-
-
     function clearCalc() {
       document.getElementById('input-box').value = '';
       document.getElementById('result-panel').innerHTML = '';
@@ -192,156 +195,119 @@ function appendCalc(val) {
 
     function backspace() {
       const box = document.getElementById('input-box');
-      box.value = box.value.slice(0, -1);
+      // Remove character before caret
+      const start = box.selectionStart ?? box.value.length;
+      const end = box.selectionEnd ?? box.value.length;
+      if (start === end && start > 0) {
+        box.value = box.value.slice(0, start-1) + box.value.slice(end);
+        box.setSelectionRange(start-1, start-1);
+      } else if (start !== end) {
+        box.value = box.value.slice(0, start) + box.value.slice(end);
+        box.setSelectionRange(start, start);
+      }
       box.focus();
     }
 
- function calculate() {
-  let panel = document.getElementById('result-panel');
-  panel.innerHTML = '';
-  let input = document.getElementById('input-box').value.trim();
-
-  // Split on + and - operators, preserve sign with each term
-  let termRegex = /([+\-]?[^+\-]+)/g;
-  let terms = [];
-  let match;
-  while ((match = termRegex.exec(input)) !== null) {
-    let seg = match[0].trim();
-    if (seg) terms.push(seg);
-  }
-
-  if (terms.length === 0) {
-    panel.innerHTML = `<span style='color:red;'>Could not parse input.<br>Try: 0.5 Nm or 2 m + 3 m</span>`;
-    return;
-  }
-
-  // Try to evaluate numeric/unit terms, echo others
-  let evaluatedTerms = [];
-  for (let seg of terms) {
-    // Handle multiplication/division within a segment
-    if (seg.match(/[*\/]/)) {
-      let multParts = seg.split(/([*/])/);
-      let val = null, unit = '', symbolic = false, symbolSegs = [];
-      let lastOp = '*';
-      for (let i = 0; i < multParts.length; i++) {
-        let part = multParts[i].trim();
-        if (part === '*' || part === '/') {
-          lastOp = part;
-        } else if (part.length) {
-          let m = part.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)\s*([a-zA-ZμΩ]*)$/);
-          if (!m) {
-            // Not a plain number/unit; treat as symbolic (e.g. x, y, 3x, etc)
-            symbolic = true;
-            symbolSegs.push(part);
-            continue;
-          }
-          let v = parseFloat(m[1]);
-          let u = m[2] || '';
-          if (val === null) {
-            val = v;
-            unit = u;
-          } else {
-            if (lastOp === '*') {
-              val *= v;
-            } else {
-              val /= v;
-            }
-            if (!unit) unit = u;
-          }
-        }
-      }
-      if (symbolic || symbolSegs.length) {
-        evaluatedTerms.push(seg);
-      } else {
-        evaluatedTerms.push((val !== null ? val : '') + (unit ? ' ' + unit : ''));
-      }
-    } else {
-      // Single value/unit or variable
-let m = seg.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)?\s*([a-zA-ZμΩ][a-zA-Z0-9]*(\^\d+)?)?$/);
-if (m && (m[1] || m[2])) {
-  let v = m[1] ? parseFloat(m[1]) : '';
-  let u = m[2] || '';
-  evaluatedTerms.push((v !== '' ? v : '') + (u ? ' ' + u : ''));
-} else {
-  evaluatedTerms.push(seg);
-}
-
-      }
-    }
-  }
-
-  // Re-join for output
-  let outStr = evaluatedTerms
-  .map((term, i) => {
-    // Clean up whitespace and signs
-    term = term.trim();
-    if (i === 0) return term;
-    if (term.startsWith('-')) return ' - ' + term.slice(1).trim();
-    return ' + ' + term.replace(/^\+/, '').trim();
-  })
-  .join('');
-
-  // Fractional display: only for numeric/unit terms for now
-let fracTerms = evaluatedTerms.map((t, i) => {
-  let m = t.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)?\s*([a-zA-ZμΩ][a-zA-Z0-9]*(\^\d+)?)?$/);
-  let frac = (m && m[1]) ? decimalToFraction(parseFloat(m[1])) + (m[2] ? ' ' + m[2] : '') : t;
-  frac = frac.trim();
-  if (i === 0) return frac;
-  if (frac.startsWith('-')) return ' - ' + frac.slice(1).trim();
-  return ' + ' + frac.replace(/^\+/, '').trim();
-}).join('');
-
-
-
-  // Output
-  panel.innerHTML = `
-    <div class='output-row'><span class='section-label'>Decimal:</span> ${outStr}</div>
-    <div class='output-row'><span class='section-label'>Fraction:</span> ${fracTerms}</div>
-  `;
-}
-
-
-
-
-
-    function printOutputs(value, unit) {
+    function calculate() {
       let panel = document.getElementById('result-panel');
-      let html = '';
+      panel.innerHTML = '';
+      let input = document.getElementById('input-box').value.trim();
 
-      // Decimal
-      html += `<div class='output-row'><span class='section-label'>Decimal:</span> ${value} ${unit}</div>`;
+      // Split on + and - operators, preserve sign with each term
+      let termRegex = /([+\-]?[^+\-]+)/g;
+      let terms = [];
+      let match;
+      while ((match = termRegex.exec(input)) !== null) {
+        let seg = match[0].trim();
+        if (seg) terms.push(seg);
+      }
 
-      // Fraction
-      html += `<div class='output-row'><span class='section-label'>Fraction:</span> ${decimalToFraction(value)} ${unit}</div>`;
+      if (terms.length === 0) {
+        panel.innerHTML = `<span style='color:red;'>Could not parse input.<br>Try: 0.5 Nm or 2 m + 3 m</span>`;
+        return;
+      }
 
-      // Downscale/upscale logic for SI prefixes (simple)
-      let base = units[unit] ? units[unit].base : unit;
-      let scaledValue = value, scaledUnit = unit;
-      if (unit && units[unit]) {
-        if (Math.abs(value) >= 1000 && units[base+'m']) {
-          scaledValue = value * units[unit].factor / units[base+'m'].factor;
-          scaledUnit = base + 'm';
-        } else if (Math.abs(value) < 1 && units['m'+unit]) {
-          scaledValue = value * units[unit].factor / units['m'+unit].factor;
-          scaledUnit = 'm' + unit;
+      // Try to evaluate numeric/unit terms, echo others
+      let evaluatedTerms = [];
+      for (let seg of terms) {
+        // Handle multiplication/division within a segment
+        if (seg.match(/[*\/]/)) {
+          let multParts = seg.split(/([*/])/);
+          let val = null, unit = '', symbolic = false, symbolSegs = [];
+          let lastOp = '*';
+          for (let i = 0; i < multParts.length; i++) {
+            let part = multParts[i].trim();
+            if (part === '*' || part === '/') {
+              lastOp = part;
+            } else if (part.length) {
+              let m = part.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)\s*([a-zA-ZμΩ]*)$/);
+              if (!m) {
+                // Not a plain number/unit; treat as symbolic (e.g. x, y, 3x, etc)
+                symbolic = true;
+                symbolSegs.push(part);
+                continue;
+              }
+              let v = parseFloat(m[1]);
+              let u = m[2] || '';
+              if (val === null) {
+                val = v;
+                unit = u;
+              } else {
+                if (lastOp === '*') {
+                  val *= v;
+                } else {
+                  val /= v;
+                }
+                if (!unit) unit = u;
+              }
+            }
+          }
+          if (symbolic || symbolSegs.length) {
+            evaluatedTerms.push(seg);
+          } else {
+            evaluatedTerms.push((val !== null ? val : '') + (unit ? ' ' + unit : ''));
+          }
+        } else {
+          // Single value/unit or variable
+          let m = seg.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)?\s*([a-zA-ZμΩ][a-zA-Z0-9]*(\^\d+)?)?$/);
+          if (m && (m[1] || m[2])) {
+            let v = m[1] ? parseFloat(m[1]) : '';
+            let u = m[2] || '';
+            evaluatedTerms.push((v !== '' ? v : '') + (u ? ' ' + u : ''));
+          } else {
+            evaluatedTerms.push(seg);
+          }
         }
-        if (scaledUnit !== unit) {
-          html += `<div class='output-row'><span class='section-label'>Scaled:</span> ${scaledValue} ${scaledUnit}</div>`;
-        }
       }
 
-      // SI breakdown
-      let siString = '';
-      if (derivedSI[unit]) {
-        siString = derivedSI[unit];
-      } else if (base && derivedSI[base]) {
-        siString = derivedSI[base];
-      }
-      if (siString) {
-        html += `<div class='output-row'><span class='section-label'>SI breakdown:</span> <span class='unit-breakdown'>${value} ${siString}</span></div>`;
-      }
-      panel.innerHTML = html;
+      // Re-join for output
+      let outStr = evaluatedTerms
+        .map((term, i) => {
+          term = term.trim();
+          if (i === 0) return term;
+          if (term.startsWith('-')) return ' - ' + term.slice(1).trim();
+          return ' + ' + term.replace(/^\+/, '').trim();
+        })
+        .join('');
+
+      // Fractional display: only for numeric/unit terms for now
+      let fracTerms = evaluatedTerms.map((t, i) => {
+        let m = t.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)?\s*([a-zA-ZμΩ][a-zA-Z0-9]*(\^\d+)?)?$/);
+        let frac = (m && m[1]) ? decimalToFraction(parseFloat(m[1])) + (m[2] ? ' ' + m[2] : '') : t;
+        frac = frac.trim();
+        if (i === 0) return frac;
+        if (frac.startsWith('-')) return ' - ' + frac.slice(1).trim();
+        return ' + ' + frac.replace(/^\+/, '').trim();
+      }).join('');
+
+      // Output
+      panel.innerHTML = `
+        <div class='output-row'><span class='section-label'>Decimal:</span> ${outStr}</div>
+        <div class='output-row'><span class='section-label'>Fraction:</span> ${fracTerms}</div>
+      `;
     }
+
+    // (printOutputs unused)
   </script>
 </body>
 </html>
