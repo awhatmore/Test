@@ -182,27 +182,27 @@
   panel.innerHTML = '';
   let input = document.getElementById('input-box').value.trim();
 
-  // Split into segments by + or -
-  let regex = /([+\-]?\s*[\d.]+(?:\s*[a-zA-ZμΩ]*)?(?:\s*[*/]\s*[\d.]+(?:\s*[a-zA-ZμΩ]*)?)?)/g;
-  let segments = [];
+  // Split on + and - operators, preserve sign with each term
+  let termRegex = /([+\-]?[^+\-]+)/g;
+  let terms = [];
   let match;
-  while ((match = regex.exec(input)) !== null) {
+  while ((match = termRegex.exec(input)) !== null) {
     let seg = match[0].trim();
-    if (seg) segments.push(seg);
+    if (seg) terms.push(seg);
   }
 
-  if (segments.length === 0) {
+  if (terms.length === 0) {
     panel.innerHTML = `<span style='color:red;'>Could not parse input.<br>Try: 0.5 Nm or 2 m + 3 m</span>`;
     return;
   }
 
-  // Parse and compute each segment
-  let results = [];
-  for (let seg of segments) {
-    // Handle multiplication/division in segment
-    if (seg.includes('*') || seg.includes('/')) {
+  // Try to evaluate numeric/unit terms, echo others
+  let evaluatedTerms = [];
+  for (let seg of terms) {
+    // Handle multiplication/division within a segment
+    if (seg.match(/[*\/]/)) {
       let multParts = seg.split(/([*/])/);
-      let val = null, unit = '';
+      let val = null, unit = '', symbolic = false, symbolSegs = [];
       let lastOp = '*';
       for (let i = 0; i < multParts.length; i++) {
         let part = multParts[i].trim();
@@ -211,8 +211,10 @@
         } else if (part.length) {
           let m = part.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)\s*([a-zA-ZμΩ]*)$/);
           if (!m) {
-            panel.innerHTML = `<span style='color:red;'>Parse error in: ${part}</span>`;
-            return;
+            // Not a plain number/unit; treat as symbolic (e.g. x, y, 3x, etc)
+            symbolic = true;
+            symbolSegs.push(part);
+            continue;
           }
           let v = parseFloat(m[1]);
           let u = m[2] || '';
@@ -225,50 +227,41 @@
             } else {
               val /= v;
             }
-            // Prefer to keep the unit if only one operand has a unit
             if (!unit) unit = u;
           }
         }
       }
-      results.push({value: val, unit: unit});
-    } else {
-      // Single number or number + unit
-      let m = seg.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)\s*([a-zA-ZμΩ]*)$/);
-      if (!m) {
-        panel.innerHTML = `<span style='color:red;'>Parse error in: ${seg}</span>`;
-        return;
+      if (symbolic || symbolSegs.length) {
+        evaluatedTerms.push(seg);
+      } else {
+        evaluatedTerms.push((val !== null ? val : '') + (unit ? ' ' + unit : ''));
       }
-      results.push({value: parseFloat(m[1]), unit: m[2] || ''});
+    } else {
+      // Single value/unit or variable
+      let m = seg.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)\s*([a-zA-ZμΩ]*)$/);
+      if (m) {
+        let v = parseFloat(m[1]);
+        let u = m[2] || '';
+        evaluatedTerms.push((v !== null ? v : '') + (u ? ' ' + u : ''));
+      } else {
+        // Symbolic, variable, or unknown term (e.g. x, 3x, x^2, etc)
+        evaluatedTerms.push(seg);
+      }
     }
   }
 
-  // Combine results: sum like units, print sum for mixed units
-  let combined = {};
-  for (let {value, unit} of results) {
-    let key = unit;
-    if (!combined[key]) combined[key] = 0;
-    combined[key] += value;
-  }
+  // Re-join for output
+  let outStr = evaluatedTerms.join(' + ').replace(/\+\s+\-/g, '- ');
 
-  // Build output string
-  let terms = [];
-  for (let [unit, value] of Object.entries(combined)) {
-    if (Math.abs(value) < 1e-10) continue;
-    let valStr = value.toString().replace(/\.0+$/, '');
-    terms.push(`${valStr}${unit ? ' ' + unit : ''}`);
-  }
-
-  if (terms.length === 0) {
-    panel.innerHTML = `<span style='color:red;'>Result is zero.</span>`;
-    return;
-  }
-
-  let outStr = terms.join(' + ');
-  // For fraction output (simple, not per-term yet)
-  let fracTerms = Object.entries(combined)
-    .filter(([_,v]) => Math.abs(v) > 1e-10)
-    .map(([unit, value]) => `${decimalToFraction(value)}${unit ? ' ' + unit : ''}`)
-    .join(' + ');
+  // Fractional display: only for numeric/unit terms for now
+  let fracTerms = evaluatedTerms.map(t => {
+    let m = t.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)\s*([a-zA-ZμΩ]*)$/);
+    if (m) {
+      return decimalToFraction(parseFloat(m[1])) + (m[2] ? ' ' + m[2] : '');
+    } else {
+      return t;
+    }
+  }).join(' + ').replace(/\+\s+\-/g, '- ');
 
   // Output
   panel.innerHTML = `
@@ -276,6 +269,7 @@
     <div class='output-row'><span class='section-label'>Fraction:</span> ${fracTerms}</div>
   `;
 }
+
 
 
 
