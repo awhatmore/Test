@@ -209,103 +209,112 @@
     }
 
     function calculate() {
-      let panel = document.getElementById('result-panel');
-      panel.innerHTML = '';
-      let input = document.getElementById('input-box').value.trim();
+  let panel = document.getElementById('result-panel');
+  panel.innerHTML = '';
+  let input = document.getElementById('input-box').value.trim();
 
-      // Split on + and - operators, preserve sign with each term
-      let termRegex = /([+\-]?[^+\-]+)/g;
-      let terms = [];
-      let match;
-      while ((match = termRegex.exec(input)) !== null) {
-        let seg = match[0].trim();
-        if (seg) terms.push(seg);
-      }
+  // Split on + and - operators, preserve sign with each term
+  let termRegex = /([+\-]?[^+\-]+)/g;
+  let terms = [];
+  let match;
+  while ((match = termRegex.exec(input)) !== null) {
+    let seg = match[0].trim();
+    if (seg) terms.push(seg);
+  }
 
-      if (terms.length === 0) {
-        panel.innerHTML = `<span style='color:red;'>Could not parse input.<br>Try: 0.5 Nm or 2 m + 3 m</span>`;
-        return;
-      }
+  if (terms.length === 0) {
+    panel.innerHTML = `<span style='color:red;'>Could not parse input.<br>Try: 0.5 Nm or 2 m + 3 m</span>`;
+    return;
+  }
 
-      // Try to evaluate numeric/unit terms, echo others
-      let evaluatedTerms = [];
-      for (let seg of terms) {
-        // Handle multiplication/division within a segment
-        if (seg.match(/[*\/]/)) {
-          let multParts = seg.split(/([*/])/);
-          let val = null, unit = '', symbolic = false, symbolSegs = [];
-          let lastOp = '*';
-          for (let i = 0; i < multParts.length; i++) {
-            let part = multParts[i].trim();
-            if (part === '*' || part === '/') {
-              lastOp = part;
-            } else if (part.length) {
-              let m = part.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)\s*([a-zA-ZμΩ]*)$/);
-              if (!m) {
-                // Not a plain number/unit; treat as symbolic (e.g. x, y, 3x, etc)
-                symbolic = true;
-                symbolSegs.push(part);
-                continue;
-              }
-              let v = parseFloat(m[1]);
-              let u = m[2] || '';
-              if (val === null) {
-                val = v;
-                unit = u;
-              } else {
-                if (lastOp === '*') {
-                  val *= v;
-                } else {
-                  val /= v;
-                }
-                if (!unit) unit = u;
-              }
-            }
+  // Try to evaluate numeric/unit terms, echo others
+  let evaluatedTerms = [];
+  for (let seg of terms) {
+    // Handle multiplication/division within a segment
+    if (seg.match(/[*\/]/)) {
+      // Split and parse factors
+      let multParts = seg.split(/([*/])/);
+      let val = null, numUnits = [], denUnits = [], lastOp = '*';
+      let symbolic = false, symbolSegs = [];
+      for (let i = 0; i < multParts.length; i++) {
+        let part = multParts[i].trim();
+        if (part === '*' || part === '/') {
+          lastOp = part;
+        } else if (part.length) {
+          // Parse coefficient and unit, or treat as symbolic
+          let m = part.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)?\s*([a-zA-ZμΩ]+)?$/);
+          if (!m) {
+            symbolic = true;
+            symbolSegs.push(part);
+            continue;
           }
-          if (symbolic || symbolSegs.length) {
-            evaluatedTerms.push(seg);
-          } else {
-            evaluatedTerms.push((val !== null ? val : '') + (unit ? ' ' + unit : ''));
-          }
-        } else {
-          // Single value/unit or variable
-          let m = seg.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)?\s*([a-zA-ZμΩ][a-zA-Z0-9]*(\^\d+)?)?$/);
-          if (m && (m[1] || m[2])) {
-            let v = m[1] ? parseFloat(m[1]) : '';
-            let u = m[2] || '';
-            evaluatedTerms.push((v !== '' ? v : '') + (u ? ' ' + u : ''));
-          } else {
-            evaluatedTerms.push(seg);
+          let v = m[1] ? parseFloat(m[1]) : 1;
+          let u = m[2] || '';
+          if (val === null) val = v;
+          else val = (lastOp === '*') ? val * v : val / v;
+          if (u) {
+            if (lastOp === '*') numUnits.push(u);
+            else denUnits.push(u);
           }
         }
       }
-
-      // Re-join for output
-      let outStr = evaluatedTerms
-        .map((term, i) => {
-          term = term.trim();
-          if (i === 0) return term;
-          if (term.startsWith('-')) return ' - ' + term.slice(1).trim();
-          return ' + ' + term.replace(/^\+/, '').trim();
-        })
-        .join('');
-
-      // Fractional display: only for numeric/unit terms for now
-      let fracTerms = evaluatedTerms.map((t, i) => {
-        let m = t.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)?\s*([a-zA-ZμΩ][a-zA-Z0-9]*(\^\d+)?)?$/);
-        let frac = (m && m[1]) ? decimalToFraction(parseFloat(m[1])) + (m[2] ? ' ' + m[2] : '') : t;
-        frac = frac.trim();
-        if (i === 0) return frac;
-        if (frac.startsWith('-')) return ' - ' + frac.slice(1).trim();
-        return ' + ' + frac.replace(/^\+/, '').trim();
-      }).join('');
-
-      // Output
-      panel.innerHTML = `
-        <div class='output-row'><span class='section-label'>Decimal:</span> ${outStr}</div>
-        <div class='output-row'><span class='section-label'>Fraction:</span> ${fracTerms}</div>
-      `;
+      if (symbolic || symbolSegs.length) {
+        evaluatedTerms.push(seg);
+      } else {
+        // Join numerator and denominator units
+        let joinedNum = numUnits.join('');
+        let joinedDen = denUnits.join('');
+        let unitStr = joinedNum + (joinedDen ? '/' + joinedDen : '');
+        // If unitStr is a recognized derived SI (like "VA" or "W"), show both forms
+        let outputStr = (val !== null ? val : '') + (unitStr ? ' ' + unitStr : '');
+        // Power/watt recognition: A*V or VA is W
+        let derived = '';
+        if (unitStr === 'VA' || unitStr === 'W' || unitStr === 'AV') derived = 'W';
+        if (derived && derived !== unitStr) {
+          outputStr += ` (${val} W)`;
+        }
+        evaluatedTerms.push(outputStr.trim());
+      }
+    } else {
+      // Single value/unit or variable
+      let m = seg.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)?\s*([a-zA-ZμΩ][a-zA-Z0-9]*(\^\d+)?)?$/);
+      if (m && (m[1] || m[2])) {
+        let v = m[1] ? parseFloat(m[1]) : '';
+        let u = m[2] || '';
+        evaluatedTerms.push((v !== '' ? v : '') + (u ? ' ' + u : ''));
+      } else {
+        evaluatedTerms.push(seg);
+      }
     }
+  }
+
+  // Re-join for output
+  let outStr = evaluatedTerms
+    .map((term, i) => {
+      term = term.trim();
+      if (i === 0) return term;
+      if (term.startsWith('-')) return ' - ' + term.slice(1).trim();
+      return ' + ' + term.replace(/^\+/, '').trim();
+    })
+    .join('');
+
+  // Fractional display: only for numeric/unit terms for now
+  let fracTerms = evaluatedTerms.map((t, i) => {
+    let m = t.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)?\s*([a-zA-ZμΩ][a-zA-Z0-9]*(\^\d+)?)?$/);
+    let frac = (m && m[1]) ? decimalToFraction(parseFloat(m[1])) + (m[2] ? ' ' + m[2] : '') : t;
+    frac = frac.trim();
+    if (i === 0) return frac;
+    if (frac.startsWith('-')) return ' - ' + frac.slice(1).trim();
+    return ' + ' + frac.replace(/^\+/, '').trim();
+  }).join('');
+
+  // Output
+  panel.innerHTML = `
+    <div class='output-row'><span class='section-label'>Decimal:</span> ${outStr}</div>
+    <div class='output-row'><span class='section-label'>Fraction:</span> ${fracTerms}</div>
+  `;
+}
+
 
     // (printOutputs unused)
   </script>
