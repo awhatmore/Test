@@ -238,14 +238,15 @@
       }
     } else {
       // Single value/unit or variable
-      let m = seg.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)\s*([a-zA-ZμΩ]*)$/);
-      if (m) {
-        let v = parseFloat(m[1]);
-        let u = m[2] || '';
-        evaluatedTerms.push((v !== null ? v : '') + (u ? ' ' + u : ''));
-      } else {
-        // Symbolic, variable, or unknown term (e.g. x, 3x, x^2, etc)
-        evaluatedTerms.push(seg);
+let m = seg.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)?\s*([a-zA-ZμΩ][a-zA-Z0-9]*(\^\d+)?)?$/);
+if (m && (m[1] || m[2])) {
+  let v = m[1] ? parseFloat(m[1]) : '';
+  let u = m[2] || '';
+  evaluatedTerms.push((v !== '' ? v : '') + (u ? ' ' + u : ''));
+} else {
+  evaluatedTerms.push(seg);
+}
+
       }
     }
   }
@@ -262,14 +263,15 @@
   .join('');
 
   // Fractional display: only for numeric/unit terms for now
-  let fracTerms = evaluatedTerms.map((t, i) => {
-  let m = t.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)\s*([a-zA-ZμΩ]*)$/);
-  let frac = m ? decimalToFraction(parseFloat(m[1])) + (m[2] ? ' ' + m[2] : '') : t;
+let fracTerms = evaluatedTerms.map((t, i) => {
+  let m = t.match(/^([+\-]?\d*\.?\d+|[+\-]?\d+)?\s*([a-zA-ZμΩ][a-zA-Z0-9]*(\^\d+)?)?$/);
+  let frac = (m && m[1]) ? decimalToFraction(parseFloat(m[1])) + (m[2] ? ' ' + m[2] : '') : t;
   frac = frac.trim();
   if (i === 0) return frac;
   if (frac.startsWith('-')) return ' - ' + frac.slice(1).trim();
   return ' + ' + frac.replace(/^\+/, '').trim();
 }).join('');
+
 
 
   // Output
