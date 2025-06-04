@@ -346,25 +346,27 @@ for (let expKey in resultMap) {
   let valueStr = v.toString();
   let fracStr = decimalToFraction(v);
 
-  // MAIN OUTPUT: If baseStr is empty, skip it!
   let main = derived
     ? `${valueStr} ${derived}`
     : (baseStr ? `${valueStr} ${baseStr}` : valueStr);
 
-  // BASE output: Only if not empty and not duplicate
   let base = (baseStr && (!derived || baseStr !== derived))
     ? `${valueStr} ${baseStr}`
     : '';
 
-  // FRACTION: If baseStr is empty, skip it!
-  let frac = derived
-    ? `${fracStr} ${derived}`
-    : (baseStr ? `${fracStr} ${baseStr}` : fracStr);
+  // Only show base breakdown if it's nonempty and different from main
+  let out = (base && base !== main)
+    ? main + ` <span class='unit-breakdown'>(${base})</span>`
+    : main;
 
-    let out = main + (base ? ` <span class='unit-breakdown'>(${base})</span>` : '');
   outRows.push(out);
-  fracRows.push(frac);
+  fracRows.push(
+    derived
+      ? `${fracStr} ${derived}`
+      : (baseStr ? `${fracStr} ${baseStr}` : fracStr)
+  );
 }
+
 
 
 
