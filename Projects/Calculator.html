@@ -274,6 +274,15 @@ function calculate() {
     return [val, symbolicExp];
   }
 
+  function formatTerm(val, expObj) {
+  // Build the variable/unit string, omitting zero exponents and empty keys
+  let unitStr = Object.entries(expObj)
+    .filter(([u, e]) => u && e !== 0)
+    .map(([u, e]) => e === 1 ? u : `${u}^${e}`)
+    .join('·');
+  return unitStr ? `${val} ${unitStr}` : `${val}`;
+}
+
   // Evaluate a single term (handles * and / inside term)
   function evalTerm(term) {
     let multParts = term.split(/([*/])/);
@@ -315,23 +324,36 @@ function calculate() {
   }
 
   // Build outputs
-  let outRows = [], fracRows = [];
-  for (let expKey in resultMap) {
-    let v = resultMap[expKey];
-    if (!v) continue; // Skip zeros
-    let exp = JSON.parse(expKey);
-    let derived = expToDerived(exp);
-    let baseStr = expToStr(exp);
-    let valueStr = v.toString();
-    let fracStr = decimalToFraction(v);
+let outRows = [], fracRows = [];
+for (let expKey in resultMap) {
+  let v = resultMap[expKey];
+  if (!v) continue; // Skip zeros
+  let exp = JSON.parse(expKey);
+  let derived = expToDerived(exp);
+  let baseStr = expToStr(exp);
+  let valueStr = v.toString();
+  let fracStr = decimalToFraction(v);
 
-    let main = derived ? `${valueStr} ${derived}` : `${valueStr} ${baseStr}`;
-    let base = derived ? `${valueStr} ${baseStr}` : '';
-    let frac = derived ? `${fracStr} ${derived}` : `${fracStr} ${baseStr}`;
-    let out = main + (base && base !== main ? ` <span class='unit-breakdown'>(${base})</span>` : '');
-    outRows.push(out);
-    fracRows.push(frac);
-  }
+  // MAIN OUTPUT: If baseStr is '1', skip it!
+  let main = derived
+    ? `${valueStr} ${derived}`
+    : (baseStr && baseStr !== '1' ? `${valueStr} ${baseStr}` : valueStr);
+
+  // BASE output: Only if not empty/'1' and not duplicate
+  let base = (baseStr && baseStr !== '1' && (!derived || baseStr !== derived))
+    ? `${valueStr} ${baseStr}`
+    : '';
+
+  // FRACTION: If baseStr is '1', skip it!
+  let frac = derived
+    ? `${fracStr} ${derived}`
+    : (baseStr && baseStr !== '1' ? `${fracStr} ${baseStr}` : fracStr);
+
+  let out = main + (base ? ` <span class='unit-breakdown'>(${base})</span>` : '');
+  outRows.push(out);
+  fracRows.push(frac);
+}
+
 
   if (!outRows.length) {
     panel.innerHTML = `<span style='color:red;'>No nonzero result.</span>`;
