@@ -174,13 +174,15 @@ function expEqual(e1, e2) {
   return BASES.every(b => (e1[b]||0) === (e2[b]||0));
 }
 function expToStr(exp) {
-  let unitString = BASES.map(k => {
-  if (!exp[k]) return '';
-  if (exp[k] === 1) return k;
-  if (exp[k] === -1) return k+'⁻¹';
-  return `${k}^${exp[k]}`;
-}).filter(Boolean).join('·');
-return unitString; // Returns '' if no nonzero units
+  return Object.entries(exp)
+    .filter(([k, v]) => v !== 0)
+    .map(([k, v]) => {
+      if (v === 1) return k;
+      if (v === -1) return k + '⁻¹';
+      return `${k}^${v}`;
+    })
+    .join('·') || '';
+}
 
 }
 function expToDerived(exp) {
@@ -256,34 +258,34 @@ function calculate() {
   }
 
   // Evaluate each term to [value, exponent object]
-  function parseFactor(str) {
-    // Ex: 5, 5 m, 5 m^2, m, A^2, ...
-    let m = str.match(/^([+\-]?\d*\.?\d+)?\s*([a-zA-ZμΩ]+)?(?:\^([+\-]?\d+))?$/);
-    let val = m && m[1] ? parseFloat(m[1]) : 1;
-    let unit = m && m[2] ? m[2] : '';
-    let pow = m && m[3] ? parseInt(m[3]) : 1;
-    if (!unit) return [val, zeroExp()];
-    // Reduce alias units to SI base/derived
-    if (UNITS[unit]) {
-      let [f, baseUnit] = UNITS[unit];
-      val *= f ** pow;
-      let baseExp = UNIT_TABLE[baseUnit] || zeroExp();
-      let resultExp = {};
-      BASES.forEach(b => resultExp[b] = (baseExp[b]||0)*pow);
-      return [val, resultExp];
-    }
-    // Direct SI/derived
-    if (UNIT_TABLE[unit]) {
-      let baseExp = UNIT_TABLE[unit];
-      let resultExp = {};
-      BASES.forEach(b => resultExp[b] = (baseExp[b]||0)*pow);
-      return [val, resultExp];
-    }
-    // Unknown unit: treat as symbolic (x, y, etc.)
-    let symbolicExp = zeroExp();
-    symbolicExp[unit] = pow;
-    return [val, symbolicExp];
+function parseFactor(str) {
+  let m = str.match(/^([+\-]?\d*\.?\d+)?\s*([a-zA-ZμΩ]+)?(?:\^([+\-]?\d+))?$/);
+  let val = m && m[1] ? parseFloat(m[1]) : 1;
+  let unit = m && m[2] ? m[2] : '';
+  let pow = m && m[3] ? parseInt(m[3]) : 1;
+  if (!unit) return [val, zeroExp()];
+  // If it's a defined SI/alias unit
+  if (UNITS[unit]) {
+    let [f, baseUnit] = UNITS[unit];
+    val *= f ** pow;
+    let baseExp = UNIT_TABLE[baseUnit] || zeroExp();
+    let resultExp = {};
+    BASES.forEach(b => resultExp[b] = (baseExp[b]||0)*pow);
+    return [val, resultExp];
   }
+  // If it's a defined SI/derived unit
+  if (UNIT_TABLE[unit]) {
+    let baseExp = UNIT_TABLE[unit];
+    let resultExp = {};
+    BASES.forEach(b => resultExp[b] = (baseExp[b]||0)*pow);
+    return [val, resultExp];
+  }
+  // Anything else is treated as a symbolic variable (x, y, etc.)
+  let symbolicExp = zeroExp();
+  symbolicExp[unit] = pow;
+  return [val, symbolicExp];
+}
+
 
   function formatTerm(val, expObj) {
   // Build the variable/unit string, omitting zero exponents and empty keys
