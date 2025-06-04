@@ -48,7 +48,10 @@
 </head>
 <body>
   <h2>Smart SI Unit Calculator</h2>
-  <div id="pretty-math-output"></div>
+  <div style="display:flex;align-items:center;margin-bottom:0.7em;">
+    <div id="pretty-math-output" style="flex:1;"></div>
+    <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
+  </div>
   <input id="input-box" placeholder="Enter calculation (e.g. 5 V * 5 A + 5 W)" autocomplete="off"
     onkeydown="if(event.key==='Enter'){calculate(); return false;}">
   <div class="calculator">
@@ -127,7 +130,6 @@
   <div id="result-panel"></div>
 
 <script>
-/* --- SI Unit Table --- */
 const BASES = ['kg', 'm', 's', 'A', 'K', 'mol', 'cd'];
 const UNIT_TABLE = {
   m:   {kg:0, m:1, s:0, A:0, K:0, mol:0, cd:0},
@@ -151,7 +153,6 @@ const UNIT_TABLE = {
 const DERIVED_LOOKUP = Object.fromEntries(
   Object.entries(UNIT_TABLE).map(([k,v])=>[JSON.stringify(v),k])
 );
-
 const UNITS = {
   nm:  [1e-9, 'm'], μm:[1e-6,'m'], mm:[1e-3,'m'], cm:[1e-2,'m'], m:[1,'m'], km:[1e3,'m'],
   in: [0.0254,'m'], ft:[0.3048,'m'], yd:[0.9144,'m'], mi:[1609.34,'m'],
@@ -162,16 +163,12 @@ const UNITS = {
   N:[1,'N'], J:[1,'J'], S:[1,'S'], H:[1,'H'],
   VA:[1,'VA'],
 };
-
 function cloneExp(e) { return Object.assign({}, e); }
 function zeroExp() { let o={}; BASES.forEach(b=>o[b]=0); return o; }
 function addExp(e1, e2, sign=1) {
   let out = {};
   BASES.forEach(b => out[b] = (e1[b]||0) + sign*(e2[b]||0));
   return out;
-}
-function expEqual(e1, e2) {
-  return BASES.every(b => (e1[b]||0) === (e2[b]||0));
 }
 function expToStr(exp) {
   return Object.entries(exp)
@@ -200,7 +197,6 @@ function decimalToFraction(value, maxDenom=10000) {
   }
   return (bestDenom === 1) ? bestNum.toString() : `${bestNum}/${bestDenom}`;
 }
-
 function appendCalc(val) {
   const box = document.getElementById('input-box');
   if (!box) return;
@@ -212,13 +208,11 @@ function appendCalc(val) {
   box.setSelectionRange(caretPos, caretPos);
   box.focus();
 }
-
 function clearCalc() {
   document.getElementById('input-box').value = '';
   document.getElementById('result-panel').innerHTML = '';
   document.getElementById('pretty-math-output').innerHTML = '';
 }
-
 function backspace() {
   const box = document.getElementById('input-box');
   const start = box.selectionStart;
@@ -232,20 +226,16 @@ function backspace() {
   }
   box.focus();
 }
-
 // ----------- MATHJAX FORMATTING -----------
-
+// Cursive/italic for variables: SI units get upright, all other variables get math italics
 function expToLatex(exp) {
-  // SI base units as upright roman (\mathrm), unknowns as italic (default)
   let unitParts = [];
   for (const [k, v] of Object.entries(exp)) {
     if (!v) continue;
-    // SI base/derived upright
     if (BASES.includes(k)) {
       unitParts.push(`\\mathrm{${k}}` + (v === 1 ? '' : `^{${v}}`));
     } else {
-      // Symbolic variable, cursive/italic (default in math mode)
-      unitParts.push(`${k}` + (v === 1 ? '' : `^{${v}}`));
+      unitParts.push(`\\mathit{${k}}` + (v === 1 ? '' : `^{${v}}`));
     }
   }
   return unitParts.join('\\,');
@@ -254,7 +244,6 @@ function termToLatex(val, exp, fractionMode = false) {
   let numStr = fractionMode ? decimalToFraction(val) : val.toString();
   let parts = [];
   if (numStr.includes('/')) {
-    // Real fraction output
     const [num, den] = numStr.split('/');
     parts.push(`\\frac{${num}}{${den}}`);
   } else {
@@ -264,7 +253,6 @@ function termToLatex(val, exp, fractionMode = false) {
   if (unitLatex) parts.push(unitLatex);
   return parts.join('\\, ');
 }
-
 function resultsToLatex(resultMap, fractionMode=false) {
   let rows = [];
   for (let expKey in resultMap) {
@@ -275,16 +263,13 @@ function resultsToLatex(resultMap, fractionMode=false) {
   }
   return rows.join(' + ');
 }
-
-// ----------- CALCULATOR LOGIC -----------
-
+let lastLatex = "";
 function calculate() {
   let panel = document.getElementById('result-panel');
   let prettyDiv = document.getElementById('pretty-math-output');
   panel.innerHTML = '';
   prettyDiv.innerHTML = '';
   let input = document.getElementById('input-box').value.trim();
-
   // Split terms on + or -, keeping sign
   let termRegex = /([+\-]?[^+\-]+)/g;
   let terms = [];
@@ -299,7 +284,6 @@ function calculate() {
     MathJax.typesetPromise();
     return;
   }
-
   function parseFactor(str) {
     let m = str.match(/^([+\-]?\d*\.?\d+)?\s*([a-zA-ZμΩ]+)?(?:\^([+\-]?\d+))?$/);
     let val = m && m[1] ? parseFloat(m[1]) : 1;
@@ -324,7 +308,6 @@ function calculate() {
     symbolicExp[unit] = pow;
     return [val, symbolicExp];
   }
-
   function evalTerm(term) {
     let multParts = term.split(/([*/])/);
     let val = null, exp = zeroExp(), lastOp = '*';
@@ -350,7 +333,6 @@ function calculate() {
     }
     return [val, exp];
   }
-
   // Map of stringified exponents to summed values
   let resultMap = {};
   for (let seg of terms) {
@@ -362,16 +344,15 @@ function calculate() {
     if (!resultMap[expKey]) resultMap[expKey] = 0;
     resultMap[expKey] += sign * v;
   }
-
   // --- Pretty Math Output ---
   let latex = resultsToLatex(resultMap, false);
+  lastLatex = latex; // store for copy
   if (latex.trim()) {
     prettyDiv.innerHTML = `\\(${latex}\\)`;
   } else {
     prettyDiv.innerHTML = '';
   }
   MathJax.typesetPromise();
-
   // --- Standard Output ---
   let outRows = [], fracRows = [];
   for (let expKey in resultMap) {
@@ -382,19 +363,15 @@ function calculate() {
     let baseStr = expToStr(exp);
     let valueStr = v.toString();
     let fracStr = decimalToFraction(v);
-
     let main = derived
       ? `${valueStr} ${derived}`
       : (baseStr ? `${valueStr} ${baseStr}` : valueStr);
-
     let base = (baseStr && (!derived || baseStr !== derived))
       ? `${valueStr} ${baseStr}`
       : '';
-
     let out = (base && base !== main)
       ? main + ` <span class='unit-breakdown'>(${base})</span>`
       : main;
-
     outRows.push(out);
     fracRows.push(
       derived
@@ -402,17 +379,25 @@ function calculate() {
         : (baseStr ? `${fracStr} ${baseStr}` : fracStr)
     );
   }
-
   if (!outRows.length) {
     panel.innerHTML = `<span style='color:red;'>No nonzero result.</span>`;
     return;
   }
-
   panel.innerHTML = `
     <div class='output-row'><span class='section-label'>Decimal:</span> ${outRows.join(' + ')}</div>
     <div class='output-row'><span class='section-label'>Fraction:</span> ${fracRows.join(' + ')}</div>
   `;
 }
+// -- Clipboard button handler (needs to be outside calculate so it's only attached once) --
+document.getElementById('copy-latex-btn').onclick = function() {
+  if (!lastLatex) return;
+  navigator.clipboard.writeText(String.raw`\\(${lastLatex}\\)`)
+    .then(() => {
+      let btn = document.getElementById('copy-latex-btn');
+      btn.textContent = '✅';
+      setTimeout(() => btn.textContent = '📋', 800);
+    });
+};
 </script>
 </body>
 </html>
