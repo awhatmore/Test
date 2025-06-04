@@ -361,7 +361,7 @@ for (let expKey in resultMap) {
     ? `${fracStr} ${derived}`
     : (baseStr ? `${fracStr} ${baseStr}` : fracStr);
 
-  let out = main + (base ? ` <span class='unit-breakdown'>(${base})</span>` : '');
+    let out = main + (base ? ` <span class='unit-breakdown'>(${base})</span>` : '');
   outRows.push(out);
   fracRows.push(frac);
 }
