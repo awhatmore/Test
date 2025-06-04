@@ -334,7 +334,7 @@ function calculate() {
     resultMap[expKey] += sign * v;
   }
 
-  // Build outputs
+// Build outputs
 let outRows = [], fracRows = [];
 for (let expKey in resultMap) {
   let v = resultMap[expKey];
@@ -345,25 +345,26 @@ for (let expKey in resultMap) {
   let valueStr = v.toString();
   let fracStr = decimalToFraction(v);
 
-  // MAIN OUTPUT: If baseStr is '1', skip it!
+  // MAIN OUTPUT: If baseStr is empty, skip it!
   let main = derived
     ? `${valueStr} ${derived}`
-    : (baseStr && baseStr !== '1' ? `${valueStr} ${baseStr}` : valueStr);
+    : (baseStr ? `${valueStr} ${baseStr}` : valueStr);
 
-  // BASE output: Only if not empty/'1' and not duplicate
-  let base = (baseStr && baseStr !== '1' && (!derived || baseStr !== derived))
+  // BASE output: Only if not empty and not duplicate
+  let base = (baseStr && (!derived || baseStr !== derived))
     ? `${valueStr} ${baseStr}`
     : '';
 
-  // FRACTION: If baseStr is '1', skip it!
+  // FRACTION: If baseStr is empty, skip it!
   let frac = derived
     ? `${fracStr} ${derived}`
-    : (baseStr && baseStr !== '1' ? `${fracStr} ${baseStr}` : fracStr);
+    : (baseStr ? `${fracStr} ${baseStr}` : fracStr);
 
   let out = main + (base ? ` <span class='unit-breakdown'>(${base})</span>` : '');
   outRows.push(out);
   fracRows.push(frac);
 }
+
 
 
   if (!outRows.length) {
