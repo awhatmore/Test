@@ -174,12 +174,14 @@ function expEqual(e1, e2) {
   return BASES.every(b => (e1[b]||0) === (e2[b]||0));
 }
 function expToStr(exp) {
-  return BASES.map(k => {
-    if (!exp[k]) return '';
-    if (exp[k] === 1) return k;
-    if (exp[k] === -1) return k+'⁻¹';
-    return `${k}^${exp[k]}`;
-  }).filter(Boolean).join('·') || '1';
+  let unitString = BASES.map(k => {
+  if (!exp[k]) return '';
+  if (exp[k] === 1) return k;
+  if (exp[k] === -1) return k+'⁻¹';
+  return `${k}^${exp[k]}`;
+}).filter(Boolean).join('·');
+return unitString; // Returns '' if no nonzero units
+
 }
 function expToDerived(exp) {
   let key = JSON.stringify(exp);
@@ -221,9 +223,18 @@ function clearCalc() {
 
 function backspace() {
   const box = document.getElementById('input-box');
-  box.value = box.value.slice(0, -1);
+  const start = box.selectionStart;
+  const end = box.selectionEnd;
+  if (start === end && start > 0) {
+    box.value = box.value.slice(0, start-1) + box.value.slice(end);
+    box.setSelectionRange(start-1, start-1);
+  } else {
+    box.value = box.value.slice(0, start) + box.value.slice(end);
+    box.setSelectionRange(start, start);
+  }
   box.focus();
 }
+
 
 // Main function
 function calculate() {
