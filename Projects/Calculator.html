@@ -7,6 +7,7 @@
   <style>
     body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 2rem; }
     h2 { text-align: center; }
+    #pretty-math-output { font-size: 1.5em; margin-bottom: 0.7em; min-height: 2em; color:#fff;}
     #input-box {
       width: 100%;
       font-size: 1.25rem;
@@ -41,9 +42,13 @@
     .output-row { margin-bottom: 0.3em; }
     .unit-breakdown { color: #6cf; font-family: 'Consolas', monospace; }
   </style>
+  <!-- MATHJAX CDN FOR BEAUTIFUL OUTPUT -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
   <h2>Smart SI Unit Calculator</h2>
+  <div id="pretty-math-output"></div>
   <input id="input-box" placeholder="Enter calculation (e.g. 5 V * 5 A + 5 W)" autocomplete="off"
     onkeydown="if(event.key==='Enter'){calculate(); return false;}">
   <div class="calculator">
@@ -124,7 +129,6 @@
 <script>
 /* --- SI Unit Table --- */
 const BASES = ['kg', 'm', 's', 'A', 'K', 'mol', 'cd'];
-// Exponents for each SI or derived unit:
 const UNIT_TABLE = {
   m:   {kg:0, m:1, s:0, A:0, K:0, mol:0, cd:0},
   kg:  {kg:1, m:0, s:0, A:0, K:0, mol:0, cd:0},
@@ -142,16 +146,13 @@ const UNIT_TABLE = {
   F:   {kg:-1, m:-2, s:4, A:2, K:0, mol:0, cd:0},
   S:   {kg:-1, m:-2, s:3, A:2, K:0, mol:0, cd:0},
   H:   {kg:1, m:2, s:-2, A:-2, K:0, mol:0, cd:0},
-  // Add more as needed!
-  VA:  {kg:1, m:2, s:-3, A:0, K:0, mol:0, cd:0}, // treat VA same as W (special for this calc)
+  VA:  {kg:1, m:2, s:-3, A:0, K:0, mol:0, cd:0},
 };
 const DERIVED_LOOKUP = Object.fromEntries(
   Object.entries(UNIT_TABLE).map(([k,v])=>[JSON.stringify(v),k])
 );
 
-/* --- Unit Aliases & Factors --- */
 const UNITS = {
-  // SI base/derived (factor: [multiplier, canonical unit])
   nm:  [1e-9, 'm'], μm:[1e-6,'m'], mm:[1e-3,'m'], cm:[1e-2,'m'], m:[1,'m'], km:[1e3,'m'],
   in: [0.0254,'m'], ft:[0.3048,'m'], yd:[0.9144,'m'], mi:[1609.34,'m'],
   mg:[1e-6,'kg'], g:[1e-3,'kg'], kg:[1,'kg'], t:[1000,'kg'],
@@ -162,7 +163,6 @@ const UNITS = {
   VA:[1,'VA'],
 };
 
-/* --- Helper: Exponent Operations --- */
 function cloneExp(e) { return Object.assign({}, e); }
 function zeroExp() { let o={}; BASES.forEach(b=>o[b]=0); return o; }
 function addExp(e1, e2, sign=1) {
@@ -183,13 +183,10 @@ function expToStr(exp) {
     })
     .join('·') || '';
 }
-  
 function expToDerived(exp) {
   let key = JSON.stringify(exp);
   return DERIVED_LOOKUP[key] || null;
 }
-
-/* --- Calculator Logic --- */
 function decimalToFraction(value, maxDenom=10000) {
   if (!isFinite(value)) return value.toString();
   let num = value, denom = 1, bestNum = 1, bestDenom = 1, bestError = Math.abs(value-1);
@@ -210,7 +207,6 @@ function appendCalc(val) {
   const start = box.selectionStart;
   const end = box.selectionEnd;
   const text = box.value;
-  // Insert value at caret, or at the end if caret is lost
   box.value = text.slice(0, start) + val + text.slice(end);
   const caretPos = start + val.length;
   box.setSelectionRange(caretPos, caretPos);
@@ -220,6 +216,7 @@ function appendCalc(val) {
 function clearCalc() {
   document.getElementById('input-box').value = '';
   document.getElementById('result-panel').innerHTML = '';
+  document.getElementById('pretty-math-output').innerHTML = '';
 }
 
 function backspace() {
@@ -236,11 +233,56 @@ function backspace() {
   box.focus();
 }
 
+// ----------- MATHJAX FORMATTING -----------
 
-// Main function
+function expToLatex(exp) {
+  // SI base units as upright roman (\mathrm), unknowns as italic (default)
+  let unitParts = [];
+  for (const [k, v] of Object.entries(exp)) {
+    if (!v) continue;
+    // SI base/derived upright
+    if (BASES.includes(k)) {
+      unitParts.push(`\\mathrm{${k}}` + (v === 1 ? '' : `^{${v}}`));
+    } else {
+      // Symbolic variable, cursive/italic (default in math mode)
+      unitParts.push(`${k}` + (v === 1 ? '' : `^{${v}}`));
+    }
+  }
+  return unitParts.join('\\,');
+}
+function termToLatex(val, exp, fractionMode = false) {
+  let numStr = fractionMode ? decimalToFraction(val) : val.toString();
+  let parts = [];
+  if (numStr.includes('/')) {
+    // Real fraction output
+    const [num, den] = numStr.split('/');
+    parts.push(`\\frac{${num}}{${den}}`);
+  } else {
+    parts.push(numStr);
+  }
+  let unitLatex = expToLatex(exp);
+  if (unitLatex) parts.push(unitLatex);
+  return parts.join('\\, ');
+}
+
+function resultsToLatex(resultMap, fractionMode=false) {
+  let rows = [];
+  for (let expKey in resultMap) {
+    let v = resultMap[expKey];
+    if (!v) continue;
+    let exp = JSON.parse(expKey);
+    rows.push(termToLatex(v, exp, fractionMode));
+  }
+  return rows.join(' + ');
+}
+
+// ----------- CALCULATOR LOGIC -----------
+
 function calculate() {
   let panel = document.getElementById('result-panel');
+  let prettyDiv = document.getElementById('pretty-math-output');
   panel.innerHTML = '';
+  prettyDiv.innerHTML = '';
   let input = document.getElementById('input-box').value.trim();
 
   // Split terms on + or -, keeping sign
@@ -253,53 +295,39 @@ function calculate() {
   }
   if (!terms.length) {
     panel.innerHTML = `<span style='color:red;'>Could not parse input.<br>Try: 5 V * 5 A + 5 W</span>`;
+    prettyDiv.innerHTML = '';
+    MathJax.typesetPromise();
     return;
   }
 
-  // Evaluate each term to [value, exponent object]
-function parseFactor(str) {
-  let m = str.match(/^([+\-]?\d*\.?\d+)?\s*([a-zA-ZμΩ]+)?(?:\^([+\-]?\d+))?$/);
-  let val = m && m[1] ? parseFloat(m[1]) : 1;
-  let unit = m && m[2] ? m[2] : '';
-  let pow = m && m[3] ? parseInt(m[3]) : 1;
-  if (!unit) return [val, zeroExp()];
-  // If it's a defined SI/alias unit
-  if (UNITS[unit]) {
-    let [f, baseUnit] = UNITS[unit];
-    val *= f ** pow;
-    let baseExp = UNIT_TABLE[baseUnit] || zeroExp();
-    let resultExp = {};
-    BASES.forEach(b => resultExp[b] = (baseExp[b]||0)*pow);
-    return [val, resultExp];
+  function parseFactor(str) {
+    let m = str.match(/^([+\-]?\d*\.?\d+)?\s*([a-zA-ZμΩ]+)?(?:\^([+\-]?\d+))?$/);
+    let val = m && m[1] ? parseFloat(m[1]) : 1;
+    let unit = m && m[2] ? m[2] : '';
+    let pow = m && m[3] ? parseInt(m[3]) : 1;
+    if (!unit) return [val, zeroExp()];
+    if (UNITS[unit]) {
+      let [f, baseUnit] = UNITS[unit];
+      val *= f ** pow;
+      let baseExp = UNIT_TABLE[baseUnit] || zeroExp();
+      let resultExp = {};
+      BASES.forEach(b => resultExp[b] = (baseExp[b]||0)*pow);
+      return [val, resultExp];
+    }
+    if (UNIT_TABLE[unit]) {
+      let baseExp = UNIT_TABLE[unit];
+      let resultExp = {};
+      BASES.forEach(b => resultExp[b] = (baseExp[b]||0)*pow);
+      return [val, resultExp];
+    }
+    let symbolicExp = zeroExp();
+    symbolicExp[unit] = pow;
+    return [val, symbolicExp];
   }
-  // If it's a defined SI/derived unit
-  if (UNIT_TABLE[unit]) {
-    let baseExp = UNIT_TABLE[unit];
-    let resultExp = {};
-    BASES.forEach(b => resultExp[b] = (baseExp[b]||0)*pow);
-    return [val, resultExp];
-  }
-  // Anything else is treated as a symbolic variable (x, y, etc.)
-  let symbolicExp = zeroExp();
-  symbolicExp[unit] = pow;
-  return [val, symbolicExp];
-}
 
-
-  function formatTerm(val, expObj) {
-  // Build the variable/unit string, omitting zero exponents and empty keys
-  let unitStr = Object.entries(expObj)
-    .filter(([u, e]) => u && e !== 0)
-    .map(([u, e]) => e === 1 ? u : `${u}^${e}`)
-    .join('·');
-  return unitStr ? `${val} ${unitStr}` : `${val}`;
-}
-
-  // Evaluate a single term (handles * and / inside term)
   function evalTerm(term) {
     let multParts = term.split(/([*/])/);
     let val = null, exp = zeroExp(), lastOp = '*';
-    let symbolic = false, symbolSegs = [];
     for (let i=0; i<multParts.length; i++) {
       let part = multParts[i].trim();
       if (part === '*' || part === '/') {
@@ -335,40 +363,45 @@ function parseFactor(str) {
     resultMap[expKey] += sign * v;
   }
 
-// Build outputs
-let outRows = [], fracRows = [];
-for (let expKey in resultMap) {
-  let v = resultMap[expKey];
-  if (!v) continue; // Skip zeros
-  let exp = JSON.parse(expKey);
-  let derived = expToDerived(exp);
-  let baseStr = expToStr(exp);
-  let valueStr = v.toString();
-  let fracStr = decimalToFraction(v);
+  // --- Pretty Math Output ---
+  let latex = resultsToLatex(resultMap, false);
+  if (latex.trim()) {
+    prettyDiv.innerHTML = `\\(${latex}\\)`;
+  } else {
+    prettyDiv.innerHTML = '';
+  }
+  MathJax.typesetPromise();
 
-  let main = derived
-    ? `${valueStr} ${derived}`
-    : (baseStr ? `${valueStr} ${baseStr}` : valueStr);
+  // --- Standard Output ---
+  let outRows = [], fracRows = [];
+  for (let expKey in resultMap) {
+    let v = resultMap[expKey];
+    if (!v) continue;
+    let exp = JSON.parse(expKey);
+    let derived = expToDerived(exp);
+    let baseStr = expToStr(exp);
+    let valueStr = v.toString();
+    let fracStr = decimalToFraction(v);
 
-  let base = (baseStr && (!derived || baseStr !== derived))
-    ? `${valueStr} ${baseStr}`
-    : '';
+    let main = derived
+      ? `${valueStr} ${derived}`
+      : (baseStr ? `${valueStr} ${baseStr}` : valueStr);
 
-  // Only show base breakdown if it's nonempty and different from main
-  let out = (base && base !== main)
-    ? main + ` <span class='unit-breakdown'>(${base})</span>`
-    : main;
+    let base = (baseStr && (!derived || baseStr !== derived))
+      ? `${valueStr} ${baseStr}`
+      : '';
 
-  outRows.push(out);
-  fracRows.push(
-    derived
-      ? `${fracStr} ${derived}`
-      : (baseStr ? `${fracStr} ${baseStr}` : fracStr)
-  );
-}
+    let out = (base && base !== main)
+      ? main + ` <span class='unit-breakdown'>(${base})</span>`
+      : main;
 
-
-
+    outRows.push(out);
+    fracRows.push(
+      derived
+        ? `${fracStr} ${derived}`
+        : (baseStr ? `${fracStr} ${baseStr}` : fracStr)
+    );
+  }
 
   if (!outRows.length) {
     panel.innerHTML = `<span style='color:red;'>No nonzero result.</span>`;
