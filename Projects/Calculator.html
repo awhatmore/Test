@@ -183,8 +183,7 @@ function expToStr(exp) {
     })
     .join('·') || '';
 }
-
-}
+  
 function expToDerived(exp) {
   let key = JSON.stringify(exp);
   return DERIVED_LOOKUP[key] || null;
