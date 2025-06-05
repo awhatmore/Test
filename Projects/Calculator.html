@@ -53,11 +53,13 @@
     <div id="pretty-math-output" style="flex:1;"></div>
     <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
   </div>
-  <input id="input-box"
+<div id="pretty-input-output" style="font-size:1.7em; min-height:2em; margin-bottom:0.4em;"></div>
+<input id="input-box"
   placeholder="Enter calculation (e.g. 5 V * 5 A + 5 W)"
   autocomplete="off"
   oninput="updatePrettyInput(); calculate();"
   onkeydown="if(event.key==='Enter'){calculate(); return false;}">
+
 
 
 
@@ -176,6 +178,20 @@ const UNITS = {
   N:[1,'N'], J:[1,'J'], S:[1,'S'], H:[1,'H'],
   VA:[1,'VA'],
 };
+
+
+  function updatePrettyInput() {
+  let input = document.getElementById('input-box').value;
+  let prettyDiv = document.getElementById('pretty-input-output');
+  if (!input.trim()) {
+    prettyDiv.innerHTML = '';
+    MathJax.typesetPromise();
+    return;
+  }
+  prettyDiv.innerHTML = `\\(${formatInputAsLatex(input)}\\)`;
+  MathJax.typesetPromise();
+}
+
 function setSigFigs(n) {
   currentSigFigs = n;
   document.querySelectorAll('.sigfig-btn').forEach(btn => {
@@ -386,17 +402,7 @@ function calculate() {
     return [val, exp];
   }
 
-  function updatePrettyInput() {
-  let input = document.getElementById('input-box').value;
-  let prettyDiv = document.getElementById('pretty-math-output');
-  if (!input.trim()) {
-    prettyDiv.innerHTML = '';
-    MathJax.typesetPromise();
-    return;
-  }
-  prettyDiv.innerHTML = `\\(${formatInputAsLatex(input)}\\)`;
-  MathJax.typesetPromise();
-}
+
 
   
 function toRepeatingDecimal(num, maxDecimals = 20) {
