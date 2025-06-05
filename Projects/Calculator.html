@@ -262,87 +262,49 @@ function backspace() {
 function updateUnitOptions() {
   // Your custom unit button code can go here
 }
+  
 function calculate() {
   let stepsDiv = document.getElementById('steps-math-output');
   let input = document.getElementById('input-box').value.trim();
-  let inputLatex = input ? `\\(${formatInputAsLatex(input)}\\)` : '';
+  if (!input) {
+    stepsDiv.innerHTML = '';
+    return;
+  }
+  let prettyInput = `\\(${formatInputAsLatex(input)}\\)`;
+
+  // Placeholder for your three output forms
+  let outputs = [
+    '\\(\\text{Output 1}\\)',
+    '\\(\\text{Output 2}\\)',
+    '\\(\\text{Output 3}\\)'
+  ];
+
   let steps = [];
 
-  // Detect if input has variables
-  let containsVars = /[a-zA-Z]/.test(input);
+  // First line: input on left
+  steps.push(`
+    <div class="steps-eq-row">
+      <span class="steps-side">${prettyInput}</span>
+      <span class="eq-label">=</span>
+      <span class="steps-side right"><span class="steps-eq-latex">${outputs[0]}</span></span>
+    </div>
+  `);
 
-  // Fraction? (Pretty print + eval if possible)
-  let fracMatch = input.replace(/\s+/g, '').match(/^(.+?)\/(.+)$/);
-
-  if (input && fracMatch) {
-    // Try to evaluate if NO variables
-    if (!containsVars) {
-      try {
-        let expr = input.replace(/[a-zA-ZμΩ]+/g, '').replace(/\s+/g, '');
-        let result = Function('"use strict";return (' + expr + ')')();
-        let formattedResult = formatSigFig(result, currentSigFigs);
-        let fracLatex = `\\displaystyle\\frac{${fracMatch[1]}}{${fracMatch[2]}}`;
-        // Show pretty fraction = numeric result
-        steps.push(`
-          <div class="steps-eq-row">
-            <span class="steps-side">${fracLatex}</span>
-            <span class="eq-label">=</span>
-            <span class="steps-side right"><span class="steps-eq-latex">\\(${formattedResult}\\)</span></span>
-          </div>
-        `);
-        // Optionally, show alternate forms (comment out if not needed)
-        // steps.push(`
-        //   <div class="steps-eq-row">
-        //     <span class="steps-side">${fracLatex}</span>
-        //     <span class="eq-label">=</span>
-        //     <span class="steps-side right"><span class="steps-eq-latex">\\(${formattedResult}/${fracMatch[2]}\\)</span></span>
-        //   </div>
-        // `);
-        // steps.push(`
-        //   <div class="steps-eq-row">
-        //     <span class="steps-side">${fracLatex}</span>
-        //     <span class="eq-label">=</span>
-        //     <span class="steps-side right"><span class="steps-eq-latex">\\(${formattedResult}${fracMatch[2] ? ' \\times ' + fracMatch[2] + '^{-1}' : ''}\\)</span></span>
-        //   </div>
-        // `);
-        stepsDiv.innerHTML = steps.join('');
-        MathJax.typesetPromise([stepsDiv]);
-        return;
-      } catch (e) {}
-    }
-    // Symbolic fraction (not evaluated): skip echo line, show nothing.
-    stepsDiv.innerHTML = '';
-    MathJax.typesetPromise([stepsDiv]);
-    return;
+  // Next lines: blank left, outputs
+  for (let i = 1; i < outputs.length; i++) {
+    steps.push(`
+      <div class="steps-eq-row">
+        <span class="steps-side">&nbsp;</span>
+        <span class="eq-label">=</span>
+        <span class="steps-side right"><span class="steps-eq-latex">${outputs[i]}</span></span>
+      </div>
+    `);
   }
 
-  // Not a fraction
-  if (input) {
-    if (!containsVars) {
-      // Numeric evaluation (input left, result right)
-      try {
-        let expr = input.replace(/[a-zA-ZμΩ]+/g, '').replace(/\s+/g, '');
-        let result = Function('"use strict";return (' + expr + ')')();
-        let formattedResult = formatSigFig(result, currentSigFigs);
-        steps.push(`
-          <div class="steps-eq-row">
-            <span class="steps-side">${inputLatex}</span>
-            <span class="eq-label">=</span>
-            <span class="steps-side right"><span class="steps-eq-latex">\\(${formattedResult}\\)</span></span>
-          </div>
-        `);
-        stepsDiv.innerHTML = steps.join('');
-        MathJax.typesetPromise([stepsDiv]);
-        return;
-      } catch (e) {}
-    }
-    // Symbolic/non-evaluated: skip echo line, show nothing.
-    stepsDiv.innerHTML = '';
-    MathJax.typesetPromise([stepsDiv]);
-    return;
-  }
-  stepsDiv.innerHTML = '';
+  stepsDiv.innerHTML = steps.join('');
+  MathJax.typesetPromise([stepsDiv]);
 }
+
 
 
 document.getElementById('copy-latex-btn').onclick = function() {
