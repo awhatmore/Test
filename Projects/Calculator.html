@@ -7,7 +7,9 @@
   <style>
     body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 2rem; }
     h2 { text-align: center; }
-    #pretty-math-output { font-size: 1.5em; margin-bottom: 0.7em; min-height: 2em; color:#fff;}
+    #pretty-math-output, #pretty-input-output {
+      font-size: 1.5em; min-height: 2em; color:#fff; margin-bottom:0.3em;
+    }
     #input-box {
       width: 100%;
       font-size: 1.25rem;
@@ -49,9 +51,9 @@
 </head>
 <body>
   <h2>Smart SI Unit Calculator</h2>
-  <div id="pretty-input-output" style="font-size:1.5em; min-height:2em; color:#fff; margin-bottom:0.3em;"></div>
+  <div id="pretty-input-output"></div>
   <div style="font-size:2em; text-align:center; margin-bottom: 0.5em;">=</div>
-  <div id="pretty-math-output" style="font-size:1.5em; min-height:2em; color:#fff; margin-bottom:0.7em;"></div>
+  <div id="pretty-math-output"></div>
   <div style="display:flex;align-items:center;margin-bottom:0.7em;">
     <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
   </div>
@@ -61,18 +63,12 @@
     oninput="updatePrettyInput(); calculate();"
     onkeydown="if(event.key==='Enter'){calculate(); return false;}">
 
-
-
-
-
-
-
   <div style="margin-bottom:0.5em;">
-  Significant figures: 
-<button class="sigfig-btn" onclick="setSigFigs(3)">3</button>
-<button class="sigfig-btn" onclick="setSigFigs(6)">6</button>
-<button class="sigfig-btn" onclick="setSigFigs(10)">10</button>
-</div>
+    Significant figures: 
+    <button class="sigfig-btn" onclick="setSigFigs(3)">3</button>
+    <button class="sigfig-btn" onclick="setSigFigs(6)">6</button>
+    <button class="sigfig-btn" onclick="setSigFigs(10)">10</button>
+  </div>
   <div class="calculator">
     <button onclick="appendCalc('1')">1</button>
     <button onclick="appendCalc('2')">2</button>
@@ -183,6 +179,7 @@ const UNITS = {
   VA:[1,'VA'],
 };
 
+let currentSigFigs = 3;
 
 function updatePrettyInput() {
   let input = document.getElementById('input-box').value;
@@ -195,7 +192,6 @@ function updatePrettyInput() {
   prettyDiv.innerHTML = `\\(${formatInputAsLatex(input)}\\)`;
   MathJax.typesetPromise();
 }
-
 
 function setSigFigs(n) {
   currentSigFigs = n;
@@ -249,14 +245,16 @@ function appendCalc(val) {
   const caretPos = start + val.length;
   box.setSelectionRange(caretPos, caretPos);
   box.focus();
-  calculate(); // <<< Add this!
+  updatePrettyInput();
+  calculate();
 }
 
 function clearCalc() {
   document.getElementById('input-box').value = '';
   document.getElementById('result-panel').innerHTML = '';
   document.getElementById('pretty-math-output').innerHTML = '';
-  calculate(); // <<< Add this!
+  document.getElementById('pretty-input-output').innerHTML = '';
+  calculate();
 }
 
 function backspace() {
@@ -271,11 +269,11 @@ function backspace() {
     box.setSelectionRange(start, start);
   }
   box.focus();
-  calculate(); // <<< Add this!
+  updatePrettyInput();
+  calculate();
 }
 
 // ----------- MATHJAX FORMATTING -----------
-// Cursive/italic for variables: SI units get upright, all other variables get math italics
 function expToLatex(exp) {
   let unitParts = [];
   for (const [k, v] of Object.entries(exp)) {
@@ -320,21 +318,29 @@ function resultsToLatex(resultMap, fractionMode=false, sigFigs=currentSigFigs) {
 }
 
 function formatInputAsLatex(input) {
-  // Basic: handles a/b as a fraction
-  // Expand if you want more advanced parsing later!
   input = input.replace(/\s+/g, ''); // Remove spaces for clarity
-  // Match: something / something
   let fracMatch = input.match(/^(.+?)\/(.+)$/);
   if (fracMatch) {
-    // Make numerator and denominator pretty (allow things like 5xyz)
     return `\\displaystyle\\frac{${fracMatch[1]}}{${fracMatch[2]}}`;
   } else {
-    // Otherwise, just render as is, with variables italic
-    // Make xyz -> \mathit{xyz}
     return input.replace(/([a-zA-Z]+)/g, "\\mathit{$1}");
   }
 }
 
+function toRepeatingDecimal(num, maxDecimals = 20) {
+  let str = num.toString();
+  if (!str.includes('.')) return str;
+  let frac = num % 1;
+  for (let i = 1; i < maxDecimals; i++) {
+    let candidate = Math.round(frac * Math.pow(10, i));
+    if (candidate === Math.pow(10, i) - 1) {
+      let base = Math.floor(num);
+      let repDigit = Math.round(frac * Math.pow(10, i)) % 10;
+      return `${base === 0 ? '' : base}.\\overline{${repDigit}}`;
+    }
+  }
+  return num.toPrecision(10);
+}
 
 let lastLatex = "";
 function calculate() {
@@ -343,7 +349,6 @@ function calculate() {
   panel.innerHTML = '';
   prettyDiv.innerHTML = '';
   let input = document.getElementById('input-box').value.trim();
-  // Split terms on + or -, keeping sign
   let termRegex = /([+\-]?[^+\-]+)/g;
   let terms = [];
   let match;
@@ -407,29 +412,6 @@ function calculate() {
     return [val, exp];
   }
 
-
-
-  
-function toRepeatingDecimal(num, maxDecimals = 20) {
-  // Only support for repeating NINES for now, e.g., 1/9, 2/9, 1/3
-  let str = num.toString();
-  if (!str.includes('.')) return str;
-
-  let frac = num % 1;
-  for (let i = 1; i < maxDecimals; i++) {
-    let repeated = Number('0.' + '9'.repeat(i));
-    let candidate = Math.round(frac * Math.pow(10, i));
-    if (candidate === Math.pow(10, i) - 1) {
-      // It's a repeating nines decimal!
-      let base = Math.floor(num);
-      let repDigit = Math.round(frac * Math.pow(10, i)) % 10;
-      return `${base === 0 ? '' : base}.\\overline{${repDigit}}`;
-    }
-  }
-  return num.toPrecision(10); // fallback
-}
-
-  // Map of stringified exponents to summed values
   let resultMap = {};
   for (let seg of terms) {
     let sign = 1;
@@ -442,7 +424,7 @@ function toRepeatingDecimal(num, maxDecimals = 20) {
   }
   // --- Pretty Math Output ---
   let latex = resultsToLatex(resultMap, false);
-  lastLatex = latex; // store for copy
+  lastLatex = latex;
   if (latex.trim()) {
     prettyDiv.innerHTML = `\\(${latex}\\)`;
   } else {
@@ -484,7 +466,7 @@ function toRepeatingDecimal(num, maxDecimals = 20) {
     <div class='output-row'><span class='section-label'>Fraction:</span> ${fracRows.join(' + ')}</div>
   `;
 }
-// -- Clipboard button handler (needs to be outside calculate so it's only attached once) --
+
 document.getElementById('copy-latex-btn').onclick = function() {
   if (!lastLatex) return;
   navigator.clipboard.writeText(String.raw`\\(${lastLatex}\\)`)
@@ -493,6 +475,12 @@ document.getElementById('copy-latex-btn').onclick = function() {
       btn.textContent = '✅';
       setTimeout(() => btn.textContent = '📋', 800);
     });
+};
+
+// Initial pretty update/calculate on load
+window.onload = function() {
+  updatePrettyInput();
+  calculate();
 };
 </script>
 </body>
