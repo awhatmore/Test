@@ -281,13 +281,22 @@ function calculate() {
         let expr = input.replace(/[a-zA-ZμΩ]+/g, '').replace(/\s+/g, '');
         let result = Function('"use strict";return (' + expr + ')')();
         let formattedResult = formatSigFig(result, currentSigFigs);
-        steps.push(`
-          <div class="steps-eq-row">
-            <span class="steps-side">${inputLatex}</span>
-            <span class="eq-label">=</span>
-            <span class="steps-side right"><span class="steps-eq-latex">\\(${formattedResult}\\)</span></span>
-          </div>
-        `);
+// Symbolic: only show if input and output would be different
+let outputLatex = inputLatex; // In the future, could be a simplified form
+if (inputLatex !== outputLatex) {
+  steps.push(`
+    <div class="steps-eq-row">
+      <span class="steps-side">${inputLatex}</span>
+      <span class="eq-label">=</span>
+      <span class="steps-side right"><span class="steps-eq-latex">${outputLatex}</span></span>
+    </div>
+  `);
+}
+// (If they're the same, don't show anything)
+stepsDiv.innerHTML = steps.join('');
+MathJax.typesetPromise([stepsDiv]);
+return;
+
         // Show alternate forms (fraction, decimal, negative exponent) all in same left-right order
         let fracLatex = `\\displaystyle\\frac{${fracMatch[1]}}{${fracMatch[2]}}`;
         let decimalLatex = `\\(${formattedResult}/${fracMatch[2]}\\)`;
