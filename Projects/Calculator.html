@@ -53,7 +53,7 @@
     <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
   </div>
   <input id="input-box" placeholder="Enter calculation (e.g. 5 V * 5 A + 5 W)" autocomplete="off"
-    onkeydown="if(event.key==='Enter'){calculate(); return false;}">
+    oninput="calculate()" onkeydown="if(event.key==='Enter'){calculate(); return false;}">
   <div class="calculator">
     <button onclick="appendCalc('1')">1</button>
     <button onclick="appendCalc('2')">2</button>
