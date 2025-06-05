@@ -392,7 +392,7 @@ function calculate() {
   prettyInput.innerHTML = inputLatex;
 
   MathJax.typesetPromise([prettyInput]).then(() => {
-    // Measure pretty input width
+    // Dynamically measure pretty input width
     let measureSpan = document.createElement('span');
     measureSpan.style.visibility = 'hidden';
     measureSpan.style.position = 'absolute';
@@ -402,107 +402,103 @@ function calculate() {
     document.body.appendChild(measureSpan);
 
     MathJax.typesetPromise([measureSpan]).then(() => {
-      let inputWidth = measureSpan.getBoundingClientRect().width;
+      let inputWidth = measureSpan.getBoundingClientRect().width || 180; // Fallback if empty
       document.body.removeChild(measureSpan);
 
       let steps = [];
 
-// Fractions: e.g. 5/9xxx or 5.5/5
-let fracMatch = input.replace(/\s+/g,'').match(/^(.+?)\/(.+)$/);
-if (input && fracMatch) {
-  let numerator = fracMatch[1], denominator = fracMatch[2];
-  // If BOTH numerator and denominator are numbers, just eval:
-  if (!isNaN(Number(numerator)) && !isNaN(Number(denominator))) {
-    // Evaluate as normal expression
-    try {
-      let expr = input.replace(/[a-zA-ZμΩ]+/g, '').replace(/\s+/g, '');
-      let result = Function('"use strict";return (' + expr + ')')();
-      let formattedResult = formatSigFig(result, currentSigFigs);
-      stepsDiv.innerHTML = `
-        <div class="steps-eq-row">
-          <span class="steps-indent" style="width:${prettyInput.offsetWidth}px"></span>
-          <span class="eq-label">=</span>
-          <span class="steps-eq-latex">\\(${formattedResult}\\)</span>
-        </div>
-      `;
-      MathJax.typesetPromise([stepsDiv]);
-    } catch(e) {
+      // Fractions: e.g. 5/9xxx or 5.5/5
+      let fracMatch = input.replace(/\s+/g,'').match(/^(.+?)\/(.+)$/);
+      if (input && fracMatch) {
+        let numerator = fracMatch[1], denominator = fracMatch[2];
+        // If BOTH numerator and denominator are numbers, just eval:
+        if (!isNaN(Number(numerator)) && !isNaN(Number(denominator))) {
+          try {
+            let expr = input.replace(/[a-zA-ZμΩ]+/g, '').replace(/\s+/g, '');
+            let result = Function('"use strict";return (' + expr + ')')();
+            let formattedResult = formatSigFig(result, currentSigFigs);
+            steps.push(`
+              <div class="steps-eq-row">
+                <span class="steps-side" style="width:${inputWidth}px;display:inline-block;"></span>
+                <span class="eq-label">=</span>
+                <span class="steps-side" style="width:${inputWidth}px;display:inline-block;">
+                  <span class="steps-eq-latex">\\(${formattedResult}\\)</span>
+                </span>
+              </div>
+            `);
+            stepsDiv.innerHTML = steps.join('');
+            MathJax.typesetPromise([stepsDiv]);
+          } catch(e) {
+            stepsDiv.innerHTML = '';
+          }
+          return;
+        }
+        // Otherwise, use your pretty fraction logic for symbolic or unit fractions
+        let denVars = denominator.match(/([a-zA-Z]+)/g);
+        let denNumMatch = denominator.match(/^\d+/);
+        let denNum = denNumMatch ? denNumMatch[0] : '1';
+        let denVarPowers = {};
+        if (denVars) {
+          denVars.forEach(v => {
+            let re = new RegExp(`${v}+`, 'g');
+            let count = (denominator.match(re) || ['']).join('').length / v.length;
+            denVarPowers[v] = count;
+          });
+        }
+        let denPowLatex = Object.entries(denVarPowers).map(([v, c]) => c > 1 ? `${v}^{${c}}` : v).join('');
+        let simpLatex = `\\displaystyle\\frac{${numerator}}{${denNum !== '1' ? denNum : ''}${denPowLatex}}`;
+
+        let numVal = parseFloat(numerator);
+        let denVal = parseFloat(denNum);
+        let dec = (!isNaN(numVal) && !isNaN(denVal) && denVal !== 0) ? numVal / denVal : NaN;
+        let formattedDec = formatSigFig(dec, currentSigFigs);
+        let repLatex = (!isNaN(dec)) ? formattedDec : '?';
+        let decFracLatex = `\\displaystyle\\frac{${repLatex}}{${denPowLatex}}`;
+        let fullDecLatex = `${repLatex}${Object.entries(denVarPowers).length > 0 ? '\\,' : ''}${Object.entries(denVarPowers).map(([v,c])=>`${v}^{-${c}}`).join('')}`;
+
+        [simpLatex, decFracLatex, fullDecLatex].forEach(latex => {
+          steps.push(`
+            <div class="steps-eq-row">
+              <span class="steps-side" style="width:${inputWidth}px;display:inline-block;"></span>
+              <span class="eq-label">=</span>
+              <span class="steps-side" style="width:${inputWidth}px;display:inline-block;">
+                <span class="steps-eq-latex">\\(${latex}\\)</span>
+              </span>
+            </div>
+          `);
+        });
+
+        stepsDiv.innerHTML = steps.join('');
+        MathJax.typesetPromise([stepsDiv]);
+        return;
+      }
+
+      // NEW: handle any valid math expression (e.g. "1 lb * 2 ft")
+      if (input) {
+        try {
+          let expr = input.replace(/[a-zA-ZμΩ]+/g, '').replace(/\s+/g, '');
+          let result = Function('"use strict";return (' + expr + ')')();
+          let formattedResult = formatSigFig(result, currentSigFigs);
+          stepsDiv.innerHTML = `
+            <div class="steps-eq-row">
+              <span class="steps-side" style="width:${inputWidth}px;display:inline-block;"></span>
+              <span class="eq-label">=</span>
+              <span class="steps-side" style="width:${inputWidth}px;display:inline-block;">
+                <span class="steps-eq-latex">\\(${formattedResult}\\)</span>
+              </span>
+            </div>
+          `;
+          MathJax.typesetPromise([stepsDiv]);
+        } catch(e) {
+          stepsDiv.innerHTML = '';
+        }
+        return;
+      }
       stepsDiv.innerHTML = '';
-    }
-    return;
-  }
-  // Otherwise, use your pretty fraction logic for symbolic or unit fractions
-  let denVars = denominator.match(/([a-zA-Z]+)/g);
-  let denNumMatch = denominator.match(/^\d+/);
-  let denNum = denNumMatch ? denNumMatch[0] : '1'; // Default to 1 if no leading digits
-  let denVarPowers = {};
-  if (denVars) {
-    denVars.forEach(v => {
-      let re = new RegExp(`${v}+`, 'g');
-      let count = (denominator.match(re) || ['']).join('').length / v.length;
-      denVarPowers[v] = count;
-    });
-  }
-  let denPowLatex = Object.entries(denVarPowers).map(([v, c]) => c > 1 ? `${v}^{${c}}` : v).join('');
-  let simpLatex = `\\displaystyle\\frac{${numerator}}{${denNum !== '1' ? denNum : ''}${denPowLatex}}`;
-
-  // Safe parsing:
-  let numVal = parseFloat(numerator);
-  let denVal = parseFloat(denNum);
-  let dec = (!isNaN(numVal) && !isNaN(denVal) && denVal !== 0) ? numVal / denVal : NaN;
-  let formattedDec = formatSigFig(dec, currentSigFigs); // <-- Use sig figs!
-  let repLatex = (!isNaN(dec)) ? formattedDec : '?';
-  let decFracLatex = `\\displaystyle\\frac{${repLatex}}{${denPowLatex}}`;
-  let fullDecLatex = `${repLatex}${Object.entries(denVarPowers).length > 0 ? '\\,' : ''}${Object.entries(denVarPowers).map(([v,c])=>`${v}^{-${c}}`).join('')}`;
-
-  // All output rows: indent + = + latex
-  [simpLatex, decFracLatex, fullDecLatex].forEach(latex => {
-steps.push(`
-  <div class="steps-eq-row">
-    <span class="steps-side steps-left">
-      <span class="steps-indent"></span>
-    </span>
-    <span class="eq-label">=</span>
-    <span class="steps-side steps-right">
-      <span class="steps-eq-latex">\\(${latex}\\)</span>
-    </span>
-  </div>
-`);
-
-
-
-  stepsDiv.innerHTML = steps.join('');
-  MathJax.typesetPromise([stepsDiv]);
-  return;
-}
-
-
-// NEW: handle any valid math expression (e.g. "1 lb * 2 ft")
-if (input) {
-  try {
-    // WARNING: this is a basic parser; if you want units to actually be handled, you'll need more logic!
-    // For now, strip units and just calculate numbers for demonstration:
-    let expr = input.replace(/[a-zA-ZμΩ]+/g, '').replace(/\s+/g, '');
-    let result = Function('"use strict";return (' + expr + ')')();
-    let formattedResult = formatSigFig(result, currentSigFigs);
-    stepsDiv.innerHTML = `
-      <div class="steps-eq-row">
-        <span class="steps-indent" style="width:${prettyInput.offsetWidth}px"></span>
-        <span class="eq-label">=</span>
-        <span class="steps-eq-latex">\\(${formattedResult}\\)</span>
-      </div>
-    `;
-    MathJax.typesetPromise([stepsDiv]);
-  } catch(e) {
-    stepsDiv.innerHTML = '';
-  }
-  return;
-}
-stepsDiv.innerHTML = '';
-
     });
   });
 }
+
 
 
 
