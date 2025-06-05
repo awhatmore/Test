@@ -7,8 +7,36 @@
   <style>
     body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 2rem; }
     h2 { text-align: center; }
-    #pretty-math-output, #pretty-input-output {
-      font-size: 1.5em; min-height: 2em; color:#fff; margin-bottom:0.3em;
+    #main-math-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 1em;
+    }
+    #input-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.2em;
+    }
+    #pretty-input-output {
+      font-size: 1.6em;
+      color: #fff;
+      min-width: 3em;
+      margin: 0 0.4em;
+      text-align: center;
+    }
+    #eq-sign {
+      font-size: 1.6em;
+      color: #0ff;
+      font-weight: bold;
+    }
+    #steps-output > div {
+      font-size: 1.4em;
+      color: #fff;
+      text-align: center;
+      margin: 0.15em 0;
+      min-height: 1.5em;
     }
     #input-box {
       width: 100%;
@@ -42,11 +70,15 @@
 </head>
 <body>
   <h2>Smart SI Unit Calculator</h2>
-  <div id="pretty-input-output"></div>
-  <div style="font-size:2em; text-align:center; margin-bottom: 0.5em;">=</div>
-  <div id="pretty-math-output"></div>
-  <div style="display:flex;align-items:center;margin-bottom:0.7em;">
-    <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
+  <div id="main-math-block">
+    <div id="input-row">
+      <div id="pretty-input-output"></div>
+      <span id="eq-sign">=</span>
+    </div>
+    <div id="steps-output"></div>
+    <div style="display:flex;align-items:center;margin: 0.5em 0;">
+      <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
+    </div>
   </div>
   <input id="input-box"
     placeholder="Enter calculation (e.g. 5 / 9xxx)"
@@ -164,42 +196,45 @@ function updatePrettyInput() {
   MathJax.typesetPromise();
 }
 function calculate() {
-  let prettyDiv = document.getElementById('pretty-math-output');
+  let stepsDiv = document.getElementById('steps-output');
   let input = document.getElementById('input-box').value.trim();
 
-  // Only process if input is a fraction (with possible variable string in denominator)
+  // Only process if input is a fraction with number in numerator and denominator (plus vars)
   let fracMatch = input.replace(/\s+/g,'').match(/^([\d.]+)\s*\/\s*([\d.]+)([a-zA-Z]*)$/);
+  stepsDiv.innerHTML = '';
   if (fracMatch) {
     let numerator = fracMatch[1], denominatorNum = fracMatch[2], denominatorVars = fracMatch[3] || '';
-    // Simplify variable string to powers (e.g., xxx -> x^3)
     let varCounts = {};
     for (let char of denominatorVars) {
       varCounts[char] = (varCounts[char]||0)+1;
     }
     let simpVarLatex = Object.entries(varCounts).map(([v,c])=>c>1?`${v}^{${c}}`:v).join('');
-    // Compose LaTeX steps
     let origLatex = `\\displaystyle\\frac{${numerator}}{${denominatorNum}${denominatorVars}}`;
     let simpLatex = `\\displaystyle\\frac{${numerator}}{${denominatorNum}${simpVarLatex}}`;
     let dec = parseFloat(numerator) / parseFloat(denominatorNum);
     let decLatex = toRepeatingDecimal(dec);
     let decFracLatex = `\\displaystyle\\frac{${decLatex}}{${simpVarLatex}}`;
     let fullDecLatex = `${decLatex}\\,${Object.entries(varCounts).map(([v,c])=>`${v}^{-${c}}`).join('')}`;
-    prettyDiv.innerHTML = 
-      `= ${origLatex}<br>
-       = ${simpLatex}<br>
-       = ${decFracLatex}<br>
-       = ${fullDecLatex}`;
+
+    // Each step as a centered pretty block
+    let lines = [simpLatex, decFracLatex, fullDecLatex];
+    for(let line of lines) {
+      let el = document.createElement('div');
+      el.innerHTML = `\\(${line}\\)`;
+      stepsDiv.appendChild(el);
+    }
     MathJax.typesetPromise();
     return;
   }
   // Fallback for non-fraction input (clear steps)
-  prettyDiv.innerHTML = '';
+  stepsDiv.innerHTML = '';
   MathJax.typesetPromise();
 }
 document.getElementById('copy-latex-btn').onclick = function() {
-  let latex = document.getElementById('pretty-math-output').innerText;
-  if (!latex) return;
-  navigator.clipboard.writeText(latex)
+  let steps = document.querySelectorAll('#steps-output div');
+  let text = Array.from(steps).map(div => div.innerText).join('\n');
+  if (!text) return;
+  navigator.clipboard.writeText(text)
     .then(() => {
       let btn = document.getElementById('copy-latex-btn');
       btn.textContent = '✅';
