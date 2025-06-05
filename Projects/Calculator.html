@@ -53,12 +53,15 @@
     <div id="pretty-math-output" style="flex:1;"></div>
     <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
   </div>
-<div id="pretty-input-output" style="font-size:1.7em; min-height:2em; margin-bottom:0.4em;"></div>
+  <div id="pretty-input-output" style="font-size:1.5em; min-height:2em; color:#fff; margin-bottom:0.3em;"></div>
+<div style="font-size:2em; text-align:center;">=</div>
+<div id="pretty-math-output" style="flex:1;"></div>
 <input id="input-box"
   placeholder="Enter calculation (e.g. 5 V * 5 A + 5 W)"
   autocomplete="off"
   oninput="updatePrettyInput(); calculate();"
   onkeydown="if(event.key==='Enter'){calculate(); return false;}">
+
 
 
 
@@ -180,7 +183,7 @@ const UNITS = {
 };
 
 
-  function updatePrettyInput() {
+function updatePrettyInput() {
   let input = document.getElementById('input-box').value;
   let prettyDiv = document.getElementById('pretty-input-output');
   if (!input.trim()) {
@@ -191,6 +194,7 @@ const UNITS = {
   prettyDiv.innerHTML = `\\(${formatInputAsLatex(input)}\\)`;
   MathJax.typesetPromise();
 }
+
 
 function setSigFigs(n) {
   currentSigFigs = n;
