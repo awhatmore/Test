@@ -273,112 +273,98 @@ function calculate() {
     return;
   }
 
-  // List of units to treat specially
-  const knownUnits = [
-    "kg", "A", "W", "V", "VA"
-  ];
+  const knownUnits = [ "kg", "A", "W", "V", "VA" ];
 
-// Helper: Format input with dots/fraction for MathJax
-function formatInputForPrettyLatex(input) {
-  let clean = input.replace(/\s+/g, '');
-  // Check if input is of the form: stuff / stuff
-  let fracMatch = clean.match(/^(.+?)\/(.+)$/);
-  if (fracMatch) {
-    // Turn both numerator and denominator * into \cdot
-    let num = fracMatch[1].replace(/\*/g, ' \\cdot ');
-    let den = fracMatch[2].replace(/\*/g, ' \\cdot ');
-    return `\\displaystyle\\frac{${num}}{${den}}`;
-  } else {
-    return clean.replace(/\*/g, ' \\cdot ');
-  }
-}
-
-
-  // Helper: Parse factors
-  function parseFactors(str) {
-    let parts = str.split('*').map(s => s.trim()).filter(Boolean);
-    let factCount = {};
-    for (let p of parts) {
-      let match = p.match(/^([a-zA-ZμΩ]+)(?:\^(\d+))?$/);
-      if (match) {
-        let base = match[1];
-        let exp = match[2] ? parseInt(match[2]) : 1;
-        factCount[base] = (factCount[base] || 0) + exp;
-      } else if (!isNaN(Number(p))) {
-        factCount[p] = (factCount[p] || 0) + 1;
+  // Factor helper: returns {numProduct, vars:{var:exp, ...}}
+  function analyzeFactors(factors) {
+    let numProduct = 1;
+    let vars = {};
+    for (let f of factors) {
+      if (!isNaN(Number(f))) {
+        numProduct *= Number(f);
       } else {
-        factCount[p] = (factCount[p] || 0) + 1;
-      }
-    }
-    return factCount;
-  }
-
-  // Helper: Render factors as LaTeX
-  function renderFactorsLatex(factCount) {
-    let nums = [];
-    let vars = [];
-    for (let key in factCount) {
-      let exp = factCount[key];
-      if (isFinite(key)) {
-        nums.push(exp > 1 ? `${key}^${exp}` : key);
-      } else {
-        if (knownUnits.includes(key)) {
-          vars.push(exp > 1 ? `\\mathrm{${key}}^{${exp}}` : `\\mathrm{${key}}`);
+        // Parse exponents like y^2 or kg^3
+        let match = f.match(/^([a-zA-ZμΩ]+)(?:\^(\d+))?$/);
+        if (match) {
+          let base = match[1];
+          let exp = match[2] ? parseInt(match[2]) : 1;
+          vars[base] = (vars[base] || 0) + exp;
         } else {
-          vars.push(exp > 1 ? `${key}^{${exp}}` : key);
+          vars[f] = (vars[f] || 0) + 1;
         }
       }
     }
-    return (nums.concat(vars)).join(" \\cdot ");
+    return { numProduct, vars };
   }
 
-  // Helper: Check if factor dict is all numbers
-  function isAllNumbers(factCount) {
-    return Object.keys(factCount).every(key => !isNaN(Number(key)));
+  // Render a variable/unit dictionary as latex
+  function renderVars(vars) {
+    return Object.entries(vars)
+      .map(([v, exp]) =>
+        knownUnits.includes(v)
+          ? (exp === 1 ? `\\mathrm{${v}}` : `\\mathrm{${v}}^{${exp}}`)
+          : (exp === 1 ? v : `${v}^{${exp}}`)
+      ).join(' ');
   }
 
-  // Helper: Multiply all numbers in a factor dict
-  function multiplyNumbers(factCount) {
-    let product = 1;
-    for (let key in factCount) {
-      if (!isNaN(Number(key))) {
-        for (let i = 0; i < factCount[key]; i++) product *= Number(key);
-      }
-    }
-    return product;
+  // Compose a latex product
+  function composeLatex(num, vars) {
+    let varStr = renderVars(vars);
+    return [num !== 1 ? num : '', varStr].filter(Boolean).join(' ');
   }
 
-  // ---- Main output logic ----
+  // Process input: handle fractions
   let prettyInput = `\\(${formatInputForPrettyLatex(input)}\\)`;
-
-  // FRACTION HANDLING
+  let prettyOutput1 = '';
   let fracMatch = input.replace(/\s+/g, '').match(/^(.+?)\/(.+)$/);
-  let prettyOutput1 = "";
 
   if (fracMatch) {
-    let numFactors = parseFactors(fracMatch[1]);
-    let denFactors = parseFactors(fracMatch[2]);
-    if (isAllNumbers(numFactors) && isAllNumbers(denFactors)) {
-      // Pure numbers: evaluate
-      let numerator = multiplyNumbers(numFactors);
-      let denominator = multiplyNumbers(denFactors);
-      let value = numerator / denominator;
-      prettyOutput1 = value.toString();
+    // Split numerator and denominator by *
+    let numFactors = fracMatch[1].split('*').map(s => s.trim()).filter(Boolean);
+    let denFactors = fracMatch[2].split('*').map(s => s.trim()).filter(Boolean);
+    let numAnalysis = analyzeFactors(numFactors);
+    let denAnalysis = analyzeFactors(denFactors);
+
+    // If denominator is only number 1, treat as product
+    let isDenomOne = (denAnalysis.numProduct === 1) && Object.keys(denAnalysis.vars).length === 0;
+
+    if (isDenomOne) {
+      prettyOutput1 = composeLatex(numAnalysis.numProduct, numAnalysis.vars);
     } else {
-      // Not all numbers: pretty fraction
-      let numLatex = renderFactorsLatex(numFactors);
-      let denLatex = renderFactorsLatex(denFactors);
-      prettyOutput1 = `\\displaystyle\\frac{${numLatex}}{${denLatex}}`;
+      // Reduce vars/units: numerator minus denominator exponents
+      let allVars = { ...numAnalysis.vars };
+      for (let v in denAnalysis.vars) {
+        allVars[v] = (allVars[v] || 0) - denAnalysis.vars[v];
+      }
+      // Remove zero exponents
+      Object.keys(allVars).forEach(k => { if (allVars[k] === 0) delete allVars[k]; });
+
+      // Compose top/bottom for fraction
+      let numLatex = composeLatex(numAnalysis.numProduct, numAnalysis.vars);
+      let denLatex = composeLatex(denAnalysis.numProduct, denAnalysis.vars);
+
+      // If only a numeric denominator (e.g. 15/2), show as simplified fraction
+      if (Object.keys(denAnalysis.vars).length === 0 && denAnalysis.numProduct !== 1) {
+        prettyOutput1 = `\\displaystyle\\frac{${numLatex}}{${denLatex}}`;
+      } else {
+        // If denominator has vars, combine exponents algebraically
+        let nVars = { ...numAnalysis.vars };
+        let dVars = { ...denAnalysis.vars };
+        // Remove variables with 0 exponent
+        Object.keys(nVars).forEach(k => { if ((nVars[k] || 0) === 0) delete nVars[k]; });
+        Object.keys(dVars).forEach(k => { if ((dVars[k] || 0) === 0) delete dVars[k]; });
+        let numPart = composeLatex(numAnalysis.numProduct, nVars);
+        let denPart = composeLatex(denAnalysis.numProduct, dVars);
+        prettyOutput1 = `\\displaystyle\\frac{${numPart}}{${denPart}}`;
+      }
     }
   } else {
-    // Not a fraction: simplify if all numbers, else pretty product
-    let factCount = parseFactors(input);
-    if (isAllNumbers(factCount)) {
-      prettyOutput1 = multiplyNumbers(factCount).toString();
-    } else {
-      prettyOutput1 = renderFactorsLatex(factCount);
-    }
+    // Not a fraction, just multiply all numbers and combine vars
+    let allFactors = input.split('*').map(s => s.trim()).filter(Boolean);
+    let { numProduct, vars } = analyzeFactors(allFactors);
+    prettyOutput1 = composeLatex(numProduct, vars);
   }
+
   if (!prettyOutput1) prettyOutput1 = "\\text{(empty)}";
 
   let outputs = [
@@ -409,6 +395,7 @@ function formatInputForPrettyLatex(input) {
   stepsDiv.innerHTML = steps.join('');
   MathJax.typesetPromise([stepsDiv]);
 }
+
 
 
 
