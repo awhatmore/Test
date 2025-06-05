@@ -288,6 +288,7 @@ function calculate() {
   let stepsDiv = document.getElementById('steps-math-output');
   let input = document.getElementById('input-box').value.trim();
 
+  // Only show the input pretty at the top, not in the steps area
   let inputLatex = input ? `\\(${formatInputAsLatex(input)}\\)` : '';
   prettyInput.innerHTML = inputLatex;
 
@@ -305,45 +306,37 @@ function calculate() {
       let inputWidth = measureSpan.getBoundingClientRect().width;
       document.body.removeChild(measureSpan);
 
-      // Example output steps: you can change/add steps as needed
       let steps = [];
 
-      // Add only if input is valid and looks like a fraction
+      // Fractions: e.g. 5/9xxx
       let fracMatch = input.replace(/\s+/g,'').match(/^(.+?)\/(.+)$/);
       if (input && fracMatch) {
         let numerator = fracMatch[1], denominator = fracMatch[2];
         let denVars = denominator.match(/([a-zA-Z]+)/g);
-        let denNum = denominator.match(/^\d+/) ? denominator.match(/^\d+/)[0] : '';
+        let denNumMatch = denominator.match(/^\d+/);
+        let denNum = denNumMatch ? denNumMatch[0] : '1'; // Default to 1 if no leading digits
         let denVarPowers = {};
-        let denRest = denominator;
         if (denVars) {
-          denVars.forEach(v=>{
-            let re = new RegExp(`${v}+`,'g');
+          denVars.forEach(v => {
+            let re = new RegExp(`${v}+`, 'g');
             let count = (denominator.match(re) || ['']).join('').length / v.length;
             denVarPowers[v] = count;
-            denRest = denRest.replace(v.repeat(count), '');
           });
         }
-        let denPowLatex = Object.entries(denVarPowers).map(([v,c])=>c>1?`${v}^{${c}}`:v).join('');
-        let simpLatex = `\\displaystyle\\frac{${numerator}}{${denNum}${denPowLatex}}`;
-        let numVal = parseFloat(numerator), denVal = parseFloat(denNum), dec = numVal/denVal;
-        let repLatex = toRepeatingDecimal(dec);
-        let decFracLatex = `\\displaystyle\\frac{${repLatex}}{${denPowLatex}}`;
-        let fullDecLatex = `${repLatex}\\,${Object.entries(denVarPowers).map(([v,c])=>`${v}^{-${c}}`).join('')}`;
+        let denPowLatex = Object.entries(denVarPowers).map(([v, c]) => c > 1 ? `${v}^{${c}}` : v).join('');
+        let simpLatex = `\\displaystyle\\frac{${numerator}}{${denNum !== '1' ? denNum : ''}${denPowLatex}}`;
 
-        // Original pretty input row
-        steps.push(`
-          <div class="steps-eq-row">
-            <span class="eq-label" style="visibility:hidden;">=</span>
-            <span class="steps-eq-latex">\\(${formatInputAsLatex(input)}\\)</span>
-          </div>
-        `);
-        // Aligned output rows
-        [
-          simpLatex,
-          decFracLatex,
-          fullDecLatex
-        ].forEach(latex => {
+        // Safe parsing:
+        let numVal = parseFloat(numerator);
+        let denVal = parseFloat(denNum);
+        let dec = (!isNaN(numVal) && !isNaN(denVal) && denVal !== 0) ? numVal / denVal : NaN;
+        let repLatex = (!isNaN(dec)) ? toRepeatingDecimal(dec) : '?';
+
+        let decFracLatex = `\\displaystyle\\frac{${repLatex}}{${denPowLatex}}`;
+        let fullDecLatex = `${repLatex}${Object.entries(denVarPowers).length > 0 ? '\\,' : ''}${Object.entries(denVarPowers).map(([v,c])=>`${v}^{-${c}}`).join('')}`;
+
+        // All output rows: indent + = + latex
+        [simpLatex, decFracLatex, fullDecLatex].forEach(latex => {
           steps.push(`
             <div class="steps-eq-row">
               <span class="steps-indent" style="width:${inputWidth}px"></span>
@@ -352,16 +345,17 @@ function calculate() {
             </div>
           `);
         });
+
         stepsDiv.innerHTML = steps.join('');
         MathJax.typesetPromise([stepsDiv]);
         return;
       }
-
       // No steps to show
       stepsDiv.innerHTML = '';
     });
   });
 }
+
 
 
 // Clipboard button
