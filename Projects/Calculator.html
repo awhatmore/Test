@@ -281,54 +281,37 @@ function calculate() {
         let expr = input.replace(/[a-zA-ZμΩ]+/g, '').replace(/\s+/g, '');
         let result = Function('"use strict";return (' + expr + ')')();
         let formattedResult = formatSigFig(result, currentSigFigs);
-// Symbolic: only show if input and output would be different
-let outputLatex = inputLatex; // In the future, could be a simplified form
-if (inputLatex !== outputLatex) {
-  steps.push(`
-    <div class="steps-eq-row">
-      <span class="steps-side">${inputLatex}</span>
-      <span class="eq-label">=</span>
-      <span class="steps-side right"><span class="steps-eq-latex">${outputLatex}</span></span>
-    </div>
-  `);
-}
-// (If they're the same, don't show anything)
-stepsDiv.innerHTML = steps.join('');
-MathJax.typesetPromise([stepsDiv]);
-return;
-
-        // Show alternate forms (fraction, decimal, negative exponent) all in same left-right order
         let fracLatex = `\\displaystyle\\frac{${fracMatch[1]}}{${fracMatch[2]}}`;
-        let decimalLatex = `\\(${formattedResult}/${fracMatch[2]}\\)`;
-        let negExpLatex = `\\(${formattedResult}${fracMatch[2] ? ' \\times ' + fracMatch[2] + '^{-1}' : ''}\\)`;
+        // Show pretty fraction = numeric result
         steps.push(`
           <div class="steps-eq-row">
             <span class="steps-side">${fracLatex}</span>
             <span class="eq-label">=</span>
-            <span class="steps-side right"><span class="steps-eq-latex">${decimalLatex}</span></span>
+            <span class="steps-side right"><span class="steps-eq-latex">\\(${formattedResult}\\)</span></span>
           </div>
         `);
-        steps.push(`
-          <div class="steps-eq-row">
-            <span class="steps-side">${fracLatex}</span>
-            <span class="eq-label">=</span>
-            <span class="steps-side right"><span class="steps-eq-latex">${negExpLatex}</span></span>
-          </div>
-        `);
+        // Optionally, show alternate forms (comment out if not needed)
+        // steps.push(`
+        //   <div class="steps-eq-row">
+        //     <span class="steps-side">${fracLatex}</span>
+        //     <span class="eq-label">=</span>
+        //     <span class="steps-side right"><span class="steps-eq-latex">\\(${formattedResult}/${fracMatch[2]}\\)</span></span>
+        //   </div>
+        // `);
+        // steps.push(`
+        //   <div class="steps-eq-row">
+        //     <span class="steps-side">${fracLatex}</span>
+        //     <span class="eq-label">=</span>
+        //     <span class="steps-side right"><span class="steps-eq-latex">\\(${formattedResult}${fracMatch[2] ? ' \\times ' + fracMatch[2] + '^{-1}' : ''}\\)</span></span>
+        //   </div>
+        // `);
         stepsDiv.innerHTML = steps.join('');
         MathJax.typesetPromise([stepsDiv]);
         return;
-      } catch (e) { }
+      } catch (e) {}
     }
-    // Symbolic fraction (not evaluated)
-    steps.push(`
-      <div class="steps-eq-row">
-        <span class="steps-side">${inputLatex}</span>
-        <span class="eq-label">=</span>
-        <span class="steps-side right"><span class="steps-eq-latex">${inputLatex}</span></span>
-      </div>
-    `);
-    stepsDiv.innerHTML = steps.join('');
+    // Symbolic fraction (not evaluated): skip echo line, show nothing.
+    stepsDiv.innerHTML = '';
     MathJax.typesetPromise([stepsDiv]);
     return;
   }
@@ -336,7 +319,7 @@ return;
   // Not a fraction
   if (input) {
     if (!containsVars) {
-      // Numeric evaluation (and show input on left always)
+      // Numeric evaluation (input left, result right)
       try {
         let expr = input.replace(/[a-zA-ZμΩ]+/g, '').replace(/\s+/g, '');
         let result = Function('"use strict";return (' + expr + ')')();
@@ -351,17 +334,10 @@ return;
         stepsDiv.innerHTML = steps.join('');
         MathJax.typesetPromise([stepsDiv]);
         return;
-      } catch (e) { }
+      } catch (e) {}
     }
-    // Otherwise: just pretty-print input left, symbolic right
-    steps.push(`
-      <div class="steps-eq-row">
-        <span class="steps-side">${inputLatex}</span>
-        <span class="eq-label">=</span>
-        <span class="steps-side right"><span class="steps-eq-latex">${inputLatex}</span></span>
-      </div>
-    `);
-    stepsDiv.innerHTML = steps.join('');
+    // Symbolic/non-evaluated: skip echo line, show nothing.
+    stepsDiv.innerHTML = '';
     MathJax.typesetPromise([stepsDiv]);
     return;
   }
