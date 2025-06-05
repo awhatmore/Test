@@ -343,25 +343,65 @@ function toRepeatingDecimal(num, maxDecimals = 20) {
 }
 
 let lastLatex = "";
+  
 function calculate() {
-  let panel = document.getElementById('result-panel');
+  let prettyInput = document.getElementById('pretty-input-output');
   let prettyDiv = document.getElementById('pretty-math-output');
-  panel.innerHTML = '';
-  prettyDiv.innerHTML = '';
   let input = document.getElementById('input-box').value.trim();
-  let termRegex = /([+\-]?[^+\-]+)/g;
-  let terms = [];
-  let match;
-  while ((match = termRegex.exec(input)) !== null) {
-    let seg = match[0].trim();
-    if (seg) terms.push(seg);
-  }
-  if (!terms.length) {
-    panel.innerHTML = `<span style='color:red;'>Could not parse input.<br>Try: 5 V * 5 A + 5 W</span>`;
-    prettyDiv.innerHTML = '';
+
+  // Render original input as latex
+  prettyInput.innerHTML = input ? `\\(${formatInputAsLatex(input)}\\)` : '';
+
+  // Parse, calculate, and simplify
+  // Split into numerator/denominator
+  let fracMatch = input.replace(/\s+/g,'').match(/^(.+?)\/(.+)$/);
+  let numerator = null, denominator = null, origLatex = "", simpLatex = "", decFracLatex = "", fullDecLatex = "";
+
+  if (fracMatch) {
+    numerator = fracMatch[1];
+    denominator = fracMatch[2];
+    // Original fraction
+    origLatex = `\\displaystyle\\frac{${numerator}}{${denominator}}`;
+
+    // Simplified: gather variable powers
+    let denVars = denominator.match(/([a-zA-Z]+)/g);
+    let denNum = denominator.match(/^\d+/) ? denominator.match(/^\d+/)[0] : '';
+    let denVarPowers = {};
+    let denRest = denominator;
+    if (denVars) {
+      denVars.forEach(v=>{
+        let re = new RegExp(`${v}+`,'g');
+        let count = (denominator.match(re) || ['']).join('').length / v.length;
+        denVarPowers[v] = count;
+        denRest = denRest.replace(v.repeat(count), '');
+      });
+    }
+    let denPowLatex = Object.entries(denVarPowers).map(([v,c])=>c>1?`${v}^{${c}}`:v).join('');
+    simpLatex = `\\displaystyle\\frac{${numerator}}{${denNum}${denPowLatex}}`;
+
+    // Decimal numerator (handle repeating)
+    let numVal = parseFloat(numerator);
+    let denVal = parseFloat(denNum);
+    let dec = numVal/denVal;
+    let repLatex = toRepeatingDecimal(dec);
+    decFracLatex = `\\displaystyle\\frac{${repLatex}}{${denPowLatex}}`;
+
+    // All decimalized
+    fullDecLatex = `${repLatex}\\,${Object.entries(denVarPowers).map(([v,c])=>`${v}^{-${c}}`).join('')}`;
+
+    prettyDiv.innerHTML = 
+      `= ${origLatex}<br>
+       = ${simpLatex}<br>
+       = ${decFracLatex}<br>
+       = ${fullDecLatex}`;
     MathJax.typesetPromise();
     return;
   }
+  // Fallback to previous style if not a pure fraction
+  prettyDiv.innerHTML = '';
+  MathJax.typesetPromise();
+}
+
   function parseFactor(str) {
     let m = str.match(/^([+\-]?\d*\.?\d+)?\s*([a-zA-ZμΩ]+)?(?:\^([+\-]?\d+))?$/);
     let val = m && m[1] ? parseFloat(m[1]) : 1;
