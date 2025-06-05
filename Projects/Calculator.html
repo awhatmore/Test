@@ -53,11 +53,12 @@
     <div id="pretty-math-output" style="flex:1;"></div>
     <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
   </div>
-  <input id="input-box" 
-  placeholder="Enter calculation (e.g. 5 V * 5 A + 5 W)" 
+  <input id="input-box"
+  placeholder="Enter calculation (e.g. 5 V * 5 A + 5 W)"
   autocomplete="off"
-  oninput="calculate()"
+  oninput="updatePrettyInput(); calculate();"
   onkeydown="if(event.key==='Enter'){calculate(); return false;}">
+
 
 
   <div style="margin-bottom:0.5em;">
@@ -297,6 +298,23 @@ function resultsToLatex(resultMap, fractionMode=false, sigFigs=currentSigFigs) {
   return rows.join(' + ');
 }
 
+function formatInputAsLatex(input) {
+  // Basic: handles a/b as a fraction
+  // Expand if you want more advanced parsing later!
+  input = input.replace(/\s+/g, ''); // Remove spaces for clarity
+  // Match: something / something
+  let fracMatch = input.match(/^(.+?)\/(.+)$/);
+  if (fracMatch) {
+    // Make numerator and denominator pretty (allow things like 5xyz)
+    return `\\displaystyle\\frac{${fracMatch[1]}}{${fracMatch[2]}}`;
+  } else {
+    // Otherwise, just render as is, with variables italic
+    // Make xyz -> \mathit{xyz}
+    return input.replace(/([a-zA-Z]+)/g, "\\mathit{$1}");
+  }
+}
+
+
 let lastLatex = "";
 function calculate() {
   let panel = document.getElementById('result-panel');
@@ -367,6 +385,19 @@ function calculate() {
     }
     return [val, exp];
   }
+
+  function updatePrettyInput() {
+  let input = document.getElementById('input-box').value;
+  let prettyDiv = document.getElementById('pretty-math-output');
+  if (!input.trim()) {
+    prettyDiv.innerHTML = '';
+    MathJax.typesetPromise();
+    return;
+  }
+  prettyDiv.innerHTML = `\\(${formatInputAsLatex(input)}\\)`;
+  MathJax.typesetPromise();
+}
+
   
 function toRepeatingDecimal(num, maxDecimals = 20) {
   // Only support for repeating NINES for now, e.g., 1/9, 2/9, 1/3
