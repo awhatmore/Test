@@ -292,6 +292,7 @@ function calculate() {
   prettyInput.innerHTML = inputLatex;
 
   MathJax.typesetPromise([prettyInput]).then(() => {
+    // Measure pretty input width
     let measureSpan = document.createElement('span');
     measureSpan.style.visibility = 'hidden';
     measureSpan.style.position = 'absolute';
@@ -304,8 +305,11 @@ function calculate() {
       let inputWidth = measureSpan.getBoundingClientRect().width;
       document.body.removeChild(measureSpan);
 
-      let fracMatch = input.replace(/\s+/g,'').match(/^(.+?)\/(.+)$/);
+      // Example output steps: you can change/add steps as needed
       let steps = [];
+
+      // Add only if input is valid and looks like a fraction
+      let fracMatch = input.replace(/\s+/g,'').match(/^(.+?)\/(.+)$/);
       if (input && fracMatch) {
         let numerator = fracMatch[1], denominator = fracMatch[2];
         let denVars = denominator.match(/([a-zA-Z]+)/g);
@@ -327,35 +331,38 @@ function calculate() {
         let decFracLatex = `\\displaystyle\\frac{${repLatex}}{${denPowLatex}}`;
         let fullDecLatex = `${repLatex}\\,${Object.entries(denVarPowers).map(([v,c])=>`${v}^{-${c}}`).join('')}`;
 
+        // Original pretty input row
         steps.push(`
           <div class="steps-eq-row">
-            <span class="eq-label">=</span>
-            <span class="steps-eq-latex">${simpLatex}</span>
+            <span class="eq-label" style="visibility:hidden;">=</span>
+            <span class="steps-eq-latex">\\(${formatInputAsLatex(input)}\\)</span>
           </div>
         `);
-        steps.push(`
-          <div class="steps-eq-row">
-            <span class="steps-indent" style="width:${inputWidth}px"></span>
-            <span class="eq-label">=</span>
-            <span class="steps-eq-latex">${decFracLatex}</span>
-          </div>
-        `);
-        steps.push(`
-          <div class="steps-eq-row">
-            <span class="steps-indent" style="width:${inputWidth}px"></span>
-            <span class="eq-label">=</span>
-            <span class="steps-eq-latex">${fullDecLatex}</span>
-          </div>
-        `);
-
+        // Aligned output rows
+        [
+          simpLatex,
+          decFracLatex,
+          fullDecLatex
+        ].forEach(latex => {
+          steps.push(`
+            <div class="steps-eq-row">
+              <span class="steps-indent" style="width:${inputWidth}px"></span>
+              <span class="eq-label">=</span>
+              <span class="steps-eq-latex">\\(${latex}\\)</span>
+            </div>
+          `);
+        });
         stepsDiv.innerHTML = steps.join('');
         MathJax.typesetPromise([stepsDiv]);
         return;
       }
+
+      // No steps to show
       stepsDiv.innerHTML = '';
     });
   });
 }
+
 
 // Clipboard button
 document.getElementById('copy-latex-btn').onclick = function() {
