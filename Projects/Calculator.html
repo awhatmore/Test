@@ -21,15 +21,6 @@
       margin-bottom: 1rem;
       box-sizing: border-box;
     }
-    #result-panel {
-      background: #222;
-      padding: 1rem;
-      border-radius: 0.9rem;
-      font-size: 1rem;
-      margin-top: 1rem;
-      min-height: 60px;
-    }
-    .section-label { font-weight: bold; color: #0ff; margin-top: 0.5em; }
     .calculator {
       display: grid;
       grid-template-columns: repeat(3, 60px);
@@ -41,11 +32,11 @@
       font-size: 1.2em;
     }
     .wide { grid-column: span 2; }
-    .output-row { margin-bottom: 0.3em; }
-    .unit-breakdown { color: #6cf; font-family: 'Consolas', monospace; }
-    .sigfig-active { background: #0ff; color: #111; }
+    @media (max-width: 600px) {
+      button { width: 40px; height: 40px; font-size: 1em;}
+      .calculator { grid-template-columns: repeat(3, 40px); }
+    }
   </style>
-  <!-- MATHJAX CDN FOR BEAUTIFUL OUTPUT -->
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
@@ -58,17 +49,11 @@
     <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
   </div>
   <input id="input-box"
-    placeholder="Enter calculation (e.g. 5 V * 5 A + 5 W)"
+    placeholder="Enter calculation (e.g. 5 / 9xxx)"
     autocomplete="off"
     oninput="updatePrettyInput(); calculate();"
     onkeydown="if(event.key==='Enter'){calculate(); return false;}">
 
-  <div style="margin-bottom:0.5em;">
-    Significant figures: 
-    <button class="sigfig-btn" onclick="setSigFigs(3)">3</button>
-    <button class="sigfig-btn" onclick="setSigFigs(6)">6</button>
-    <button class="sigfig-btn" onclick="setSigFigs(10)">10</button>
-  </div>
   <div class="calculator">
     <button onclick="appendCalc('1')">1</button>
     <button onclick="appendCalc('2')">2</button>
@@ -142,45 +127,31 @@
     <button onclick="appendCalc(' Ω ')">Ω</button>
     <button onclick="appendCalc(' C ')">C</button>
   </div>
-  <div id="result-panel"></div>
 
 <script>
-const BASES = ['kg', 'm', 's', 'A', 'K', 'mol', 'cd'];
-const UNIT_TABLE = {
-  m:   {kg:0, m:1, s:0, A:0, K:0, mol:0, cd:0},
-  kg:  {kg:1, m:0, s:0, A:0, K:0, mol:0, cd:0},
-  s:   {kg:0, m:0, s:1, A:0, K:0, mol:0, cd:0},
-  A:   {kg:0, m:0, s:0, A:1, K:0, mol:0, cd:0},
-  K:   {kg:0, m:0, s:0, A:0, K:1, mol:0, cd:0},
-  mol: {kg:0, m:0, s:0, A:0, K:0, mol:1, cd:0},
-  cd:  {kg:0, m:0, s:0, A:0, K:0, mol:0, cd:1},
-  N:   {kg:1, m:1, s:-2, A:0, K:0, mol:0, cd:0},
-  J:   {kg:1, m:2, s:-2, A:0, K:0, mol:0, cd:0},
-  W:   {kg:1, m:2, s:-3, A:0, K:0, mol:0, cd:0},
-  V:   {kg:1, m:2, s:-3, A:-1, K:0, mol:0, cd:0},
-  C:   {kg:0, m:0, s:1, A:1, K:0, mol:0, cd:0},
-  Ω:   {kg:1, m:2, s:-3, A:-2, K:0, mol:0, cd:0},
-  F:   {kg:-1, m:-2, s:4, A:2, K:0, mol:0, cd:0},
-  S:   {kg:-1, m:-2, s:3, A:2, K:0, mol:0, cd:0},
-  H:   {kg:1, m:2, s:-2, A:-2, K:0, mol:0, cd:0},
-  VA:  {kg:1, m:2, s:-3, A:0, K:0, mol:0, cd:0},
-};
-const DERIVED_LOOKUP = Object.fromEntries(
-  Object.entries(UNIT_TABLE).map(([k,v])=>[JSON.stringify(v),k])
-);
-const UNITS = {
-  nm:  [1e-9, 'm'], μm:[1e-6,'m'], mm:[1e-3,'m'], cm:[1e-2,'m'], m:[1,'m'], km:[1e3,'m'],
-  in: [0.0254,'m'], ft:[0.3048,'m'], yd:[0.9144,'m'], mi:[1609.34,'m'],
-  mg:[1e-6,'kg'], g:[1e-3,'kg'], kg:[1,'kg'], t:[1000,'kg'],
-  oz:[0.0283495,'kg'], lb:[0.453592,'kg'], st:[6.35029,'kg'],
-  ns:[1e-9,'s'], μs:[1e-6,'s'], ms:[1e-3,'s'], s:[1,'s'], min:[60,'s'], hr:[3600,'s'], day:[86400,'s'],
-  A:[1,'A'], V:[1,'V'], W:[1,'W'], F:[1,'F'], Ω:[1,'Ω'], C:[1,'C'],
-  N:[1,'N'], J:[1,'J'], S:[1,'S'], H:[1,'H'],
-  VA:[1,'VA'],
-};
-
-let currentSigFigs = 3;
-
+function toRepeatingDecimal(num, maxDecimals = 20) {
+  let str = num.toString();
+  if (!str.includes('.')) return str;
+  let frac = num % 1;
+  for (let i = 1; i < maxDecimals; i++) {
+    let candidate = Math.round(frac * Math.pow(10, i));
+    if (candidate === Math.pow(10, i) - 1) {
+      let base = Math.floor(num);
+      let repDigit = Math.round(frac * Math.pow(10, i)) % 10;
+      return `${base === 0 ? '' : base}.\\overline{${repDigit}}`;
+    }
+  }
+  return num.toPrecision(10);
+}
+function formatInputAsLatex(input) {
+  input = input.replace(/\s+/g, '');
+  let fracMatch = input.match(/^(.+?)\/(.+)$/);
+  if (fracMatch) {
+    return `\\displaystyle\\frac{${fracMatch[1]}}{${fracMatch[2]}}`;
+  } else {
+    return input.replace(/([a-zA-Z]+)/g, "\\mathit{$1}");
+  }
+}
 function updatePrettyInput() {
   let input = document.getElementById('input-box').value;
   let prettyDiv = document.getElementById('pretty-input-output');
@@ -192,49 +163,53 @@ function updatePrettyInput() {
   prettyDiv.innerHTML = `\\(${formatInputAsLatex(input)}\\)`;
   MathJax.typesetPromise();
 }
+function calculate() {
+  let prettyDiv = document.getElementById('pretty-math-output');
+  let input = document.getElementById('input-box').value.trim();
 
-function setSigFigs(n) {
-  currentSigFigs = n;
-  document.querySelectorAll('.sigfig-btn').forEach(btn => {
-    btn.classList.toggle('sigfig-active', btn.textContent == n);
-  });
-  calculate(); // update output
-}
-
-function cloneExp(e) { return Object.assign({}, e); }
-function zeroExp() { let o={}; BASES.forEach(b=>o[b]=0); return o; }
-function addExp(e1, e2, sign=1) {
-  let out = {};
-  BASES.forEach(b => out[b] = (e1[b]||0) + sign*(e2[b]||0));
-  return out;
-}
-function expToStr(exp) {
-  return Object.entries(exp)
-    .filter(([k, v]) => v !== 0)
-    .map(([k, v]) => {
-      if (v === 1) return k;
-      if (v === -1) return k + '⁻¹';
-      return `${k}^${v}`;
-    })
-    .join('·') || '';
-}
-function expToDerived(exp) {
-  let key = JSON.stringify(exp);
-  return DERIVED_LOOKUP[key] || null;
-}
-function decimalToFraction(value, maxDenom=10000) {
-  if (!isFinite(value)) return value.toString();
-  let num = value, denom = 1, bestNum = 1, bestDenom = 1, bestError = Math.abs(value-1);
-  for (let d=1; d<=maxDenom; d++) {
-    let n = Math.round(value*d);
-    let error = Math.abs(value - n/d);
-    if (error < bestError) {
-      bestNum = n; bestDenom = d; bestError = error;
+  // Only process if input is a fraction (with possible variable string in denominator)
+  let fracMatch = input.replace(/\s+/g,'').match(/^([\d.]+)\s*\/\s*([\d.]+)([a-zA-Z]*)$/);
+  if (fracMatch) {
+    let numerator = fracMatch[1], denominatorNum = fracMatch[2], denominatorVars = fracMatch[3] || '';
+    // Simplify variable string to powers (e.g., xxx -> x^3)
+    let varCounts = {};
+    for (let char of denominatorVars) {
+      varCounts[char] = (varCounts[char]||0)+1;
     }
-    if (bestError < 1e-8) break;
+    let simpVarLatex = Object.entries(varCounts).map(([v,c])=>c>1?`${v}^{${c}}`:v).join('');
+    // Compose LaTeX steps
+    let origLatex = `\\displaystyle\\frac{${numerator}}{${denominatorNum}${denominatorVars}}`;
+    let simpLatex = `\\displaystyle\\frac{${numerator}}{${denominatorNum}${simpVarLatex}}`;
+    let dec = parseFloat(numerator) / parseFloat(denominatorNum);
+    let decLatex = toRepeatingDecimal(dec);
+    let decFracLatex = `\\displaystyle\\frac{${decLatex}}{${simpVarLatex}}`;
+    let fullDecLatex = `${decLatex}\\,${Object.entries(varCounts).map(([v,c])=>`${v}^{-${c}}`).join('')}`;
+    prettyDiv.innerHTML = 
+      `= ${origLatex}<br>
+       = ${simpLatex}<br>
+       = ${decFracLatex}<br>
+       = ${fullDecLatex}`;
+    MathJax.typesetPromise();
+    return;
   }
-  return (bestDenom === 1) ? bestNum.toString() : `${bestNum}/${bestDenom}`;
+  // Fallback for non-fraction input (clear steps)
+  prettyDiv.innerHTML = '';
+  MathJax.typesetPromise();
 }
+document.getElementById('copy-latex-btn').onclick = function() {
+  let latex = document.getElementById('pretty-math-output').innerText;
+  if (!latex) return;
+  navigator.clipboard.writeText(latex)
+    .then(() => {
+      let btn = document.getElementById('copy-latex-btn');
+      btn.textContent = '✅';
+      setTimeout(() => btn.textContent = '📋', 800);
+    });
+};
+window.onload = function() {
+  updatePrettyInput();
+  calculate();
+};
 function appendCalc(val) {
   const box = document.getElementById('input-box');
   if (!box) return;
@@ -248,15 +223,11 @@ function appendCalc(val) {
   updatePrettyInput();
   calculate();
 }
-
 function clearCalc() {
   document.getElementById('input-box').value = '';
-  document.getElementById('result-panel').innerHTML = '';
-  document.getElementById('pretty-math-output').innerHTML = '';
-  document.getElementById('pretty-input-output').innerHTML = '';
+  updatePrettyInput();
   calculate();
 }
-
 function backspace() {
   const box = document.getElementById('input-box');
   const start = box.selectionStart;
@@ -272,256 +243,6 @@ function backspace() {
   updatePrettyInput();
   calculate();
 }
-
-// ----------- MATHJAX FORMATTING -----------
-function expToLatex(exp) {
-  let unitParts = [];
-  for (const [k, v] of Object.entries(exp)) {
-    if (!v) continue;
-    if (BASES.includes(k)) {
-      unitParts.push(`\\mathrm{${k}}` + (v === 1 ? '' : `^{${v}}`));
-    } else {
-      unitParts.push(`\\mathit{${k}}` + (v === 1 ? '' : `^{${v}}`));
-    }
-  }
-  return unitParts.join('\\,');
-}
-function termToLatex(val, exp, fractionMode = false, sigFigs = currentSigFigs, useRepeating = true) {
-  let numStr;
-  if (fractionMode) {
-    numStr = decimalToFraction(val);
-  } else if (useRepeating && (val === 1/9 || val === 2/9 || val === 1/3)) {
-    numStr = toRepeatingDecimal(val);
-  } else {
-    numStr = (+val).toPrecision(sigFigs);
-  }
-  let parts = [];
-  if (numStr.includes('/')) {
-    const [num, den] = numStr.split('/');
-    parts.push(`\\frac{${num}}{${den}}`);
-  } else {
-    parts.push(numStr);
-  }
-  let unitLatex = expToLatex(exp);
-  if (unitLatex) parts.push(unitLatex);
-  return parts.join('\\, ');
-}
-function resultsToLatex(resultMap, fractionMode=false, sigFigs=currentSigFigs) {
-  let rows = [];
-  for (let expKey in resultMap) {
-    let v = resultMap[expKey];
-    if (!v) continue;
-    let exp = JSON.parse(expKey);
-    rows.push(termToLatex(v, exp, fractionMode, sigFigs));
-  }
-  return rows.join(' + ');
-}
-
-function formatInputAsLatex(input) {
-  input = input.replace(/\s+/g, ''); // Remove spaces for clarity
-  let fracMatch = input.match(/^(.+?)\/(.+)$/);
-  if (fracMatch) {
-    return `\\displaystyle\\frac{${fracMatch[1]}}{${fracMatch[2]}}`;
-  } else {
-    return input.replace(/([a-zA-Z]+)/g, "\\mathit{$1}");
-  }
-}
-
-function toRepeatingDecimal(num, maxDecimals = 20) {
-  let str = num.toString();
-  if (!str.includes('.')) return str;
-  let frac = num % 1;
-  for (let i = 1; i < maxDecimals; i++) {
-    let candidate = Math.round(frac * Math.pow(10, i));
-    if (candidate === Math.pow(10, i) - 1) {
-      let base = Math.floor(num);
-      let repDigit = Math.round(frac * Math.pow(10, i)) % 10;
-      return `${base === 0 ? '' : base}.\\overline{${repDigit}}`;
-    }
-  }
-  return num.toPrecision(10);
-}
-
-let lastLatex = "";
-  
-function calculate() {
-  let prettyInput = document.getElementById('pretty-input-output');
-  let prettyDiv = document.getElementById('pretty-math-output');
-  let input = document.getElementById('input-box').value.trim();
-
-  // Render original input as latex
-  prettyInput.innerHTML = input ? `\\(${formatInputAsLatex(input)}\\)` : '';
-
-  // Parse, calculate, and simplify
-  // Split into numerator/denominator
-  let fracMatch = input.replace(/\s+/g,'').match(/^(.+?)\/(.+)$/);
-  let numerator = null, denominator = null, origLatex = "", simpLatex = "", decFracLatex = "", fullDecLatex = "";
-
-  if (fracMatch) {
-    numerator = fracMatch[1];
-    denominator = fracMatch[2];
-    // Original fraction
-    origLatex = `\\displaystyle\\frac{${numerator}}{${denominator}}`;
-
-    // Simplified: gather variable powers
-    let denVars = denominator.match(/([a-zA-Z]+)/g);
-    let denNum = denominator.match(/^\d+/) ? denominator.match(/^\d+/)[0] : '';
-    let denVarPowers = {};
-    let denRest = denominator;
-    if (denVars) {
-      denVars.forEach(v=>{
-        let re = new RegExp(`${v}+`,'g');
-        let count = (denominator.match(re) || ['']).join('').length / v.length;
-        denVarPowers[v] = count;
-        denRest = denRest.replace(v.repeat(count), '');
-      });
-    }
-    let denPowLatex = Object.entries(denVarPowers).map(([v,c])=>c>1?`${v}^{${c}}`:v).join('');
-    simpLatex = `\\displaystyle\\frac{${numerator}}{${denNum}${denPowLatex}}`;
-
-    // Decimal numerator (handle repeating)
-    let numVal = parseFloat(numerator);
-    let denVal = parseFloat(denNum);
-    let dec = numVal/denVal;
-    let repLatex = toRepeatingDecimal(dec);
-    decFracLatex = `\\displaystyle\\frac{${repLatex}}{${denPowLatex}}`;
-
-    // All decimalized
-    fullDecLatex = `${repLatex}\\,${Object.entries(denVarPowers).map(([v,c])=>`${v}^{-${c}}`).join('')}`;
-
-    prettyDiv.innerHTML = 
-      `= ${origLatex}<br>
-       = ${simpLatex}<br>
-       = ${decFracLatex}<br>
-       = ${fullDecLatex}`;
-    MathJax.typesetPromise();
-    return;
-  }
-  // Fallback to previous style if not a pure fraction
-  prettyDiv.innerHTML = '';
-  MathJax.typesetPromise();
-}
-
-  function parseFactor(str) {
-    let m = str.match(/^([+\-]?\d*\.?\d+)?\s*([a-zA-ZμΩ]+)?(?:\^([+\-]?\d+))?$/);
-    let val = m && m[1] ? parseFloat(m[1]) : 1;
-    let unit = m && m[2] ? m[2] : '';
-    let pow = m && m[3] ? parseInt(m[3]) : 1;
-    if (!unit) return [val, zeroExp()];
-    if (UNITS[unit]) {
-      let [f, baseUnit] = UNITS[unit];
-      val *= f ** pow;
-      let baseExp = UNIT_TABLE[baseUnit] || zeroExp();
-      let resultExp = {};
-      BASES.forEach(b => resultExp[b] = (baseExp[b]||0)*pow);
-      return [val, resultExp];
-    }
-    if (UNIT_TABLE[unit]) {
-      let baseExp = UNIT_TABLE[unit];
-      let resultExp = {};
-      BASES.forEach(b => resultExp[b] = (baseExp[b]||0)*pow);
-      return [val, resultExp];
-    }
-    let symbolicExp = zeroExp();
-    symbolicExp[unit] = pow;
-    return [val, symbolicExp];
-  }
-  function evalTerm(term) {
-    let multParts = term.split(/([*/])/);
-    let val = null, exp = zeroExp(), lastOp = '*';
-    for (let i=0; i<multParts.length; i++) {
-      let part = multParts[i].trim();
-      if (part === '*' || part === '/') {
-        lastOp = part;
-      } else if (part.length) {
-        let [v, e] = parseFactor(part);
-        if (val === null) {
-          val = v;
-          exp = cloneExp(e);
-        } else {
-          if (lastOp === '*') {
-            val *= v;
-            exp = addExp(exp, e, 1);
-          } else {
-            val /= v;
-            exp = addExp(exp, e, -1);
-          }
-        }
-      }
-    }
-    return [val, exp];
-  }
-
-  let resultMap = {};
-  for (let seg of terms) {
-    let sign = 1;
-    if (seg.startsWith('-')) { sign = -1; seg = seg.slice(1).trim(); }
-    if (seg.startsWith('+')) { seg = seg.slice(1).trim(); }
-    let [v, exp] = evalTerm(seg);
-    let expKey = JSON.stringify(exp);
-    if (!resultMap[expKey]) resultMap[expKey] = 0;
-    resultMap[expKey] += sign * v;
-  }
-  // --- Pretty Math Output ---
-  let latex = resultsToLatex(resultMap, false);
-  lastLatex = latex;
-  if (latex.trim()) {
-    prettyDiv.innerHTML = `\\(${latex}\\)`;
-  } else {
-    prettyDiv.innerHTML = '';
-  }
-  MathJax.typesetPromise();
-  // --- Standard Output ---
-  let outRows = [], fracRows = [];
-  for (let expKey in resultMap) {
-    let v = resultMap[expKey];
-    if (!v) continue;
-    let exp = JSON.parse(expKey);
-    let derived = expToDerived(exp);
-    let baseStr = expToStr(exp);
-    let valueStr = v.toString();
-    let fracStr = decimalToFraction(v);
-    let main = derived
-      ? `${valueStr} ${derived}`
-      : (baseStr ? `${valueStr} ${baseStr}` : valueStr);
-    let base = (baseStr && (!derived || baseStr !== derived))
-      ? `${valueStr} ${baseStr}`
-      : '';
-    let out = (base && base !== main)
-      ? main + ` <span class='unit-breakdown'>(${base})</span>`
-      : main;
-    outRows.push(out);
-    fracRows.push(
-      derived
-        ? `${fracStr} ${derived}`
-        : (baseStr ? `${fracStr} ${baseStr}` : fracStr)
-    );
-  }
-  if (!outRows.length) {
-    panel.innerHTML = `<span style='color:red;'>No nonzero result.</span>`;
-    return;
-  }
-  panel.innerHTML = `
-    <div class='output-row'><span class='section-label'>Decimal:</span> ${outRows.join(' + ')}</div>
-    <div class='output-row'><span class='section-label'>Fraction:</span> ${fracRows.join(' + ')}</div>
-  `;
-}
-
-document.getElementById('copy-latex-btn').onclick = function() {
-  if (!lastLatex) return;
-  navigator.clipboard.writeText(String.raw`\\(${lastLatex}\\)`)
-    .then(() => {
-      let btn = document.getElementById('copy-latex-btn');
-      btn.textContent = '✅';
-      setTimeout(() => btn.textContent = '📋', 800);
-    });
-};
-
-// Initial pretty update/calculate on load
-window.onload = function() {
-  updatePrettyInput();
-  calculate();
-};
 </script>
 </body>
 </html>
