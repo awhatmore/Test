@@ -278,17 +278,21 @@ function calculate() {
     "kg", "A", "W", "V", "VA"
   ];
 
-  // Helper: Format input with dots for MathJax
-  function formatInputForPrettyLatex(input) {
-    // Replace * with \cdot
-    let sanitized = input.replace(/\s+/g, '');
-    sanitized = sanitized.replace(/\*/g, ' \\cdot ');
-    // Add pretty exponents for things like x*x*x
-    return sanitized.replace(/([a-zA-ZμΩ]+)(?:\*([a-zA-ZμΩ]+))*/g, function(match) {
-      // This block isn't strictly needed unless you want to further combine things visually in the input.
-      return match;
-    });
+// Helper: Format input with dots/fraction for MathJax
+function formatInputForPrettyLatex(input) {
+  let clean = input.replace(/\s+/g, '');
+  // Check if input is of the form: stuff / stuff
+  let fracMatch = clean.match(/^(.+?)\/(.+)$/);
+  if (fracMatch) {
+    // Turn both numerator and denominator * into \cdot
+    let num = fracMatch[1].replace(/\*/g, ' \\cdot ');
+    let den = fracMatch[2].replace(/\*/g, ' \\cdot ');
+    return `\\displaystyle\\frac{${num}}{${den}}`;
+  } else {
+    return clean.replace(/\*/g, ' \\cdot ');
   }
+}
+
 
   // Helper: Parse factors
   function parseFactors(str) {
