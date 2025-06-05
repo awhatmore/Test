@@ -367,11 +367,12 @@ function calculate() {
 
   if (!prettyOutput1) prettyOutput1 = "\\text{(empty)}";
 
-  let outputs = [
-    `\\(${prettyOutput1}\\)`,
-    '\\(\\text{Output 2}\\)',
-    '\\(\\text{Output 3}\\)'
-  ];
+let outputs = [
+  `\\(\\displaystyle ${prettyOutput1}\\)`,
+  '\\(\\text{Output 2}\\)',
+  '\\(\\text{Output 3}\\)'
+];
+
 
   let steps = [];
   steps.push(`
