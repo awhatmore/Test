@@ -88,6 +88,20 @@
     <button class="sigfig-btn" onclick="setSigFigs(6)">6</button>
     <button class="sigfig-btn" onclick="setSigFigs(10)">10</button>
   </div>
+  <div style="margin-bottom: 1em;">
+  <label for="unit-system">Unit System:</label>
+  <select id="unit-system" onchange="updateUnitOptions()">
+    <option value="metric">Metric (SI)</option>
+    <option value="imperial">Imperial (US)</option>
+  </select>
+  
+  <label for="discipline" style="margin-left: 1em;">Discipline:</label>
+  <select id="discipline" onchange="updateUnitOptions()">
+    <option value="electrical">Electrical</option>
+    <option value="mechanical">Mechanical</option>
+    <!-- <option value="general">General</option> -->
+  </select>
+</div>
   <div class="calculator">
     <button onclick="appendCalc('1')">1</button>
     <button onclick="appendCalc('2')">2</button>
@@ -224,6 +238,12 @@ function updatePrettyInput() {
   }
   prettyDiv.innerHTML = `\\(${formatInputAsLatex(input)}\\)`;
   MathJax.typesetPromise();
+}
+function updateUnitOptions() {
+  const system = document.getElementById('unit-system').value;
+  const discipline = document.getElementById('discipline').value;
+  // Show/hide the correct unit buttons based on selections!
+  // (Write logic to hide or show each button group, or even regenerate the button HTML.)
 }
 
 function setSigFigs(n) {
