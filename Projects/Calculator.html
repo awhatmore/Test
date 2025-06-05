@@ -7,44 +7,26 @@
   <style>
     body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 2rem; }
     h2 { text-align: center; }
-    #main-math-block {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      margin-bottom: 1em;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
+    #pretty-input-output {
+      font-size: 1.5em; min-height: 2em; color:#fff; margin-bottom:0.3em;
+      display: inline-block; /* So we can measure width */
     }
-    .math-row {
+    #steps-math-output { margin-bottom: 0.7em; }
+    .steps-eq-row {
       display: flex;
-      align-items: center;
-      font-size: 1.6em;
+      align-items: baseline;
       min-height: 2em;
-      color: #fff;
+    }
+    .steps-indent {
+      display: inline-block;
+      visibility: hidden;
+      white-space: pre;
+      font-size: 1.5em;
       font-family: inherit;
+      padding-right: 0.3em;
     }
-    .eq-sign {
-      color: #0ff;
-      font-weight: bold;
-      min-width: 1.2em;
-      text-align: right;
-      margin-right: 0.3em;
-      flex-shrink: 0;
-      font-family: inherit;
-    }
-    .pretty-math {
-      min-width: 3em;
-      text-align: left;
-      font-size: 1em;
-      font-family: inherit;
-    }
-    #steps-output .math-row {
-      font-size: 1.3em;
-      margin-top: 0.1em;
-      margin-bottom: 0.05em;
-      color: #fff;
-    }
+    .eq-label { font-size: 1.5em; margin-right: 0.2em; color: #fff;}
+    .steps-eq-latex { font-size: 1.2em; color: #fff;}
     #input-box {
       width: 100%;
       font-size: 1.25rem;
@@ -56,6 +38,15 @@
       margin-bottom: 1rem;
       box-sizing: border-box;
     }
+    #result-panel {
+      background: #222;
+      padding: 1rem;
+      border-radius: 0.9rem;
+      font-size: 1rem;
+      margin-top: 1rem;
+      min-height: 60px;
+    }
+    .section-label { font-weight: bold; color: #0ff; margin-top: 0.5em; }
     .calculator {
       display: grid;
       grid-template-columns: repeat(3, 60px);
@@ -67,26 +58,22 @@
       font-size: 1.2em;
     }
     .wide { grid-column: span 2; }
-    @media (max-width: 600px) {
-      button { width: 40px; height: 40px; font-size: 1em;}
-      .calculator { grid-template-columns: repeat(3, 40px); }
-    }
+    .output-row { margin-bottom: 0.3em; }
+    .unit-breakdown { color: #6cf; font-family: 'Consolas', monospace; }
+    .sigfig-active { background: #0ff; color: #111; }
   </style>
+  <!-- MATHJAX CDN FOR BEAUTIFUL OUTPUT -->
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
   <h2>Smart SI Unit Calculator</h2>
-  <div id="main-math-block">
-    <div class="math-row">
-      <span id="pretty-input-output" class="pretty-math"></span>
-      <span class="eq-sign" id="main-equals">=</span>
-      <span id="pretty-simp-output" class="pretty-math"></span>
-    </div>
-    <div id="steps-output"></div>
-    <div style="display:flex;align-items:center;margin: 0.5em 0;">
-      <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
-    </div>
+  <div style="display: flex; align-items: flex-start;">
+    <div id="pretty-input-output"></div>
+    <div id="steps-math-output" style="flex:1;"></div>
+  </div>
+  <div style="display:flex;align-items:center;margin-bottom:0.7em;">
+    <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
   </div>
   <input id="input-box"
     placeholder="Enter calculation (e.g. 5 / 9xxx)"
@@ -94,6 +81,12 @@
     oninput="updatePrettyInput(); calculate();"
     onkeydown="if(event.key==='Enter'){calculate(); return false;}">
 
+  <div style="margin-bottom:0.5em;">
+    Significant figures: 
+    <button class="sigfig-btn" onclick="setSigFigs(3)">3</button>
+    <button class="sigfig-btn" onclick="setSigFigs(6)">6</button>
+    <button class="sigfig-btn" onclick="setSigFigs(10)">10</button>
+  </div>
   <div class="calculator">
     <button onclick="appendCalc('1')">1</button>
     <button onclick="appendCalc('2')">2</button>
@@ -125,6 +118,7 @@
     <button onclick="appendCalc(' * ')">*</button>
     <button onclick="appendCalc(' / ')">/</button>
   </div>
+  <!-- Example unit buttons, add your own as needed -->
   <div>
     <strong>Length</strong><br>
     <button onclick="appendCalc(' nm ')">nm</button>
@@ -167,108 +161,65 @@
     <button onclick="appendCalc(' Ω ')">Ω</button>
     <button onclick="appendCalc(' C ')">C</button>
   </div>
+  <div id="result-panel"></div>
 
 <script>
-function toRepeatingDecimal(num, maxDecimals = 20) {
-  let str = num.toString();
-  if (!str.includes('.')) return str;
-  let frac = num % 1;
-  for (let i = 1; i < maxDecimals; i++) {
-    let candidate = Math.round(frac * Math.pow(10, i));
-    if (candidate === Math.pow(10, i) - 1) {
-      let base = Math.floor(num);
-      let repDigit = Math.round(frac * Math.pow(10, i)) % 10;
-      return `${base === 0 ? '' : base}.\\overline{${repDigit}}`;
-    }
-  }
-  return num.toPrecision(10);
-}
-function formatInputAsLatex(input) {
-  input = input.replace(/\s+/g, '');
-  let fracMatch = input.match(/^(.+?)\/(.+)$/);
-  if (fracMatch) {
-    return `\\displaystyle\\frac{${fracMatch[1]}}{${fracMatch[2]}}`;
-  } else {
-    return input.replace(/([a-zA-Z]+)/g, "\\mathit{$1}");
-  }
-}
+const BASES = ['kg', 'm', 's', 'A', 'K', 'mol', 'cd'];
+const UNIT_TABLE = {
+  m:   {kg:0, m:1, s:0, A:0, K:0, mol:0, cd:0},
+  kg:  {kg:1, m:0, s:0, A:0, K:0, mol:0, cd:0},
+  s:   {kg:0, m:0, s:1, A:0, K:0, mol:0, cd:0},
+  A:   {kg:0, m:0, s:0, A:1, K:0, mol:0, cd:0},
+  K:   {kg:0, m:0, s:0, A:0, K:1, mol:0, cd:0},
+  mol: {kg:0, m:0, s:0, A:0, K:0, mol:1, cd:0},
+  cd:  {kg:0, m:0, s:0, A:0, K:0, mol:0, cd:1},
+  N:   {kg:1, m:1, s:-2, A:0, K:0, mol:0, cd:0},
+  J:   {kg:1, m:2, s:-2, A:0, K:0, mol:0, cd:0},
+  W:   {kg:1, m:2, s:-3, A:0, K:0, mol:0, cd:0},
+  V:   {kg:1, m:2, s:-3, A:-1, K:0, mol:0, cd:0},
+  C:   {kg:0, m:0, s:1, A:1, K:0, mol:0, cd:0},
+  Ω:   {kg:1, m:2, s:-3, A:-2, K:0, mol:0, cd:0},
+  F:   {kg:-1, m:-2, s:4, A:2, K:0, mol:0, cd:0},
+  S:   {kg:-1, m:-2, s:3, A:2, K:0, mol:0, cd:0},
+  H:   {kg:1, m:2, s:-2, A:-2, K:0, mol:0, cd:0},
+  VA:  {kg:1, m:2, s:-3, A:0, K:0, mol:0, cd:0},
+};
+const DERIVED_LOOKUP = Object.fromEntries(
+  Object.entries(UNIT_TABLE).map(([k,v])=>[JSON.stringify(v),k])
+);
+const UNITS = {
+  nm:  [1e-9, 'm'], μm:[1e-6,'m'], mm:[1e-3,'m'], cm:[1e-2,'m'], m:[1,'m'], km:[1e3,'m'],
+  in: [0.0254,'m'], ft:[0.3048,'m'], yd:[0.9144,'m'], mi:[1609.34,'m'],
+  mg:[1e-6,'kg'], g:[1e-3,'kg'], kg:[1,'kg'], t:[1000,'kg'],
+  oz:[0.0283495,'kg'], lb:[0.453592,'kg'], st:[6.35029,'kg'],
+  ns:[1e-9,'s'], μs:[1e-6,'s'], ms:[1e-3,'s'], s:[1,'s'], min:[60,'s'], hr:[3600,'s'], day:[86400,'s'],
+  A:[1,'A'], V:[1,'V'], W:[1,'W'], F:[1,'F'], Ω:[1,'Ω'], C:[1,'C'],
+  N:[1,'N'], J:[1,'J'], S:[1,'S'], H:[1,'H'],
+  VA:[1,'VA'],
+};
+
+let currentSigFigs = 3;
+
 function updatePrettyInput() {
   let input = document.getElementById('input-box').value;
-  let prettyInput = document.getElementById('pretty-input-output');
+  let prettyDiv = document.getElementById('pretty-input-output');
   if (!input.trim()) {
-    prettyInput.innerHTML = '';
-    document.getElementById('pretty-simp-output').innerHTML = '';
+    prettyDiv.innerHTML = '';
     MathJax.typesetPromise();
     return;
   }
-  prettyInput.innerHTML = `\\(${formatInputAsLatex(input)}\\)`;
+  prettyDiv.innerHTML = `\\(${formatInputAsLatex(input)}\\)`;
   MathJax.typesetPromise();
 }
-function calculate() {
-  let input = document.getElementById('input-box').value.trim();
-  let simpDiv = document.getElementById('pretty-simp-output');
-  let stepsDiv = document.getElementById('steps-output');
-  simpDiv.innerHTML = '';
-  stepsDiv.innerHTML = '';
-  // Only process if input is a fraction with number in numerator and denominator (plus vars)
-  let fracMatch = input.replace(/\s+/g,'').match(/^([\d.]+)\s*\/\s*([\d.]+)([a-zA-Z]*)$/);
-  if (fracMatch) {
-    let numerator = fracMatch[1], denominatorNum = fracMatch[2], denominatorVars = fracMatch[3] || '';
-    let varCounts = {};
-    for (let char of denominatorVars) {
-      varCounts[char] = (varCounts[char]||0)+1;
-    }
-    let simpVarLatex = Object.entries(varCounts).map(([v,c])=>c>1?`${v}^{${c}}`:v).join('');
-    let origLatex = `\\displaystyle\\frac{${numerator}}{${denominatorNum}${denominatorVars}}`;
-    let simpLatex = `\\displaystyle\\frac{${numerator}}{${denominatorNum}${simpVarLatex}}`;
-    let dec = parseFloat(numerator) / parseFloat(denominatorNum);
-    let decLatex = toRepeatingDecimal(dec);
-    let decFracLatex = `\\displaystyle\\frac{${decLatex}}{${simpVarLatex}}`;
-    let fullDecLatex = `${decLatex}\\,${Object.entries(varCounts).map(([v,c])=>`${v}^{-${c}}`).join('')}`;
 
-    // The first line after input: 5/9xxx = 5/9x^3
-    simpDiv.innerHTML = `\\(${simpLatex}\\)`;
-
-    // Steps below, each with equals indented to line up vertically
-    let eqPad = document.getElementById('main-equals').offsetLeft + document.getElementById('main-equals').offsetWidth;
-    // We'll use a "ghost" eq-sign for vertical alignment
-    let lines = [
-      decFracLatex,
-      fullDecLatex
-    ];
-    for(let line of lines) {
-      let row = document.createElement('div');
-      row.className = 'math-row';
-      // indent equals to line up with above
-      row.innerHTML = `<span class="eq-sign">&nbsp;&nbsp;&nbsp;=</span>
-        <span class="pretty-math">\\(${line}\\)</span>`;
-      stepsDiv.appendChild(row);
-    }
-    MathJax.typesetPromise();
-    return;
-  }
-  // Fallback for non-fraction input (clear)
-  simpDiv.innerHTML = '';
-  stepsDiv.innerHTML = '';
-  MathJax.typesetPromise();
-}
-document.getElementById('copy-latex-btn').onclick = function() {
-  let eq = '=';
-  let simp = document.getElementById('pretty-simp-output').textContent;
-  let steps = document.querySelectorAll('#steps-output .pretty-math');
-  let text = simp + '\n' + Array.from(steps).map(div => div.innerText).join('\n');
-  if (!text) return;
-  navigator.clipboard.writeText(text)
-    .then(() => {
-      let btn = document.getElementById('copy-latex-btn');
-      btn.textContent = '✅';
-      setTimeout(() => btn.textContent = '📋', 800);
-    });
-};
-window.onload = function() {
-  updatePrettyInput();
+function setSigFigs(n) {
+  currentSigFigs = n;
+  document.querySelectorAll('.sigfig-btn').forEach(btn => {
+    btn.classList.toggle('sigfig-active', btn.textContent == n);
+  });
   calculate();
-};
+}
+
 function appendCalc(val) {
   const box = document.getElementById('input-box');
   if (!box) return;
@@ -282,11 +233,15 @@ function appendCalc(val) {
   updatePrettyInput();
   calculate();
 }
+
 function clearCalc() {
   document.getElementById('input-box').value = '';
-  updatePrettyInput();
+  document.getElementById('result-panel').innerHTML = '';
+  document.getElementById('pretty-input-output').innerHTML = '';
+  document.getElementById('steps-math-output').innerHTML = '';
   calculate();
 }
+
 function backspace() {
   const box = document.getElementById('input-box');
   const start = box.selectionStart;
@@ -302,6 +257,123 @@ function backspace() {
   updatePrettyInput();
   calculate();
 }
+
+function formatInputAsLatex(input) {
+  input = input.replace(/\s+/g, '');
+  let fracMatch = input.match(/^(.+?)\/(.+)$/);
+  if (fracMatch) {
+    return `\\displaystyle\\frac{${fracMatch[1]}}{${fracMatch[2]}}`;
+  } else {
+    return input.replace(/([a-zA-Z]+)/g, "\\mathit{$1}");
+  }
+}
+
+function toRepeatingDecimal(num, maxDecimals = 20) {
+  let str = num.toString();
+  if (!str.includes('.')) return str;
+  let frac = num % 1;
+  for (let i = 1; i < maxDecimals; i++) {
+    let candidate = Math.round(frac * Math.pow(10, i));
+    if (candidate === Math.pow(10, i) - 1) {
+      let base = Math.floor(num);
+      let repDigit = Math.round(frac * Math.pow(10, i)) % 10;
+      return `${base === 0 ? '' : base}.\\overline{${repDigit}}`;
+    }
+  }
+  return num.toPrecision(10);
+}
+
+function calculate() {
+  let prettyInput = document.getElementById('pretty-input-output');
+  let stepsDiv = document.getElementById('steps-math-output');
+  let input = document.getElementById('input-box').value.trim();
+
+  let inputLatex = input ? `\\(${formatInputAsLatex(input)}\\)` : '';
+  prettyInput.innerHTML = inputLatex;
+
+  MathJax.typesetPromise([prettyInput]).then(() => {
+    let measureSpan = document.createElement('span');
+    measureSpan.style.visibility = 'hidden';
+    measureSpan.style.position = 'absolute';
+    measureSpan.style.left = '-9999px';
+    measureSpan.style.fontSize = '1.5em';
+    measureSpan.innerHTML = inputLatex;
+    document.body.appendChild(measureSpan);
+
+    MathJax.typesetPromise([measureSpan]).then(() => {
+      let inputWidth = measureSpan.getBoundingClientRect().width;
+      document.body.removeChild(measureSpan);
+
+      let fracMatch = input.replace(/\s+/g,'').match(/^(.+?)\/(.+)$/);
+      let steps = [];
+      if (input && fracMatch) {
+        let numerator = fracMatch[1], denominator = fracMatch[2];
+        let denVars = denominator.match(/([a-zA-Z]+)/g);
+        let denNum = denominator.match(/^\d+/) ? denominator.match(/^\d+/)[0] : '';
+        let denVarPowers = {};
+        let denRest = denominator;
+        if (denVars) {
+          denVars.forEach(v=>{
+            let re = new RegExp(`${v}+`,'g');
+            let count = (denominator.match(re) || ['']).join('').length / v.length;
+            denVarPowers[v] = count;
+            denRest = denRest.replace(v.repeat(count), '');
+          });
+        }
+        let denPowLatex = Object.entries(denVarPowers).map(([v,c])=>c>1?`${v}^{${c}}`:v).join('');
+        let simpLatex = `\\displaystyle\\frac{${numerator}}{${denNum}${denPowLatex}}`;
+        let numVal = parseFloat(numerator), denVal = parseFloat(denNum), dec = numVal/denVal;
+        let repLatex = toRepeatingDecimal(dec);
+        let decFracLatex = `\\displaystyle\\frac{${repLatex}}{${denPowLatex}}`;
+        let fullDecLatex = `${repLatex}\\,${Object.entries(denVarPowers).map(([v,c])=>`${v}^{-${c}}`).join('')}`;
+
+        steps.push(`
+          <div class="steps-eq-row">
+            <span class="eq-label">=</span>
+            <span class="steps-eq-latex">${simpLatex}</span>
+          </div>
+        `);
+        steps.push(`
+          <div class="steps-eq-row">
+            <span class="steps-indent" style="width:${inputWidth}px"></span>
+            <span class="eq-label">=</span>
+            <span class="steps-eq-latex">${decFracLatex}</span>
+          </div>
+        `);
+        steps.push(`
+          <div class="steps-eq-row">
+            <span class="steps-indent" style="width:${inputWidth}px"></span>
+            <span class="eq-label">=</span>
+            <span class="steps-eq-latex">${fullDecLatex}</span>
+          </div>
+        `);
+
+        stepsDiv.innerHTML = steps.join('');
+        MathJax.typesetPromise([stepsDiv]);
+        return;
+      }
+      stepsDiv.innerHTML = '';
+    });
+  });
+}
+
+// Clipboard button
+document.getElementById('copy-latex-btn').onclick = function() {
+  let prettyInput = document.getElementById('pretty-input-output');
+  if (!prettyInput.textContent) return;
+  navigator.clipboard.writeText(prettyInput.textContent)
+    .then(() => {
+      let btn = document.getElementById('copy-latex-btn');
+      btn.textContent = '✅';
+      setTimeout(() => btn.textContent = '📋', 800);
+    });
+};
+
+// On load
+window.onload = function() {
+  updatePrettyInput();
+  calculate();
+};
 </script>
 </body>
 </html>
