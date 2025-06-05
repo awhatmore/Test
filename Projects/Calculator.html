@@ -226,6 +226,38 @@ const UNITS = {
   VA:[1,'VA'],
 };
 
+  const UNIT_CATEGORIES = {
+  electrical: {
+    metric: [
+      {label: 'V', unit: 'V'}, {label: 'A', unit: 'A'}, {label: 'Ω', unit: 'Ω'},
+      {label: 'W', unit: 'W'}, {label: 'F', unit: 'F'}, {label: 'S', unit: 'S'},
+      {label: 'H', unit: 'H'}, {label: 's', unit: 's'} // <--- seconds added!
+    ],
+    imperial: [
+      // Imperial electrical units (rare, but you can add as needed)
+      {label: 'V', unit: 'V'}, {label: 'A', unit: 'A'}, {label: 'Ω', unit: 'Ω'},
+      {label: 'W', unit: 'W'}, {label: 'F', unit: 'F'}, {label: 'S', unit: 'S'},
+      {label: 'H', unit: 'H'}, {label: 's', unit: 's'}
+    ],
+    length: [
+      {label: 'm', unit: 'm'}, {label: 'cm', unit: 'cm'}, {label: 'mm', unit: 'mm'},
+      {label: 'ft', unit: 'ft'}, {label: 'in', unit: 'in'}
+    ]
+  },
+  mechanical: {
+    metric: [
+      {label: 'N', unit: 'N'}, {label: 'kg', unit: 'kg'}, {label: 'Pa', unit: 'Pa'},
+      {label: 'J', unit: 'J'}, {label: 'W', unit: 'W'}, {label: 'm', unit: 'm'},
+      {label: 'cm', unit: 'cm'}, {label: 'mm', unit: 'mm'}, {label: 's', unit: 's'}
+    ],
+    imperial: [
+      {label: 'lb', unit: 'lb'}, {label: 'psi', unit: 'psi'}, {label: 'ft', unit: 'ft'},
+      {label: 'in', unit: 'in'}, {label: 'lbf', unit: 'lbf'}, {label: 'ft-lb', unit: 'ft-lb'}, {label: 's', unit: 's'}
+    ]
+  }
+};
+
+
 let currentSigFigs = 3;
 
 function updatePrettyInput() {
@@ -240,11 +272,32 @@ function updatePrettyInput() {
   MathJax.typesetPromise();
 }
 function updateUnitOptions() {
-  const system = document.getElementById('unit-system').value;
   const discipline = document.getElementById('discipline').value;
-  // Show/hide the correct unit buttons based on selections!
-  // (Write logic to hide or show each button group, or even regenerate the button HTML.)
+  const system = document.getElementById('unit-system').value;
+  const area = document.getElementById('unit-buttons-area');
+  area.innerHTML = "";
+
+  let html = '';
+
+  // Render main group buttons (metric or imperial only)
+  (UNIT_CATEGORIES[discipline][system] || []).forEach(unit => {
+    html += `<button class="unit-btn ${system}" style="display:inline-block;" onclick="appendCalc(' ${unit.unit} ')">${unit.label}</button>`;
+  });
+
+  // If electrical, show Length as secondary group (all units, but show/hide per system)
+  if (discipline === "electrical") {
+    html += ' <span style="opacity:0.5;margin-left:1em;">Length:</span> ';
+    UNIT_CATEGORIES.electrical.length.forEach(unit => {
+      // Show metric length if metric, imperial if imperial, show both if you want
+      let show = (system === 'metric' && ['m','cm','mm'].includes(unit.unit)) ||
+                 (system === 'imperial' && ['ft','in'].includes(unit.unit));
+      html += `<button class="unit-btn length-btn" style="display:${show?'inline-block':'none'};" onclick="appendCalc(' ${unit.unit} ')">${unit.label}</button>`;
+    });
+  }
+
+  area.innerHTML = html;
 }
+
 
 function setSigFigs(n) {
   currentSigFigs = n;
@@ -409,6 +462,7 @@ document.getElementById('copy-latex-btn').onclick = function() {
 window.onload = function() {
   updatePrettyInput();
   calculate();
+  updateUnitOptions(); // <-- Add this line!
 };
 </script>
 </body>
