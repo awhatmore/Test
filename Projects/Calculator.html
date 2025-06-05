@@ -273,36 +273,43 @@ function calculate() {
     return;
   }
 
-  // List of your "units" to treat specially
+  // List of units to treat specially
   const knownUnits = [
     "kg", "A", "W", "V", "VA"
-    // add more units as you wish (case sensitive)
   ];
 
-  // Helper: Parse factors from string into a list
+  // Helper: Format input with dots for MathJax
+  function formatInputForPrettyLatex(input) {
+    // Replace * with \cdot
+    let sanitized = input.replace(/\s+/g, '');
+    sanitized = sanitized.replace(/\*/g, ' \\cdot ');
+    // Add pretty exponents for things like x*x*x
+    return sanitized.replace(/([a-zA-ZμΩ]+)(?:\*([a-zA-ZμΩ]+))*/g, function(match) {
+      // This block isn't strictly needed unless you want to further combine things visually in the input.
+      return match;
+    });
+  }
+
+  // Helper: Parse factors
   function parseFactors(str) {
-    // Split by '*', allow numbers, variables, or units (letters, or greek chars, or units)
     let parts = str.split('*').map(s => s.trim()).filter(Boolean);
     let factCount = {};
     for (let p of parts) {
-      // Extract base and exponent (e.g., x^2)
       let match = p.match(/^([a-zA-ZμΩ]+)(?:\^(\d+))?$/);
       if (match) {
         let base = match[1];
         let exp = match[2] ? parseInt(match[2]) : 1;
         factCount[base] = (factCount[base] || 0) + exp;
       } else if (!isNaN(Number(p))) {
-        // Number factor
         factCount[p] = (factCount[p] || 0) + 1;
       } else {
-        // Fallback, treat as symbol
         factCount[p] = (factCount[p] || 0) + 1;
       }
     }
     return factCount;
   }
 
-  // Helper: Render factor dict to string, numbers first, then units/vars
+  // Helper: Render factors as LaTeX
   function renderFactorsLatex(factCount) {
     let nums = [];
     let vars = [];
@@ -311,7 +318,6 @@ function calculate() {
       if (isFinite(key)) {
         nums.push(exp > 1 ? `${key}^${exp}` : key);
       } else {
-        // Show units in order: knownUnits first, then vars
         if (knownUnits.includes(key)) {
           vars.push(exp > 1 ? `\\mathrm{${key}}^{${exp}}` : `\\mathrm{${key}}`);
         } else {
@@ -322,30 +328,62 @@ function calculate() {
     return (nums.concat(vars)).join(" \\cdot ");
   }
 
-  // Handle fractions: numerator/denominator parsing
+  // Helper: Check if factor dict is all numbers
+  function isAllNumbers(factCount) {
+    return Object.keys(factCount).every(key => !isNaN(Number(key)));
+  }
+
+  // Helper: Multiply all numbers in a factor dict
+  function multiplyNumbers(factCount) {
+    let product = 1;
+    for (let key in factCount) {
+      if (!isNaN(Number(key))) {
+        for (let i = 0; i < factCount[key]; i++) product *= Number(key);
+      }
+    }
+    return product;
+  }
+
+  // ---- Main output logic ----
+  let prettyInput = `\\(${formatInputForPrettyLatex(input)}\\)`;
+
+  // FRACTION HANDLING
   let fracMatch = input.replace(/\s+/g, '').match(/^(.+?)\/(.+)$/);
   let prettyOutput1 = "";
+
   if (fracMatch) {
     let numFactors = parseFactors(fracMatch[1]);
     let denFactors = parseFactors(fracMatch[2]);
-    let numLatex = renderFactorsLatex(numFactors);
-    let denLatex = renderFactorsLatex(denFactors);
-    prettyOutput1 = `\\displaystyle\\frac{${numLatex}}{${denLatex}}`;
+    if (isAllNumbers(numFactors) && isAllNumbers(denFactors)) {
+      // Pure numbers: evaluate
+      let numerator = multiplyNumbers(numFactors);
+      let denominator = multiplyNumbers(denFactors);
+      let value = numerator / denominator;
+      prettyOutput1 = value.toString();
+    } else {
+      // Not all numbers: pretty fraction
+      let numLatex = renderFactorsLatex(numFactors);
+      let denLatex = renderFactorsLatex(denFactors);
+      prettyOutput1 = `\\displaystyle\\frac{${numLatex}}{${denLatex}}`;
+    }
   } else {
+    // Not a fraction: simplify if all numbers, else pretty product
     let factCount = parseFactors(input);
-    prettyOutput1 = renderFactorsLatex(factCount);
+    if (isAllNumbers(factCount)) {
+      prettyOutput1 = multiplyNumbers(factCount).toString();
+    } else {
+      prettyOutput1 = renderFactorsLatex(factCount);
+    }
   }
   if (!prettyOutput1) prettyOutput1 = "\\text{(empty)}";
 
-  let prettyInput = `\\(${formatInputAsLatex(input)}\\)`;
   let outputs = [
     `\\(${prettyOutput1}\\)`,
-    '\\(\\text{Output 2}\\)', // Placeholder for now
-    '\\(\\text{Output 3}\\)'  // Placeholder for now
+    '\\(\\text{Output 2}\\)',
+    '\\(\\text{Output 3}\\)'
   ];
 
   let steps = [];
-  // First line: input on left
   steps.push(`
     <div class="steps-eq-row">
       <span class="steps-side">${prettyInput}</span>
@@ -354,7 +392,6 @@ function calculate() {
     </div>
   `);
 
-  // Next lines: blank left, outputs
   for (let i = 1; i < outputs.length; i++) {
     steps.push(`
       <div class="steps-eq-row">
