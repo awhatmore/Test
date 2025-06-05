@@ -12,9 +12,10 @@
       display: inline-block; /* So we can measure width */
     }
     #steps-math-output { margin-bottom: 0.7em; }
-    .steps-eq-row {
-      display: flex;
-      align-items: baseline;
+.steps-eq-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
       min-height: 2em;
       margin-bottom: 0.8em;  /* Adjust as desired */
     }
@@ -26,7 +27,17 @@
       font-family: inherit;
       padding-right: 0.3em;
     }
-    .eq-label { font-size: 1.5em; margin-right: 0.2em; color: #fff;}
+    .steps-side {
+  min-width: 120px;   /* Or whatever your minimum width is */
+  max-width: 350px;   /* Optional, prevents it getting too wide */
+  flex: 1;
+}
+    .eq-label {
+  flex: none;
+  margin: 0 0.4em;
+  font-size: 1.5em;
+  color: #fff;
+}
     .steps-eq-latex { font-size: 1.2em; color: #fff;}
     #input-box {
       width: 100%;
@@ -446,14 +457,19 @@ if (input && fracMatch) {
 
   // All output rows: indent + = + latex
   [simpLatex, decFracLatex, fullDecLatex].forEach(latex => {
-    steps.push(`
-      <div class="steps-eq-row">
-        <span class="steps-indent" style="width:${inputWidth}px"></span>
-        <span class="eq-label">=</span>
-        <span class="steps-eq-latex">\\(${latex}\\)</span>
-      </div>
-    `);
-  });
+steps.push(`
+  <div class="steps-eq-row">
+    <span class="steps-side steps-left">
+      <span class="steps-indent"></span>
+    </span>
+    <span class="eq-label">=</span>
+    <span class="steps-side steps-right">
+      <span class="steps-eq-latex">\\(${latex}\\)</span>
+    </span>
+  </div>
+`);
+
+
 
   stepsDiv.innerHTML = steps.join('');
   MathJax.typesetPromise([stepsDiv]);
