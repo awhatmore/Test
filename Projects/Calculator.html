@@ -12,13 +12,21 @@
       display: inline-block; /* So we can measure width */
     }
     #steps-math-output { margin-bottom: 0.7em; }
+    .eq-steps-container {
+  width: 100%;
+  max-width: 480px; /* Control total width here */
+  margin: 0 auto;
+  position: relative;
+}
 .steps-eq-row {
   display: flex;
   align-items: center;
   justify-content: center;
-      min-height: 2em;
-      margin-bottom: 0.8em;  /* Adjust as desired */
-    }
+  width: 100%;
+  min-height: 2em;
+  margin-bottom: 0.8em;
+  position: relative;
+}
     .steps-indent {
       display: inline-block;
       visibility: hidden;
@@ -27,16 +35,29 @@
       font-family: inherit;
       padding-right: 0.3em;
     }
-    .steps-side {
-  min-width: 120px;   /* Or whatever your minimum width is */
-  max-width: 350px;   /* Optional, prevents it getting too wide */
-  flex: 1;
+.steps-side {
+  flex: 1 1 0;
+  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  /* Remove min/max-width for better flex */
 }
-    .eq-label {
-  flex: none;
-  margin: 0 0.4em;
+
+    .steps-side.right {
+  text-align: left;
+  justify-content: flex-start;
+}
+.eq-label {
   font-size: 1.5em;
   color: #fff;
+  flex: none;
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  background: #111;
+  padding: 0 0.1em;
 }
     .steps-eq-latex { font-size: 1.2em; color: #fff;}
     #input-box {
@@ -81,9 +102,11 @@
 <body>
   <h2>Smart SI Unit Calculator</h2>
   <div style="display: flex; align-items: flex-start;">
-    <div id="pretty-input-output"></div>
-    <div id="steps-math-output" style="flex:1;"></div>
+  <div id="pretty-input-output"></div>
+  <div class="eq-steps-container">
+    <div id="steps-math-output"></div>
   </div>
+</div>
   <div style="display:flex;align-items:center;margin-bottom:0.7em;">
     <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
   </div>
