@@ -10,33 +10,40 @@
     #main-math-block {
       display: flex;
       flex-direction: column;
-      align-items: center;
+      align-items: flex-start;
       margin-bottom: 1em;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
     }
-    #input-row {
+    .math-row {
       display: flex;
       align-items: center;
-      justify-content: center;
-      margin-bottom: 0.2em;
-    }
-    #pretty-input-output {
       font-size: 1.6em;
+      min-height: 2em;
       color: #fff;
-      min-width: 3em;
-      margin: 0 0.4em;
-      text-align: center;
+      font-family: inherit;
     }
-    #eq-sign {
-      font-size: 1.6em;
+    .eq-sign {
       color: #0ff;
       font-weight: bold;
+      min-width: 1.2em;
+      text-align: right;
+      margin-right: 0.3em;
+      flex-shrink: 0;
+      font-family: inherit;
     }
-    #steps-output > div {
-      font-size: 1.4em;
+    .pretty-math {
+      min-width: 3em;
+      text-align: left;
+      font-size: 1em;
+      font-family: inherit;
+    }
+    #steps-output .math-row {
+      font-size: 1.3em;
+      margin-top: 0.1em;
+      margin-bottom: 0.05em;
       color: #fff;
-      text-align: center;
-      margin: 0.15em 0;
-      min-height: 1.5em;
     }
     #input-box {
       width: 100%;
@@ -71,9 +78,10 @@
 <body>
   <h2>Smart SI Unit Calculator</h2>
   <div id="main-math-block">
-    <div id="input-row">
-      <div id="pretty-input-output"></div>
-      <span id="eq-sign">=</span>
+    <div class="math-row">
+      <span id="pretty-input-output" class="pretty-math"></span>
+      <span class="eq-sign" id="main-equals">=</span>
+      <span id="pretty-simp-output" class="pretty-math"></span>
     </div>
     <div id="steps-output"></div>
     <div style="display:flex;align-items:center;margin: 0.5em 0;">
@@ -186,22 +194,24 @@ function formatInputAsLatex(input) {
 }
 function updatePrettyInput() {
   let input = document.getElementById('input-box').value;
-  let prettyDiv = document.getElementById('pretty-input-output');
+  let prettyInput = document.getElementById('pretty-input-output');
   if (!input.trim()) {
-    prettyDiv.innerHTML = '';
+    prettyInput.innerHTML = '';
+    document.getElementById('pretty-simp-output').innerHTML = '';
     MathJax.typesetPromise();
     return;
   }
-  prettyDiv.innerHTML = `\\(${formatInputAsLatex(input)}\\)`;
+  prettyInput.innerHTML = `\\(${formatInputAsLatex(input)}\\)`;
   MathJax.typesetPromise();
 }
 function calculate() {
-  let stepsDiv = document.getElementById('steps-output');
   let input = document.getElementById('input-box').value.trim();
-
+  let simpDiv = document.getElementById('pretty-simp-output');
+  let stepsDiv = document.getElementById('steps-output');
+  simpDiv.innerHTML = '';
+  stepsDiv.innerHTML = '';
   // Only process if input is a fraction with number in numerator and denominator (plus vars)
   let fracMatch = input.replace(/\s+/g,'').match(/^([\d.]+)\s*\/\s*([\d.]+)([a-zA-Z]*)$/);
-  stepsDiv.innerHTML = '';
   if (fracMatch) {
     let numerator = fracMatch[1], denominatorNum = fracMatch[2], denominatorVars = fracMatch[3] || '';
     let varCounts = {};
@@ -216,23 +226,37 @@ function calculate() {
     let decFracLatex = `\\displaystyle\\frac{${decLatex}}{${simpVarLatex}}`;
     let fullDecLatex = `${decLatex}\\,${Object.entries(varCounts).map(([v,c])=>`${v}^{-${c}}`).join('')}`;
 
-    // Each step as a centered pretty block
-    let lines = [simpLatex, decFracLatex, fullDecLatex];
+    // The first line after input: 5/9xxx = 5/9x^3
+    simpDiv.innerHTML = `\\(${simpLatex}\\)`;
+
+    // Steps below, each with equals indented to line up vertically
+    let eqPad = document.getElementById('main-equals').offsetLeft + document.getElementById('main-equals').offsetWidth;
+    // We'll use a "ghost" eq-sign for vertical alignment
+    let lines = [
+      decFracLatex,
+      fullDecLatex
+    ];
     for(let line of lines) {
-      let el = document.createElement('div');
-      el.innerHTML = `\\(${line}\\)`;
-      stepsDiv.appendChild(el);
+      let row = document.createElement('div');
+      row.className = 'math-row';
+      // indent equals to line up with above
+      row.innerHTML = `<span class="eq-sign">&nbsp;&nbsp;&nbsp;=</span>
+        <span class="pretty-math">\\(${line}\\)</span>`;
+      stepsDiv.appendChild(row);
     }
     MathJax.typesetPromise();
     return;
   }
-  // Fallback for non-fraction input (clear steps)
+  // Fallback for non-fraction input (clear)
+  simpDiv.innerHTML = '';
   stepsDiv.innerHTML = '';
   MathJax.typesetPromise();
 }
 document.getElementById('copy-latex-btn').onclick = function() {
-  let steps = document.querySelectorAll('#steps-output div');
-  let text = Array.from(steps).map(div => div.innerText).join('\n');
+  let eq = '=';
+  let simp = document.getElementById('pretty-simp-output').textContent;
+  let steps = document.querySelectorAll('#steps-output .pretty-math');
+  let text = simp + '\n' + Array.from(steps).map(div => div.innerText).join('\n');
   if (!text) return;
   navigator.clipboard.writeText(text)
     .then(() => {
