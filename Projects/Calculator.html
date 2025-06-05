@@ -165,6 +165,19 @@
   <div id="result-panel"></div>
 
 <script>
+  
+  function formatSigFig(num, sigfigs) {
+  if (isNaN(num)) return '?';
+  if (num === 0) return '0';
+  // Use toPrecision, but strip possible trailing zeros (for pretty output)
+  let s = Number(num).toPrecision(sigfigs);
+  // If the result is in scientific notation, leave as is
+  if (s.includes('e')) return s;
+  // Remove trailing zeros and dot if not needed
+  s = s.replace(/\.?0+$/, '');
+  return s;
+}
+
 const BASES = ['kg', 'm', 's', 'A', 'K', 'mol', 'cd'];
 const UNIT_TABLE = {
   m:   {kg:0, m:1, s:0, A:0, K:0, mol:0, cd:0},
@@ -331,10 +344,11 @@ function calculate() {
         let numVal = parseFloat(numerator);
         let denVal = parseFloat(denNum);
         let dec = (!isNaN(numVal) && !isNaN(denVal) && denVal !== 0) ? numVal / denVal : NaN;
-        let repLatex = (!isNaN(dec)) ? toRepeatingDecimal(dec) : '?';
-
+        let formattedDec = formatSigFig(dec, currentSigFigs); // <-- Use sig figs!
+        let repLatex = (!isNaN(dec)) ? formattedDec : '?';
         let decFracLatex = `\\displaystyle\\frac{${repLatex}}{${denPowLatex}}`;
         let fullDecLatex = `${repLatex}${Object.entries(denVarPowers).length > 0 ? '\\,' : ''}${Object.entries(denVarPowers).map(([v,c])=>`${v}^{-${c}}`).join('')}`;
+
 
         // All output rows: indent + = + latex
         [simpLatex, decFracLatex, fullDecLatex].forEach(latex => {
