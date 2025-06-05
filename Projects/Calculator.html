@@ -52,8 +52,12 @@
     <div id="pretty-math-output" style="flex:1;"></div>
     <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
   </div>
-  <input id="input-box" placeholder="Enter calculation (e.g. 5 V * 5 A + 5 W)" autocomplete="off"
-    oninput="calculate()" onkeydown="if(event.key==='Enter'){calculate(); return false;}">
+  <input id="input-box" 
+  placeholder="Enter calculation (e.g. 5 V * 5 A + 5 W)" 
+  autocomplete="off"
+  oninput="calculate()"
+  onkeydown="if(event.key==='Enter'){calculate(); return false;}">
+
   <div class="calculator">
     <button onclick="appendCalc('1')">1</button>
     <button onclick="appendCalc('2')">2</button>
@@ -207,12 +211,16 @@ function appendCalc(val) {
   const caretPos = start + val.length;
   box.setSelectionRange(caretPos, caretPos);
   box.focus();
+  calculate(); // <<< Add this!
 }
+
 function clearCalc() {
   document.getElementById('input-box').value = '';
   document.getElementById('result-panel').innerHTML = '';
   document.getElementById('pretty-math-output').innerHTML = '';
+  calculate(); // <<< Add this!
 }
+
 function backspace() {
   const box = document.getElementById('input-box');
   const start = box.selectionStart;
@@ -225,7 +233,9 @@ function backspace() {
     box.setSelectionRange(start, start);
   }
   box.focus();
+  calculate(); // <<< Add this!
 }
+
 // ----------- MATHJAX FORMATTING -----------
 // Cursive/italic for variables: SI units get upright, all other variables get math italics
 function expToLatex(exp) {
