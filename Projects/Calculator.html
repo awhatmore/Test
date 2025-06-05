@@ -8,7 +8,7 @@
     body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 2rem; }
     h2 { text-align: center; }
     #pretty-input-output {
-      display: none; /* input is shown in steps, not standalone */
+      display: none;
     }
     .eq-steps-container {
       width: 100%;
@@ -16,16 +16,15 @@
       margin: 0 auto 1.2em auto;
       position: relative;
     }
-.steps-eq-row {
-  min-height: 2.4em;
-  height: 2.4em;   /* Add this line for consistent row height */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  margin-bottom: 0.3em;  /* Make the gap between rows smaller if you like */
-}
-
+    .steps-eq-row {
+      min-height: 2.4em;
+      height: 2.4em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      margin-bottom: 0.3em;
+    }
     .steps-side {
       flex: 1 1 0;
       min-width: 140px;
@@ -212,13 +211,15 @@ function formatSigFig(num, sigfigs) {
   s = s.replace(/\.?0+$/, '');
   return s;
 }
-function formatInputAsLatex(input) {
-  input = input.replace(/\s+/g, '');
-  let fracMatch = input.match(/^(.+?)\/(.+)$/);
+function formatInputForPrettyLatex(input) {
+  let clean = input.replace(/\s+/g, '');
+  let fracMatch = clean.match(/^(.+?)\/(.+)$/);
   if (fracMatch) {
-    return `\\displaystyle\\frac{${fracMatch[1]}}{${fracMatch[2]}}`;
+    let num = fracMatch[1].replace(/\*/g, ' \\cdot ');
+    let den = fracMatch[2].replace(/\*/g, ' \\cdot ');
+    return `\\displaystyle\\frac{${num}}{${den}}`;
   } else {
-    return input.replace(/([a-zA-Z]+)/g, "\\mathit{$1}");
+    return clean.replace(/\*/g, ' \\cdot ');
   }
 }
 let currentSigFigs = 3;
@@ -264,7 +265,7 @@ function backspace() {
 function updateUnitOptions() {
   // Your custom unit button code can go here
 }
-  
+
 function calculate() {
   let stepsDiv = document.getElementById('steps-math-output');
   let input = document.getElementById('input-box').value.trim();
@@ -283,7 +284,6 @@ function calculate() {
       if (!isNaN(Number(f))) {
         numProduct *= Number(f);
       } else {
-        // Parse exponents like y^2 or kg^3
         let match = f.match(/^([a-zA-ZμΩ]+)(?:\^(\d+))?$/);
         if (match) {
           let base = match[1];
@@ -297,7 +297,6 @@ function calculate() {
     return { numProduct, vars };
   }
 
-  // Render a variable/unit dictionary as latex
   function renderVars(vars) {
     return Object.entries(vars)
       .map(([v, exp]) =>
@@ -307,50 +306,40 @@ function calculate() {
       ).join(' ');
   }
 
-  // Compose a latex product
   function composeLatex(num, vars) {
     let varStr = renderVars(vars);
     return [num !== 1 ? num : '', varStr].filter(Boolean).join(' ');
   }
 
-  // Process input: handle fractions
   let prettyInput = `\\(${formatInputForPrettyLatex(input)}\\)`;
   let prettyOutput1 = '';
   let fracMatch = input.replace(/\s+/g, '').match(/^(.+?)\/(.+)$/);
 
   if (fracMatch) {
-    // Split numerator and denominator by *
     let numFactors = fracMatch[1].split('*').map(s => s.trim()).filter(Boolean);
     let denFactors = fracMatch[2].split('*').map(s => s.trim()).filter(Boolean);
     let numAnalysis = analyzeFactors(numFactors);
     let denAnalysis = analyzeFactors(denFactors);
 
-    // If denominator is only number 1, treat as product
     let isDenomOne = (denAnalysis.numProduct === 1) && Object.keys(denAnalysis.vars).length === 0;
 
     if (isDenomOne) {
       prettyOutput1 = composeLatex(numAnalysis.numProduct, numAnalysis.vars);
     } else {
-      // Reduce vars/units: numerator minus denominator exponents
       let allVars = { ...numAnalysis.vars };
       for (let v in denAnalysis.vars) {
         allVars[v] = (allVars[v] || 0) - denAnalysis.vars[v];
       }
-      // Remove zero exponents
       Object.keys(allVars).forEach(k => { if (allVars[k] === 0) delete allVars[k]; });
 
-      // Compose top/bottom for fraction
       let numLatex = composeLatex(numAnalysis.numProduct, numAnalysis.vars);
       let denLatex = composeLatex(denAnalysis.numProduct, denAnalysis.vars);
 
-      // If only a numeric denominator (e.g. 15/2), show as simplified fraction
       if (Object.keys(denAnalysis.vars).length === 0 && denAnalysis.numProduct !== 1) {
         prettyOutput1 = `\\displaystyle\\frac{${numLatex}}{${denLatex}}`;
       } else {
-        // If denominator has vars, combine exponents algebraically
         let nVars = { ...numAnalysis.vars };
         let dVars = { ...denAnalysis.vars };
-        // Remove variables with 0 exponent
         Object.keys(nVars).forEach(k => { if ((nVars[k] || 0) === 0) delete nVars[k]; });
         Object.keys(dVars).forEach(k => { if ((dVars[k] || 0) === 0) delete dVars[k]; });
         let numPart = composeLatex(numAnalysis.numProduct, nVars);
@@ -359,7 +348,6 @@ function calculate() {
       }
     }
   } else {
-    // Not a fraction, just multiply all numbers and combine vars
     let allFactors = input.split('*').map(s => s.trim()).filter(Boolean);
     let { numProduct, vars } = analyzeFactors(allFactors);
     prettyOutput1 = composeLatex(numProduct, vars);
@@ -367,14 +355,14 @@ function calculate() {
 
   if (!prettyOutput1) prettyOutput1 = "\\text{(empty)}";
 
-let outputs = [
-  `\\(\\displaystyle ${prettyOutput1}\\)`,
-  '\\(\\text{Output 2}\\)',
-  '\\(\\text{Output 3}\\)'
-];
-
+  let outputs = [
+    `\\(\\displaystyle ${prettyOutput1}\\)`,
+    '\\(\\text{Output 2}\\)',
+    '\\(\\text{Output 3}\\)'
+  ];
 
   let steps = [];
+  // First row: input and Output 1
   steps.push(`
     <div class="steps-eq-row">
       <span class="steps-side">${prettyInput}</span>
@@ -382,7 +370,7 @@ let outputs = [
       <span class="steps-side right"><span class="steps-eq-latex">${outputs[0]}</span></span>
     </div>
   `);
-
+  // Other rows: blank left, Output 2 & 3
   for (let i = 1; i < outputs.length; i++) {
     steps.push(`
       <div class="steps-eq-row">
@@ -396,10 +384,6 @@ let outputs = [
   stepsDiv.innerHTML = steps.join('');
   MathJax.typesetPromise([stepsDiv]);
 }
-
-
-
-
 
 document.getElementById('copy-latex-btn').onclick = function() {
   let stepsDiv = document.getElementById('steps-math-output');
