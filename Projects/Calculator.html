@@ -8,7 +8,7 @@
     body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 2rem; }
     h2 { text-align: center; }
     #pretty-input-output {
-      display: none; /* hide standalone pretty input, it's inside steps now */
+      display: none; /* input is shown in steps, not standalone */
     }
     .eq-steps-container {
       width: 100%;
@@ -104,7 +104,7 @@
   <input id="input-box"
     placeholder="Enter calculation (e.g. 5 / 9xxx)"
     autocomplete="off"
-    oninput="updatePrettyInput(); calculate();"
+    oninput="calculate();"
     onkeydown="if(event.key==='Enter'){calculate(); return false;}">
 
   <div style="margin-bottom:0.5em;">
@@ -220,7 +220,6 @@ function formatInputAsLatex(input) {
   }
 }
 let currentSigFigs = 3;
-function updatePrettyInput() { /* hide, handled in steps row */ }
 function setSigFigs(n) {
   currentSigFigs = n;
   document.querySelectorAll('.sigfig-btn').forEach(btn => {
@@ -261,14 +260,14 @@ function backspace() {
   calculate();
 }
 function updateUnitOptions() {
-  // You can keep your unit code unchanged, omitted for brevity
+  // Your custom unit button code can go here
 }
 function calculate() {
   let stepsDiv = document.getElementById('steps-math-output');
   let input = document.getElementById('input-box').value.trim();
   let inputLatex = input ? `\\(${formatInputAsLatex(input)}\\)` : '';
   let steps = [];
-  // Fraction (with both numbers): "5.5/5"
+  // Fraction (both numbers): "5.5/5"
   let fracMatch = input.replace(/\s+/g,'').match(/^(.+?)\/(.+)$/);
   if (input && fracMatch && !isNaN(Number(fracMatch[1])) && !isNaN(Number(fracMatch[2]))) {
     try {
@@ -358,7 +357,7 @@ document.getElementById('copy-latex-btn').onclick = function() {
 };
 window.onload = function() {
   calculate();
-  updateUnitOptions();
+  updateUnitOptions && updateUnitOptions();
 };
 </script>
 </body>
