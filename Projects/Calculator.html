@@ -25,7 +25,6 @@
   width: 100%;
   min-height: 2em;
   margin-bottom: 0.8em;
-  position: relative;
 }
     .steps-indent {
       display: inline-block;
@@ -36,28 +35,26 @@
       padding-right: 0.3em;
     }
 .steps-side {
-  flex: 1 1 0;
-  text-align: right;
+  width: 50%;
+  min-width: 140px;  /* adjust as needed */
+  max-width: 320px;  /* adjust as needed */
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  /* Remove min/max-width for better flex */
 }
 
-    .steps-side.right {
-  text-align: left;
+  .steps-side.right {
   justify-content: flex-start;
 }
 .eq-label {
   font-size: 1.5em;
   color: #fff;
   flex: none;
-  margin: 0;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  margin: 0 0.1em;
   z-index: 1;
   background: #111;
   padding: 0 0.1em;
+  position: relative;
 }
     .steps-eq-latex { font-size: 1.2em; color: #fff;}
     #input-box {
@@ -101,12 +98,10 @@
 </head>
 <body>
   <h2>Smart SI Unit Calculator</h2>
-  <div style="display: flex; align-items: flex-start;">
-  <div id="pretty-input-output"></div>
-  <div class="eq-steps-container">
-    <div id="steps-math-output"></div>
-  </div>
+<div class="eq-steps-container">
+  <div id="steps-math-output"></div>
 </div>
+
   <div style="display:flex;align-items:center;margin-bottom:0.7em;">
     <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
   </div>
@@ -440,15 +435,14 @@ function calculate() {
             let expr = input.replace(/[a-zA-ZμΩ]+/g, '').replace(/\s+/g, '');
             let result = Function('"use strict";return (' + expr + ')')();
             let formattedResult = formatSigFig(result, currentSigFigs);
-            steps.push(`
-              <div class="steps-eq-row">
-                <span class="steps-side" style="width:${inputWidth}px;display:inline-block;"></span>
-                <span class="eq-label">=</span>
-                <span class="steps-side" style="width:${inputWidth}px;display:inline-block;">
-                  <span class="steps-eq-latex">\\(${formattedResult}\\)</span>
-                </span>
-              </div>
-            `);
+          // Build the main equation row: input (pretty), equals, output
+          steps.push(`
+            <div class="steps-eq-row">
+              <span class="steps-side">${inputLatex}</span>
+              <span class="eq-label">=</span>
+              <span class="steps-side right"><span class="steps-eq-latex">\\(${formattedResult}\\)</span></span>
+            </div>
+          `);
             stepsDiv.innerHTML = steps.join('');
             MathJax.typesetPromise([stepsDiv]);
           } catch(e) {
