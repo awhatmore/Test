@@ -7,85 +7,18 @@
   <style>
     body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 2rem; }
     h2 { text-align: center; }
-    #pretty-input-output {
-      display: none;
-    }
-    .eq-steps-container {
-      width: 100%;
-      max-width: 600px;
-      margin: 0 auto 1.2em auto;
-      position: relative;
-    }
-    .steps-eq-row {
-      min-height: 2.4em;
-      height: 2.4em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      margin-bottom: 0.8em;
-    }
-    .steps-side {
-      flex: 1 1 0;
-      min-width: 140px;
-      max-width: 320px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      font-size: 1.4em;
-      word-break: break-all;
-      white-space: normal;
-      padding-right: 0.4em;
-      box-sizing: border-box;
-    }
-    .steps-side.right {
-      justify-content: flex-start;
-      padding-right: 0;
-      padding-left: 0.4em;
-    }
-    .eq-label {
-      font-size: 1.6em;
-      color: #fff;
-      flex: none;
-      margin: 0 0.18em;
-      z-index: 1;
-      background: #111;
-      padding: 0 0.1em;
-      position: relative;
-      min-width: 1.4em;
-      text-align: center;
-    }
+    #pretty-input-output { display: none; }
+    .eq-steps-container { width: 100%; max-width: 600px; margin: 0 auto 1.2em auto; position: relative; }
+    .steps-eq-row { min-height: 2.4em; height: 2.4em; display: flex; align-items: center; justify-content: center; width: 100%; margin-bottom: 0.8em; }
+    .steps-side { flex: 1 1 0; min-width: 140px; max-width: 320px; display: flex; align-items: center; justify-content: flex-end; font-size: 1.4em; word-break: break-all; white-space: normal; padding-right: 0.4em; box-sizing: border-box; }
+    .steps-side.right { justify-content: flex-start; padding-right: 0; padding-left: 0.4em; }
+    .eq-label { font-size: 1.6em; color: #fff; flex: none; margin: 0 0.18em; z-index: 1; background: #111; padding: 0 0.1em; position: relative; min-width: 1.4em; text-align: center; }
     .steps-eq-latex { font-size: 1em; color: #fff;}
-    #input-box {
-      width: 100%;
-      font-size: 1.25rem;
-      padding: 0.5rem 1rem;
-      background: #181818;
-      color: #0f0;
-      border: 1px solid #444;
-      border-radius: 0.5rem;
-      margin-bottom: 1rem;
-      box-sizing: border-box;
-    }
-    #result-panel {
-      background: #222;
-      padding: 1rem;
-      border-radius: 0.9rem;
-      font-size: 1rem;
-      margin-top: 1rem;
-      min-height: 60px;
-    }
+    #input-box { width: 100%; font-size: 1.25rem; padding: 0.5rem 1rem; background: #181818; color: #0f0; border: 1px solid #444; border-radius: 0.5rem; margin-bottom: 1rem; box-sizing: border-box; }
+    #result-panel { background: #222; padding: 1rem; border-radius: 0.9rem; font-size: 1rem; margin-top: 1rem; min-height: 60px; }
     .section-label { font-weight: bold; color: #0ff; margin-top: 0.5em; }
-    .calculator {
-      display: grid;
-      grid-template-columns: repeat(3, 60px);
-      gap: 5px;
-    }
-    button {
-      width: 60px;
-      height: 60px;
-      font-size: 1.2em;
-    }
+    .calculator { display: grid; grid-template-columns: repeat(3, 60px); gap: 5px; }
+    button { width: 60px; height: 60px; font-size: 1.2em; }
     .wide { grid-column: span 2; }
     .output-row { margin-bottom: 0.3em; }
     .unit-breakdown { color: #6cf; font-family: 'Consolas', monospace; }
@@ -137,7 +70,6 @@
     <option value="diff_eq">Differential Equations</option>
     <option value="statics">Statics</option>
     <option value="solids">Solids</option>
-
      <!-- <option value="mechanical"></option>-->
     </select>
   </div>
@@ -218,135 +150,13 @@
   </div>-->
   <div id="result-panel"></div>
 <script>
-function formatSigFig(num, sigfigs) {
-  if (isNaN(num)) return '?';
-  if (num === 0) return '0';
-  let s = Number(num).toPrecision(sigfigs);
-  if (s.includes('e')) return s;
-  s = s.replace(/\.?0+$/, '');
-  return s;
-}
-  // Helper to analyze factors, combine numbers, count exponents
-function analyzeFactors(factors) {
-  let numProduct = 1;
-  let vars = {};
-  for (let f of factors) {
-    // Remove any surrounding parentheses from factors
-    f = f.replace(/^\((.*)\)$/, '$1');
-    if (!isNaN(Number(f))) {
-      numProduct *= Number(f);
-    } else {
-      let match = f.match(/^([a-zA-ZμΩ]+)(?:\^(\d+))?$/);
-      if (match) {
-        let base = match[1];
-        let exp = match[2] ? parseInt(match[2]) : 1;
-        vars[base] = (vars[base] || 0) + exp;
-      } else {
-        // "yy" or "yyy" → "y", "y", "y"
-        for (let ch of f) {
-          if (/[a-zA-ZμΩ]/.test(ch)) vars[ch] = (vars[ch] || 0) + 1;
-        }
-      }
-    }
-  }
-  return { numProduct, vars };
-}
-  function expandAdjacentVariables(str) {
-  // Replace any group of two or more single-letter variables with explicit multiplication
-  // e.g., "yy" -> "y*y", "yyy" -> "y*y*y"
-  // Also works for xyz -> x*y*z
-  return str.replace(/([a-zA-Z])(?=[a-zA-Z])/g, '$1*');
-}
-  function insertImplicitMultiplication(str) {
-  // Insert * between:
-  // 1. digit followed by letter, e.g., 5y => 5*y
-  // 2. letter followed by digit, e.g., y5 => y*5
-  // 3. letter followed by letter, e.g., xy => x*y (except known units, which you can handle more deeply later)
-  // 4. closing parenthesis followed by number/letter, e.g., )5 or )x => )*5 or )*x
-  // 5. number/letter followed by opening parenthesis, e.g., 5( or x( => 5*( or x*(
-  return str
-    .replace(/([0-9])([a-zA-Z(])/g, '$1*$2')
-    .replace(/([a-zA-Z)])([0-9a-zA-Z(])/g, '$1*$2');
-}
-
-// Helper to create MathJax-friendly pretty input with big brackets if needed
-function wrapWithBrackets(latexExpr, open, close) {
-  if (open && close) return `\\left(${latexExpr}\\right)`;
-  if (open && !close) return `\\left(${latexExpr}\\right.`;  // missing close
-  if (!open && close) return `\\left.${latexExpr}\\right)`;  // missing open
-  return latexExpr;
-}
-
-function formatInputForPrettyLatex(input) {
-  let clean = input.replace(/\s+/g, '');
-
-  // Helper to process group (fraction or not)
-  function processGroup(group) {
-    let fracMatch = group.match(/^(.+?)\/(.+)$/);
-    if (fracMatch) {
-      let num = fracMatch[1].replace(/\*/g, ' \\cdot ');
-      let den = fracMatch[2].replace(/\*/g, ' \\cdot ');
-      return `\\left(\\displaystyle\\frac{${num}}{${den}}\\right)`;
-    } else {
-      let pretty = group.replace(/\*/g, ' \\cdot ');
-      return `\\left(${pretty}\\right)`;
-    }
-  }
-
-  // Find all top-level groups (things in parentheses)
-  let groups = [];
-  let i = 0, depth = 0, lastStart = 0;
-  while (i < clean.length) {
-    if (clean[i] === '(') {
-      if (depth === 0) lastStart = i+1;
-      depth++;
-    } else if (clean[i] === ')') {
-      depth--;
-      if (depth === 0) {
-        groups.push(clean.slice(lastStart, i));
-      }
-    }
-    i++;
-  }
-
-  // If we found groups, process as group*group*...
-  if (groups.length > 0) {
-    let rendered = groups.map(processGroup).join(' \\cdot ');
-    return rendered;
-  }
-
-  // Otherwise, fallback: process as one group (fraction or not)
-  return processGroup(clean);
-}
-
-
-  // Find all top-level groups (things in parentheses)
-  let groups = [];
-  let i = 0, depth = 0, lastStart = 0;
-  while (i < clean.length) {
-    if (clean[i] === '(') {
-      if (depth === 0) lastStart = i+1;
-      depth++;
-    } else if (clean[i] === ')') {
-      depth--;
-      if (depth === 0) {
-        groups.push(clean.slice(lastStart, i));
-      }
-    }
-    i++;
-  }
-
-  // If we found groups, process as group*group*...
-  if (groups.length > 0) {
-    let rest = clean.split(/\([^\(\)]*\)/g).filter(s => s.length > 0);
-    let rendered = groups.map(processGroup).join(' \\cdot ');
-    // If there's stuff before or after, add it (rare, but could happen)
-    if (rest.length > 0) rendered = rest[0] + rendered + (rest[1] || '');
-    return rendered;
-  }
-
-  // Otherwise, fallback: process as one group (fraction or not)
-  return processGroup(clean);
+let currentSigFigs = 3;
+function setSigFigs(n) {
+  currentSigFigs = n;
+  document.querySelectorAll('.sigfig-btn').forEach(btn => {
+    btn.classList.toggle('sigfig-active', btn.textContent == n);
+  });
+  calculate();
 }
 function appendCalc(val) {
   const box = document.getElementById('input-box');
@@ -383,7 +193,52 @@ function backspace() {
 function updateUnitOptions() {
   // Your custom unit button code can go here
 }
-
+// Insert * for things like 5y or y5 or )x or x(
+function insertImplicitMultiplication(str) {
+  return str
+    .replace(/([0-9])([a-zA-Z(])/g, '$1*$2')
+    .replace(/([a-zA-Z)])([0-9a-zA-Z(])/g, '$1*$2');
+}
+// Expand things like yy -> y*y, xyz -> x*y*z
+function expandAdjacentVariables(str) {
+  return str.replace(/([a-zA-Z])(?=[a-zA-Z])/g, '$1*');
+}
+// LaTeX grouping for pretty input
+function formatInputForPrettyLatex(input) {
+  let clean = input.replace(/\s+/g, '');
+  function processGroup(group) {
+    let fracMatch = group.match(/^(.+?)\/(.+)$/);
+    if (fracMatch) {
+      let num = fracMatch[1].replace(/\*/g, ' \\cdot ');
+      let den = fracMatch[2].replace(/\*/g, ' \\cdot ');
+      return `\\left(\\displaystyle\\frac{${num}}{${den}}\\right)`;
+    } else {
+      let pretty = group.replace(/\*/g, ' \\cdot ');
+      return `\\left(${pretty}\\right)`;
+    }
+  }
+  // Find all top-level groups (parentheses)
+  let groups = [];
+  let i = 0, depth = 0, lastStart = 0;
+  while (i < clean.length) {
+    if (clean[i] === '(') {
+      if (depth === 0) lastStart = i+1;
+      depth++;
+    } else if (clean[i] === ')') {
+      depth--;
+      if (depth === 0) {
+        groups.push(clean.slice(lastStart, i));
+      }
+    }
+    i++;
+  }
+  if (groups.length > 0) {
+    let rendered = groups.map(processGroup).join(' \\cdot ');
+    return rendered;
+  }
+  return processGroup(clean);
+}
+// Math core for pretty output
 function calculate() {
   let inputRaw = document.getElementById('input-box').value.trim();
   let expanded = expandAdjacentVariables(inputRaw);
@@ -393,10 +248,7 @@ function calculate() {
     stepsDiv.innerHTML = '';
     return;
   }
-
   const knownUnits = [ "kg", "A", "W", "V", "VA" ];
-
-  // Helper to analyze and count numbers and variable exponents
   function analyzeFactors(factors) {
     let numProduct = 1;
     let vars = {};
@@ -406,14 +258,12 @@ function calculate() {
       if (!isNaN(Number(f))) {
         numProduct *= Number(f);
       } else {
-        // Accept repeated variables (like yyy → y*y*y)
         let match = f.match(/^([a-zA-ZμΩ]+)(?:\^(-?\d+))?$/);
         if (match) {
           let base = match[1];
           let exp = match[2] ? parseInt(match[2]) : 1;
           vars[base] = (vars[base] || 0) + exp;
         } else {
-          // fallback: treat each character as variable if not matched (e.g. yyy)
           for (let ch of f) {
             if (/[a-zA-ZμΩ]/.test(ch)) vars[ch] = (vars[ch] || 0) + 1;
           }
@@ -422,8 +272,6 @@ function calculate() {
     }
     return { numProduct, vars };
   }
-
-  // Helper to render variable/unit dictionary as LaTeX
   function renderVars(vars) {
     return Object.entries(vars)
       .map(([v, exp]) =>
@@ -432,62 +280,42 @@ function calculate() {
           : (exp === 1 ? v : `${v}^{${exp}}`)
       ).join(' ');
   }
-
-  // ---- Main Calculation ----
-
-  // Parse as fraction if present, else as product
   let prettyInput = `\\(${formatInputForPrettyLatex(input)}\\)`;
   let prettyOutput1 = '';
   let fracMatch = input.replace(/\s+/g, '').match(/^(.+?)\/(.+)$/);
-
   if (fracMatch) {
-    // Remove parentheses from numbers before splitting
     let numFactors = fracMatch[1].replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
     let denFactors = fracMatch[2].replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
     let numAnalysis = analyzeFactors(numFactors);
     let denAnalysis = analyzeFactors(denFactors);
-
-    // Cancel out shared variables
     let allVars = { ...numAnalysis.vars };
     for (let v in denAnalysis.vars) {
       allVars[v] = (allVars[v] || 0) - denAnalysis.vars[v];
     }
-    // Remove vars with 0 exponent
     Object.keys(allVars).forEach(k => { if (allVars[k] === 0) delete allVars[k]; });
-
-    // Numerator and denominator for final output
     let numVarStr = renderVars(Object.fromEntries(Object.entries(allVars).filter(([k, v]) => v > 0)));
     let denVarStr = renderVars(Object.fromEntries(Object.entries(allVars).filter(([k, v]) => v < 0).map(([k, v]) => [k, -v])));
     let numerator = numAnalysis.numProduct;
     let denominator = denAnalysis.numProduct;
-
-    // If all variables and numbers cancel, numerator/denominator may be 1
     let numDisplay = [numerator !== 1 ? numerator : '', numVarStr].filter(Boolean).join(' ') || '1';
     let denDisplay = [denominator !== 1 ? denominator : '', denVarStr].filter(Boolean).join(' ') || '1';
-
-    // If denominator is just 1, just show the numerator
     if (denDisplay === '1') {
       prettyOutput1 = numDisplay;
     } else {
       prettyOutput1 = `\\displaystyle\\frac{${numDisplay}}{${denDisplay}}`;
     }
   } else {
-    // Not a fraction: just product, collapse repeated variables and multiply all numbers
     let allFactors = input.replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
     let { numProduct, vars } = analyzeFactors(allFactors);
     let varStr = renderVars(vars);
     prettyOutput1 = [numProduct !== 1 ? numProduct : '', varStr].filter(Boolean).join(' ') || '1';
   }
-
   if (!prettyOutput1) prettyOutput1 = "\\text{(empty)}";
-
-  // Build outputs (Output 2 and 3 placeholders)
   let outputs = [
     `\\(${prettyOutput1}\\)`,
     '\\(\\text{Output 2}\\)',
     '\\(\\text{Output 3}\\)'
   ];
-
   let steps = [];
   steps.push(`
     <div class="steps-eq-row">
@@ -496,7 +324,6 @@ function calculate() {
       <span class="steps-side right"><span class="steps-eq-latex">${outputs[0]}</span></span>
     </div>
   `);
-
   for (let i = 1; i < outputs.length; i++) {
     steps.push(`
       <div class="steps-eq-row">
@@ -506,12 +333,9 @@ function calculate() {
       </div>
     `);
   }
-
   stepsDiv.innerHTML = steps.join('');
   MathJax.typesetPromise([stepsDiv]);
 }
-
-
 document.getElementById('copy-latex-btn').onclick = function() {
   let stepsDiv = document.getElementById('steps-math-output');
   if (!stepsDiv.textContent) return;
