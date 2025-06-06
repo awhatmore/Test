@@ -206,6 +206,29 @@ function expandAdjacentVariables(str) {
 // LaTeX grouping for pretty input
 function formatInputForPrettyLatex(input) {
   let clean = input.replace(/\s+/g, '');
+
+  // Helper: Split at top-level + or -
+  function splitTopLevel(expr) {
+    let parts = [];
+    let current = '';
+    let depth = 0;
+    for (let i = 0; i < expr.length; ++i) {
+      let c = expr[i];
+      if (c === '(') depth++;
+      if (c === ')') depth--;
+      if ((c === '+' || c === '-') && depth === 0) {
+        if (current !== '') parts.push(current);
+        parts.push(c); // keep operator as separate part
+        current = '';
+      } else {
+        current += c;
+      }
+    }
+    if (current !== '') parts.push(current);
+    return parts;
+  }
+
+  // Helper to process group (fraction or not)
   function processGroup(group) {
     let fracMatch = group.match(/^(.+?)\/(.+)$/);
     if (fracMatch) {
@@ -217,27 +240,25 @@ function formatInputForPrettyLatex(input) {
       return `\\left(${pretty}\\right)`;
     }
   }
-  // Find all top-level groups (parentheses)
-  let groups = [];
-  let i = 0, depth = 0, lastStart = 0;
-  while (i < clean.length) {
-    if (clean[i] === '(') {
-      if (depth === 0) lastStart = i+1;
-      depth++;
-    } else if (clean[i] === ')') {
-      depth--;
-      if (depth === 0) {
-        groups.push(clean.slice(lastStart, i));
+
+  // If expression has top-level + or -, split and join
+  let topLevelParts = splitTopLevel(clean);
+  if (topLevelParts.length > 1) {
+    let latexParts = [];
+    for (let part of topLevelParts) {
+      if (part === '+' || part === '-') {
+        latexParts.push(part); // add the operator
+      } else {
+        latexParts.push(processGroup(part));
       }
     }
-    i++;
+    return latexParts.join(' ');
   }
-  if (groups.length > 0) {
-    let rendered = groups.map(processGroup).join(' \\cdot ');
-    return rendered;
-  }
+
+  // Otherwise, fallback: process as one group (fraction or not)
   return processGroup(clean);
 }
+
 // Math core for pretty output
 function calculate() {
   let inputRaw = document.getElementById('input-box').value.trim();
