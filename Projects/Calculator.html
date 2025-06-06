@@ -193,21 +193,34 @@ function backspace() {
 function updateUnitOptions() {
   // Your custom unit button code can go here
 }
+
+// Step 1: Expand repeated variables, e.g., yyy -> y^3, xxx -> x^3, xyyzz -> x*y^2*z^2
+function expandRepeatedVariables(str) {
+  return str.replace(/([a-zA-Z])\1{1,}/g, (match, p1) => `${p1}^${match.length}`);
+}
+
+// Step 2: Expand variables followed by >1 digit, e.g., y12 -> y^12, x22 -> x^22
+function expandVariableExponents(str) {
+  // Don't touch already-formatted exponents, i.e., y^3
+  // Only process if not directly after ^ (already exponent) and not as part of number
+  // e.g., y10, x100, z42, but not y^10
+  return str.replace(/([a-zA-Z])(\d{2,})/g, (match, v, digits, offset, s) => {
+    if (offset > 0 && s[offset-1] === '^') return match; // skip if already an exponent
+    return `${v}^${digits}`;
+  });
+}
+
 // Insert * for things like 5y or y5 or )x or x(
 function insertImplicitMultiplication(str) {
   return str
     .replace(/([0-9])([a-zA-Z(])/g, '$1*$2')
     .replace(/([a-zA-Z)])([0-9a-zA-Z(])/g, '$1*$2');
 }
-// Expand things like yy -> y*y, xyz -> x*y*z
-function expandAdjacentVariables(str) {
-  return str.replace(/([a-zA-Z])(?=[a-zA-Z])/g, '$1*');
-}
+
 // LaTeX grouping for pretty input
 function formatInputForPrettyLatex(input) {
   let clean = input.replace(/\s+/g, '');
 
-  // Helper: Split at top-level operators (+ - * /) (ignoring those inside parentheses)
   function splitTopLevel(expr) {
     let parts = [];
     let current = '';
@@ -218,7 +231,7 @@ function formatInputForPrettyLatex(input) {
       if (c === ')') depth--;
       if ((c === '+' || c === '-' || c === '*' || c === '/') && depth === 0) {
         if (current !== '') parts.push(current);
-        parts.push(c); // keep operator as separate part
+        parts.push(c);
         current = '';
       } else {
         current += c;
@@ -227,29 +240,21 @@ function formatInputForPrettyLatex(input) {
     if (current !== '') parts.push(current);
     return parts;
   }
-
-  // Helper to process group (fraction or not)
   function processGroup(group) {
-    // If it's wrapped in parenthesis, remove them
     if (group.startsWith('(') && group.endsWith(')')) {
-      // Only strip if they are a matching pair for the whole group
       let d = 0;
       for (let i = 0; i < group.length; ++i) {
         if (group[i] === '(') d++;
         if (group[i] === ')') d--;
         if (d === 0 && i < group.length - 1) {
-          // Found a closing paren before end, don't strip
           return processMath(group);
         }
       }
-      // Strip one pair
       group = group.substring(1, group.length - 1);
       return `\\left(${processMath(group)}\\right)`;
     }
     return processMath(group);
   }
-
-  // Helper to process math group for fraction
   function processMath(group) {
     let fracMatch = group.match(/^(.+?)\/(.+)$/);
     if (fracMatch) {
@@ -261,17 +266,12 @@ function formatInputForPrettyLatex(input) {
       return pretty;
     }
   }
-
-  // Main logic: split at top-level ops, recursively handle each group
   let topLevelParts = splitTopLevel(clean);
-
-  // If more than one part, recursively process
   if (topLevelParts.length > 1) {
     let latexParts = [];
     for (let i = 0; i < topLevelParts.length; ++i) {
       let part = topLevelParts[i];
       if (['+', '-', '*', '/'].includes(part)) {
-        // Pretty print operators
         if (part === '*') latexParts.push(' \\cdot ');
         else if (part === '/') latexParts.push(' \\div ');
         else latexParts.push(' ' + part + ' ');
@@ -281,16 +281,21 @@ function formatInputForPrettyLatex(input) {
     }
     return latexParts.join('');
   }
-
-  // Fallback: just process as single group
   return processGroup(clean);
 }
 
-// Math core for pretty output
 function calculate() {
   let inputRaw = document.getElementById('input-box').value.trim();
-  let expanded = expandAdjacentVariables(inputRaw);
-  let input = insertImplicitMultiplication(expanded);
+
+  // STEP 1: Expand repeated letters (yy, xxx, etc)
+  let expanded = expandRepeatedVariables(inputRaw);
+
+  // STEP 2: Expand variable exponents (y10 => y^10, x22 => x^22)
+  let withExponents = expandVariableExponents(expanded);
+
+  // STEP 3: Insert * for implied multiplication (5y, y5, etc)
+  let input = insertImplicitMultiplication(withExponents);
+
   let stepsDiv = document.getElementById('steps-math-output');
   if (!input) {
     stepsDiv.innerHTML = '';
@@ -301,7 +306,6 @@ function calculate() {
     let numProduct = 1;
     let vars = {};
     for (let f of factors) {
-      // Remove parentheses from numbers, e.g., (5) → 5
       f = f.replace(/^\((\d+)\)$/, '$1');
       if (!isNaN(Number(f))) {
         numProduct *= Number(f);
