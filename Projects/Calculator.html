@@ -254,17 +254,34 @@ function analyzeFactors(factors) {
     .replace(/([a-zA-Z)])([0-9a-zA-Z(])/g, '$1*$2');
 }
 
+// Helper to create MathJax-friendly pretty input with big brackets if needed
+function wrapWithBrackets(latexExpr, open, close) {
+  if (open && close) return `\\left(${latexExpr}\\right)`;
+  if (open && !close) return `\\left(${latexExpr}\\right.`;  // missing close
+  if (!open && close) return `\\left.${latexExpr}\\right)`;  // missing open
+  return latexExpr;
+}
+
 function formatInputForPrettyLatex(input) {
   let clean = input.replace(/\s+/g, '');
-  let fracMatch = clean.match(/^(.+?)\/(.+)$/);
+  let open = clean.startsWith('(');
+  let close = clean.endsWith(')');
+  let inside = clean;
+  // Remove only the outermost brackets if present
+  if (open && close) inside = inside.slice(1, -1);
+  // Format inside as before
+  let fracMatch = inside.match(/^(.+?)\/(.+)$/);
+  let latexExpr;
   if (fracMatch) {
     let num = fracMatch[1].replace(/\*/g, ' \\cdot ');
     let den = fracMatch[2].replace(/\*/g, ' \\cdot ');
-    return `\\displaystyle\\frac{${num}}{${den}}`;
+    latexExpr = `\\displaystyle\\frac{${num}}{${den}}`;
   } else {
-    return clean.replace(/\*/g, ' \\cdot ');
+    latexExpr = inside.replace(/\*/g, ' \\cdot ');
   }
+  return wrapWithBrackets(latexExpr, open, close);
 }
+
 let currentSigFigs = 3;
 function setSigFigs(n) {
   currentSigFigs = n;
