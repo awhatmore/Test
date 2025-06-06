@@ -279,31 +279,74 @@ function wrapWithBrackets(latexExpr, open, close) {
 
 function formatInputForPrettyLatex(input) {
   let clean = input.replace(/\s+/g, '');
-  let open = clean.startsWith('(');
-  let close = clean.endsWith(')');
-  let inside = clean;
-  // Remove only the outermost brackets if present
-  if (open && close) inside = inside.slice(1, -1);
-  // Format inside as before
-  let fracMatch = inside.match(/^(.+?)\/(.+)$/);
-  let latexExpr;
-  if (fracMatch) {
-    let num = fracMatch[1].replace(/\*/g, ' \\cdot ');
-    let den = fracMatch[2].replace(/\*/g, ' \\cdot ');
-    latexExpr = `\\displaystyle\\frac{${num}}{${den}}`;
-  } else {
-    latexExpr = inside.replace(/\*/g, ' \\cdot ');
+
+  // Helper to process group (fraction or not)
+  function processGroup(group) {
+    let fracMatch = group.match(/^(.+?)\/(.+)$/);
+    if (fracMatch) {
+      let num = fracMatch[1].replace(/\*/g, ' \\cdot ');
+      let den = fracMatch[2].replace(/\*/g, ' \\cdot ');
+      return `\\left(\\displaystyle\\frac{${num}}{${den}}\\right)`;
+    } else {
+      let pretty = group.replace(/\*/g, ' \\cdot ');
+      return `\\left(${pretty}\\right)`;
+    }
   }
-  return wrapWithBrackets(latexExpr, open, close);
+
+  // Find all top-level groups (things in parentheses)
+  let groups = [];
+  let i = 0, depth = 0, lastStart = 0;
+  while (i < clean.length) {
+    if (clean[i] === '(') {
+      if (depth === 0) lastStart = i+1;
+      depth++;
+    } else if (clean[i] === ')') {
+      depth--;
+      if (depth === 0) {
+        groups.push(clean.slice(lastStart, i));
+      }
+    }
+    i++;
+  }
+
+  // If we found groups, process as group*group*...
+  if (groups.length > 0) {
+    let rendered = groups.map(processGroup).join(' \\cdot ');
+    return rendered;
+  }
+
+  // Otherwise, fallback: process as one group (fraction or not)
+  return processGroup(clean);
 }
 
-let currentSigFigs = 3;
-function setSigFigs(n) {
-  currentSigFigs = n;
-  document.querySelectorAll('.sigfig-btn').forEach(btn => {
-    btn.classList.toggle('sigfig-active', btn.textContent == n);
-  });
-  calculate();
+
+  // Find all top-level groups (things in parentheses)
+  let groups = [];
+  let i = 0, depth = 0, lastStart = 0;
+  while (i < clean.length) {
+    if (clean[i] === '(') {
+      if (depth === 0) lastStart = i+1;
+      depth++;
+    } else if (clean[i] === ')') {
+      depth--;
+      if (depth === 0) {
+        groups.push(clean.slice(lastStart, i));
+      }
+    }
+    i++;
+  }
+
+  // If we found groups, process as group*group*...
+  if (groups.length > 0) {
+    let rest = clean.split(/\([^\(\)]*\)/g).filter(s => s.length > 0);
+    let rendered = groups.map(processGroup).join(' \\cdot ');
+    // If there's stuff before or after, add it (rare, but could happen)
+    if (rest.length > 0) rendered = rest[0] + rendered + (rest[1] || '');
+    return rendered;
+  }
+
+  // Otherwise, fallback: process as one group (fraction or not)
+  return processGroup(clean);
 }
 function appendCalc(val) {
   const box = document.getElementById('input-box');
