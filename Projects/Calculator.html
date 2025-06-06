@@ -211,6 +211,12 @@ function formatSigFig(num, sigfigs) {
   s = s.replace(/\.?0+$/, '');
   return s;
 }
+  function expandAdjacentVariables(str) {
+  // Replace any group of two or more single-letter variables with explicit multiplication
+  // e.g., "yy" -> "y*y", "yyy" -> "y*y*y"
+  // Also works for xyz -> x*y*z
+  return str.replace(/([a-zA-Z])(?=[a-zA-Z])/g, '$1*');
+}
   function insertImplicitMultiplication(str) {
   // Insert * between:
   // 1. digit followed by letter, e.g., 5y => 5*y
@@ -280,7 +286,8 @@ function updateUnitOptions() {
 
 function calculate() {
   let inputRaw = document.getElementById('input-box').value.trim();
-  let input = insertImplicitMultiplication(inputRaw); // <-- Use this cleaned version for all parsing
+  let expanded = expandAdjacentVariables(inputRaw);
+  let input = insertImplicitMultiplication(expanded);
   let stepsDiv = document.getElementById('steps-math-output');
   if (!input) {
     stepsDiv.innerHTML = '';
