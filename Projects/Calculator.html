@@ -211,6 +211,18 @@ function formatSigFig(num, sigfigs) {
   s = s.replace(/\.?0+$/, '');
   return s;
 }
+  function insertImplicitMultiplication(str) {
+  // Insert * between:
+  // 1. digit followed by letter, e.g., 5y => 5*y
+  // 2. letter followed by digit, e.g., y5 => y*5
+  // 3. letter followed by letter, e.g., xy => x*y (except known units, which you can handle more deeply later)
+  // 4. closing parenthesis followed by number/letter, e.g., )5 or )x => )*5 or )*x
+  // 5. number/letter followed by opening parenthesis, e.g., 5( or x( => 5*( or x*(
+  return str
+    .replace(/([0-9])([a-zA-Z(])/g, '$1*$2')
+    .replace(/([a-zA-Z)])([0-9a-zA-Z(])/g, '$1*$2');
+}
+
 function formatInputForPrettyLatex(input) {
   let clean = input.replace(/\s+/g, '');
   let fracMatch = clean.match(/^(.+?)\/(.+)$/);
@@ -267,8 +279,9 @@ function updateUnitOptions() {
 }
 
 function calculate() {
+  let inputRaw = document.getElementById('input-box').value.trim();
+  let input = insertImplicitMultiplication(inputRaw); // <-- Use this cleaned version for all parsing
   let stepsDiv = document.getElementById('steps-math-output');
-  let input = document.getElementById('input-box').value.trim();
   if (!input) {
     stepsDiv.innerHTML = '';
     return;
