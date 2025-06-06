@@ -211,6 +211,31 @@ function formatSigFig(num, sigfigs) {
   s = s.replace(/\.?0+$/, '');
   return s;
 }
+  // Helper to analyze factors, combine numbers, count exponents
+function analyzeFactors(factors) {
+  let numProduct = 1;
+  let vars = {};
+  for (let f of factors) {
+    // Remove any surrounding parentheses from factors
+    f = f.replace(/^\((.*)\)$/, '$1');
+    if (!isNaN(Number(f))) {
+      numProduct *= Number(f);
+    } else {
+      let match = f.match(/^([a-zA-ZμΩ]+)(?:\^(\d+))?$/);
+      if (match) {
+        let base = match[1];
+        let exp = match[2] ? parseInt(match[2]) : 1;
+        vars[base] = (vars[base] || 0) + exp;
+      } else {
+        // "yy" or "yyy" → "y", "y", "y"
+        for (let ch of f) {
+          if (/[a-zA-ZμΩ]/.test(ch)) vars[ch] = (vars[ch] || 0) + 1;
+        }
+      }
+    }
+  }
+  return { numProduct, vars };
+}
   function expandAdjacentVariables(str) {
   // Replace any group of two or more single-letter variables with explicit multiplication
   // e.g., "yy" -> "y*y", "yyy" -> "y*y*y"
@@ -296,27 +321,34 @@ function calculate() {
 
   const knownUnits = [ "kg", "A", "W", "V", "VA" ];
 
-  // Factor helper: returns {numProduct, vars:{var:exp, ...}}
+  // Helper to analyze and count numbers and variable exponents
   function analyzeFactors(factors) {
     let numProduct = 1;
     let vars = {};
     for (let f of factors) {
+      // Remove parentheses from numbers, e.g., (5) → 5
+      f = f.replace(/^\((\d+)\)$/, '$1');
       if (!isNaN(Number(f))) {
         numProduct *= Number(f);
       } else {
-        let match = f.match(/^([a-zA-ZμΩ]+)(?:\^(\d+))?$/);
+        // Accept repeated variables (like yyy → y*y*y)
+        let match = f.match(/^([a-zA-ZμΩ]+)(?:\^(-?\d+))?$/);
         if (match) {
           let base = match[1];
           let exp = match[2] ? parseInt(match[2]) : 1;
           vars[base] = (vars[base] || 0) + exp;
         } else {
-          vars[f] = (vars[f] || 0) + 1;
+          // fallback: treat each character as variable if not matched (e.g. yyy)
+          for (let ch of f) {
+            if (/[a-zA-ZμΩ]/.test(ch)) vars[ch] = (vars[ch] || 0) + 1;
+          }
         }
       }
     }
     return { numProduct, vars };
   }
 
+  // Helper to render variable/unit dictionary as LaTeX
   function renderVars(vars) {
     return Object.entries(vars)
       .map(([v, exp]) =>
@@ -326,63 +358,62 @@ function calculate() {
       ).join(' ');
   }
 
-  function composeLatex(num, vars) {
-    let varStr = renderVars(vars);
-    return [num !== 1 ? num : '', varStr].filter(Boolean).join(' ');
-  }
+  // ---- Main Calculation ----
 
+  // Parse as fraction if present, else as product
   let prettyInput = `\\(${formatInputForPrettyLatex(input)}\\)`;
   let prettyOutput1 = '';
   let fracMatch = input.replace(/\s+/g, '').match(/^(.+?)\/(.+)$/);
 
   if (fracMatch) {
-    let numFactors = fracMatch[1].split('*').map(s => s.trim()).filter(Boolean);
-    let denFactors = fracMatch[2].split('*').map(s => s.trim()).filter(Boolean);
+    // Remove parentheses from numbers before splitting
+    let numFactors = fracMatch[1].replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
+    let denFactors = fracMatch[2].replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
     let numAnalysis = analyzeFactors(numFactors);
     let denAnalysis = analyzeFactors(denFactors);
 
-    let isDenomOne = (denAnalysis.numProduct === 1) && Object.keys(denAnalysis.vars).length === 0;
+    // Cancel out shared variables
+    let allVars = { ...numAnalysis.vars };
+    for (let v in denAnalysis.vars) {
+      allVars[v] = (allVars[v] || 0) - denAnalysis.vars[v];
+    }
+    // Remove vars with 0 exponent
+    Object.keys(allVars).forEach(k => { if (allVars[k] === 0) delete allVars[k]; });
 
-    if (isDenomOne) {
-      prettyOutput1 = composeLatex(numAnalysis.numProduct, numAnalysis.vars);
+    // Numerator and denominator for final output
+    let numVarStr = renderVars(Object.fromEntries(Object.entries(allVars).filter(([k, v]) => v > 0)));
+    let denVarStr = renderVars(Object.fromEntries(Object.entries(allVars).filter(([k, v]) => v < 0).map(([k, v]) => [k, -v])));
+    let numerator = numAnalysis.numProduct;
+    let denominator = denAnalysis.numProduct;
+
+    // If all variables and numbers cancel, numerator/denominator may be 1
+    let numDisplay = [numerator !== 1 ? numerator : '', numVarStr].filter(Boolean).join(' ') || '1';
+    let denDisplay = [denominator !== 1 ? denominator : '', denVarStr].filter(Boolean).join(' ') || '1';
+
+    // If denominator is just 1, just show the numerator
+    if (denDisplay === '1') {
+      prettyOutput1 = numDisplay;
     } else {
-      let allVars = { ...numAnalysis.vars };
-      for (let v in denAnalysis.vars) {
-        allVars[v] = (allVars[v] || 0) - denAnalysis.vars[v];
-      }
-      Object.keys(allVars).forEach(k => { if (allVars[k] === 0) delete allVars[k]; });
-
-      let numLatex = composeLatex(numAnalysis.numProduct, numAnalysis.vars);
-      let denLatex = composeLatex(denAnalysis.numProduct, denAnalysis.vars);
-
-      if (Object.keys(denAnalysis.vars).length === 0 && denAnalysis.numProduct !== 1) {
-        prettyOutput1 = `\\displaystyle\\frac{${numLatex}}{${denLatex}}`;
-      } else {
-        let nVars = { ...numAnalysis.vars };
-        let dVars = { ...denAnalysis.vars };
-        Object.keys(nVars).forEach(k => { if ((nVars[k] || 0) === 0) delete nVars[k]; });
-        Object.keys(dVars).forEach(k => { if ((dVars[k] || 0) === 0) delete dVars[k]; });
-        let numPart = composeLatex(numAnalysis.numProduct, nVars);
-        let denPart = composeLatex(denAnalysis.numProduct, dVars);
-        prettyOutput1 = `\\displaystyle\\frac{${numPart}}{${denPart}}`;
-      }
+      prettyOutput1 = `\\displaystyle\\frac{${numDisplay}}{${denDisplay}}`;
     }
   } else {
-    let allFactors = input.split('*').map(s => s.trim()).filter(Boolean);
+    // Not a fraction: just product, collapse repeated variables and multiply all numbers
+    let allFactors = input.replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
     let { numProduct, vars } = analyzeFactors(allFactors);
-    prettyOutput1 = composeLatex(numProduct, vars);
+    let varStr = renderVars(vars);
+    prettyOutput1 = [numProduct !== 1 ? numProduct : '', varStr].filter(Boolean).join(' ') || '1';
   }
 
   if (!prettyOutput1) prettyOutput1 = "\\text{(empty)}";
 
+  // Build outputs (Output 2 and 3 placeholders)
   let outputs = [
-    `\\(\\displaystyle ${prettyOutput1}\\)`,
+    `\\(${prettyOutput1}\\)`,
     '\\(\\text{Output 2}\\)',
     '\\(\\text{Output 3}\\)'
   ];
 
   let steps = [];
-  // First row: input and Output 1
   steps.push(`
     <div class="steps-eq-row">
       <span class="steps-side">${prettyInput}</span>
@@ -390,7 +421,7 @@ function calculate() {
       <span class="steps-side right"><span class="steps-eq-latex">${outputs[0]}</span></span>
     </div>
   `);
-  // Other rows: blank left, Output 2 & 3
+
   for (let i = 1; i < outputs.length; i++) {
     steps.push(`
       <div class="steps-eq-row">
@@ -404,6 +435,7 @@ function calculate() {
   stepsDiv.innerHTML = steps.join('');
   MathJax.typesetPromise([stepsDiv]);
 }
+
 
 document.getElementById('copy-latex-btn').onclick = function() {
   let stepsDiv = document.getElementById('steps-math-output');
