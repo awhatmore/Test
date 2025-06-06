@@ -201,7 +201,8 @@ function insertImplicitMultiplication(str) {
 }
 // Expand things like yy -> y*y, xyz -> x*y*z
 function expandAdjacentVariables(str) {
-  return str.replace(/([a-zA-Z])(?=[a-zA-Z])/g, '$1*');
+  // y10 => y^10, x22 => x^22
+  return str.replace(/([a-zA-Z])(\d+)/g, '$1^$2');
 }
 // LaTeX grouping for pretty input
 function formatInputForPrettyLatex(input) {
@@ -289,10 +290,10 @@ function formatInputForPrettyLatex(input) {
 
 // Math core for pretty output
 function calculate() {
-  let inputRaw = document.getElementById('input-box').value.trim();
-  let expanded = expandAdjacentVariables(inputRaw);
-  let input = insertImplicitMultiplication(expanded);
-  let stepsDiv = document.getElementById('steps-math-output');
+let inputRaw = document.getElementById('input-box').value.trim();
+let expandedVars = expandAdjacentVariables(inputRaw);  // yyy -> y^3
+let withExponents = expandExponents(expandedVars);     // y10 -> y^10
+let input = insertImplicitMultiplication(withExponents); // 5y -> 5*y
   if (!input) {
     stepsDiv.innerHTML = '';
     return;
