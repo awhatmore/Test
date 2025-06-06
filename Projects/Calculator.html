@@ -207,7 +207,7 @@ function expandAdjacentVariables(str) {
 function formatInputForPrettyLatex(input) {
   let clean = input.replace(/\s+/g, '');
 
-  // Helper: Split at top-level + or -
+  // Helper: Split at top-level operators (+ - * /) (ignoring those inside parentheses)
   function splitTopLevel(expr) {
     let parts = [];
     let current = '';
@@ -216,7 +216,7 @@ function formatInputForPrettyLatex(input) {
       let c = expr[i];
       if (c === '(') depth++;
       if (c === ')') depth--;
-      if ((c === '+' || c === '-') && depth === 0) {
+      if ((c === '+' || c === '-' || c === '*' || c === '/') && depth === 0) {
         if (current !== '') parts.push(current);
         parts.push(c); // keep operator as separate part
         current = '';
@@ -230,34 +230,62 @@ function formatInputForPrettyLatex(input) {
 
   // Helper to process group (fraction or not)
   function processGroup(group) {
+    // If it's wrapped in parenthesis, remove them
+    if (group.startsWith('(') && group.endsWith(')')) {
+      // Only strip if they are a matching pair for the whole group
+      let d = 0;
+      for (let i = 0; i < group.length; ++i) {
+        if (group[i] === '(') d++;
+        if (group[i] === ')') d--;
+        if (d === 0 && i < group.length - 1) {
+          // Found a closing paren before end, don't strip
+          return processMath(group);
+        }
+      }
+      // Strip one pair
+      group = group.substring(1, group.length - 1);
+      return `\\left(${processMath(group)}\\right)`;
+    }
+    return processMath(group);
+  }
+
+  // Helper to process math group for fraction
+  function processMath(group) {
     let fracMatch = group.match(/^(.+?)\/(.+)$/);
     if (fracMatch) {
       let num = fracMatch[1].replace(/\*/g, ' \\cdot ');
       let den = fracMatch[2].replace(/\*/g, ' \\cdot ');
-      return `\\left(\\displaystyle\\frac{${num}}{${den}}\\right)`;
+      return `\\displaystyle\\frac{${num}}{${den}}`;
     } else {
       let pretty = group.replace(/\*/g, ' \\cdot ');
-      return `\\left(${pretty}\\right)`;
+      return pretty;
     }
   }
 
-  // If expression has top-level + or -, split and join
+  // Main logic: split at top-level ops, recursively handle each group
   let topLevelParts = splitTopLevel(clean);
+
+  // If more than one part, recursively process
   if (topLevelParts.length > 1) {
     let latexParts = [];
-    for (let part of topLevelParts) {
-      if (part === '+' || part === '-') {
-        latexParts.push(part); // add the operator
+    for (let i = 0; i < topLevelParts.length; ++i) {
+      let part = topLevelParts[i];
+      if (['+', '-', '*', '/'].includes(part)) {
+        // Pretty print operators
+        if (part === '*') latexParts.push(' \\cdot ');
+        else if (part === '/') latexParts.push(' \\div ');
+        else latexParts.push(' ' + part + ' ');
       } else {
         latexParts.push(processGroup(part));
       }
     }
-    return latexParts.join(' ');
+    return latexParts.join('');
   }
 
-  // Otherwise, fallback: process as one group (fraction or not)
+  // Fallback: just process as single group
   return processGroup(clean);
 }
+
 
 // Math core for pretty output
 function calculate() {
