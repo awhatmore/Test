@@ -201,8 +201,8 @@ function insertImplicitMultiplication(str) {
 }
 // Expand things like yy -> y*y, xyz -> x*y*z
 function expandAdjacentVariables(str) {
-  // y10 => y^10, x22 => x^22
-  return str.replace(/([a-zA-Z])(\d+)/g, '$1^$2');
+  // Only expand repeated letters NOT followed by digits
+  return str.replace(/([a-zA-Z])\1{1,}(?!\d)/g, (m, p1) => `${p1}^${m.length}`);
 }
 // LaTeX grouping for pretty input
 function formatInputForPrettyLatex(input) {
