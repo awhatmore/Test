@@ -191,25 +191,8 @@ function backspace() {
   calculate();
 }
 function updateUnitOptions() {
-  // Your custom unit button code can go here
+  // Custom unit button logic
 }
-
-// Step 1: Expand repeated variables, e.g., yyy -> y^3, xxx -> x^3, xyyzz -> x*y^2*z^2
-function expandRepeatedVariables(str) {
-  return str.replace(/([a-zA-Z])\1{1,}/g, (match, p1) => `${p1}^${match.length}`);
-}
-
-// Step 2: Expand variables followed by >1 digit, e.g., y12 -> y^12, x22 -> x^22
-function expandVariableExponents(str) {
-  // Don't touch already-formatted exponents, i.e., y^3
-  // Only process if not directly after ^ (already exponent) and not as part of number
-  // e.g., y10, x100, z42, but not y^10
-  return str.replace(/([a-zA-Z])(\d{2,})/g, (match, v, digits, offset, s) => {
-    if (offset > 0 && s[offset-1] === '^') return match; // skip if already an exponent
-    return `${v}^${digits}`;
-  });
-}
-
 // Insert * for things like 5y or y5 or )x or x(
 function insertImplicitMultiplication(str) {
   return str
@@ -217,154 +200,75 @@ function insertImplicitMultiplication(str) {
     .replace(/([a-zA-Z)])([0-9a-zA-Z(])/g, '$1*$2');
 }
 
-// LaTeX grouping for pretty input
-function formatInputForPrettyLatex(input) {
-  let clean = input.replace(/\s+/g, '');
+// Pretty-print the input as close to raw as possible for the left column
+function prettyInputRaw(str) {
+  // For input: Show repeated vars and exponents *exactly* as typed.
+  // Replace groups of repeated vars with "y y y" and y10 with y^{10}
+  // Also, add spacing for clarity
+  return str
+    .replace(/([a-zA-Z])(\d{2,})/g, '$1^{\$2}')           // y10 => y^{10}
+    .replace(/([a-zA-Z])\1+/g, m => m.split('').join(' ')) // yyy -> y y y
+    .replace(/\*/g, ' \\cdot ')                            // stars to \cdot
+    .replace(/\//g, ' \\div ')                             // slash to div
+    .replace(/\(/g, '\\left(')                             // parens for MathJax
+    .replace(/\)/g, '\\right)');
+}
 
-  function splitTopLevel(expr) {
-    let parts = [];
-    let current = '';
-    let depth = 0;
-    for (let i = 0; i < expr.length; ++i) {
-      let c = expr[i];
-      if (c === '(') depth++;
-      if (c === ')') depth--;
-      if ((c === '+' || c === '-' || c === '*' || c === '/') && depth === 0) {
-        if (current !== '') parts.push(current);
-        parts.push(c);
-        current = '';
+// MathJax-friendly pretty output for the right column (combines vars/exponents)
+function prettyOutputCombined(str) {
+  // Expand repeated variables: yyy => y*y*y, xyz => x*y*z, etc.
+  let expanded = str.replace(/([a-zA-Z])(?=[a-zA-Z])/g, '$1*');
+  // Expand exponents: y10 -> y^10 if not already in exponent form
+  expanded = expanded.replace(/([a-zA-Z])(\d{2,})/g, (m,v,n,off,s) => {
+    if (off > 0 && s[off-1] === '^') return m;
+    return `${v}^${n}`;
+  });
+  expanded = insertImplicitMultiplication(expanded);
+
+  // Now split and combine for output
+  let allFactors = expanded.replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
+  let knownUnits = [ "kg", "A", "W", "V", "VA" ];
+  let numProduct = 1;
+  let vars = {};
+  for (let f of allFactors) {
+    f = f.replace(/^\((\d+)\)$/, '$1');
+    if (!isNaN(Number(f))) {
+      numProduct *= Number(f);
+    } else {
+      let match = f.match(/^([a-zA-ZμΩ]+)(?:\^(-?\d+))?$/);
+      if (match) {
+        let base = match[1];
+        let exp = match[2] ? parseInt(match[2]) : 1;
+        vars[base] = (vars[base] || 0) + exp;
       } else {
-        current += c;
-      }
-    }
-    if (current !== '') parts.push(current);
-    return parts;
-  }
-  function processGroup(group) {
-    if (group.startsWith('(') && group.endsWith(')')) {
-      let d = 0;
-      for (let i = 0; i < group.length; ++i) {
-        if (group[i] === '(') d++;
-        if (group[i] === ')') d--;
-        if (d === 0 && i < group.length - 1) {
-          return processMath(group);
+        for (let ch of f) {
+          if (/[a-zA-ZμΩ]/.test(ch)) vars[ch] = (vars[ch] || 0) + 1;
         }
       }
-      group = group.substring(1, group.length - 1);
-      return `\\left(${processMath(group)}\\right)`;
-    }
-    return processMath(group);
-  }
-  function processMath(group) {
-    let fracMatch = group.match(/^(.+?)\/(.+)$/);
-    if (fracMatch) {
-      let num = fracMatch[1].replace(/\*/g, ' \\cdot ');
-      let den = fracMatch[2].replace(/\*/g, ' \\cdot ');
-      return `\\displaystyle\\frac{${num}}{${den}}`;
-    } else {
-      let pretty = group.replace(/\*/g, ' \\cdot ');
-      return pretty;
     }
   }
-  let topLevelParts = splitTopLevel(clean);
-  if (topLevelParts.length > 1) {
-    let latexParts = [];
-    for (let i = 0; i < topLevelParts.length; ++i) {
-      let part = topLevelParts[i];
-      if (['+', '-', '*', '/'].includes(part)) {
-        if (part === '*') latexParts.push(' \\cdot ');
-        else if (part === '/') latexParts.push(' \\div ');
-        else latexParts.push(' ' + part + ' ');
-      } else {
-        latexParts.push(processGroup(part));
-      }
-    }
-    return latexParts.join('');
-  }
-  return processGroup(clean);
+  let varStr = Object.entries(vars)
+    .map(([v, exp]) =>
+      knownUnits.includes(v)
+        ? (exp === 1 ? `\\mathrm{${v}}` : `\\mathrm{${v}}^{${exp}}`)
+        : (exp === 1 ? v : `${v}^{${exp}}`)
+    ).join(' ');
+  return [numProduct !== 1 ? numProduct : '', varStr].filter(Boolean).join(' ') || '1';
 }
 
 function calculate() {
   let inputRaw = document.getElementById('input-box').value.trim();
-
-  // STEP 1: Expand repeated letters (yy, xxx, etc)
-  let expanded = expandRepeatedVariables(inputRaw);
-
-  // STEP 2: Expand variable exponents (y10 => y^10, x22 => x^22)
-  let withExponents = expandVariableExponents(expanded);
-
-  // STEP 3: Insert * for implied multiplication (5y, y5, etc)
-  let input = insertImplicitMultiplication(withExponents);
-
   let stepsDiv = document.getElementById('steps-math-output');
-  if (!input) {
+  if (!inputRaw) {
     stepsDiv.innerHTML = '';
     return;
   }
-  const knownUnits = [ "kg", "A", "W", "V", "VA" ];
-  function analyzeFactors(factors) {
-    let numProduct = 1;
-    let vars = {};
-    for (let f of factors) {
-      f = f.replace(/^\((\d+)\)$/, '$1');
-      if (!isNaN(Number(f))) {
-        numProduct *= Number(f);
-      } else {
-        let match = f.match(/^([a-zA-ZμΩ]+)(?:\^(-?\d+))?$/);
-        if (match) {
-          let base = match[1];
-          let exp = match[2] ? parseInt(match[2]) : 1;
-          vars[base] = (vars[base] || 0) + exp;
-        } else {
-          for (let ch of f) {
-            if (/[a-zA-ZμΩ]/.test(ch)) vars[ch] = (vars[ch] || 0) + 1;
-          }
-        }
-      }
-    }
-    return { numProduct, vars };
-  }
-  function renderVars(vars) {
-    return Object.entries(vars)
-      .map(([v, exp]) =>
-        knownUnits.includes(v)
-          ? (exp === 1 ? `\\mathrm{${v}}` : `\\mathrm{${v}}^{${exp}}`)
-          : (exp === 1 ? v : `${v}^{${exp}}`)
-      ).join(' ');
-  }
-  let prettyInput = `\\(${formatInputForPrettyLatex(input)}\\)`;
-  let prettyOutput1 = '';
-  let fracMatch = input.replace(/\s+/g, '').match(/^(.+?)\/(.+)$/);
-  if (fracMatch) {
-    let numFactors = fracMatch[1].replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
-    let denFactors = fracMatch[2].replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
-    let numAnalysis = analyzeFactors(numFactors);
-    let denAnalysis = analyzeFactors(denFactors);
-    let allVars = { ...numAnalysis.vars };
-    for (let v in denAnalysis.vars) {
-      allVars[v] = (allVars[v] || 0) - denAnalysis.vars[v];
-    }
-    Object.keys(allVars).forEach(k => { if (allVars[k] === 0) delete allVars[k]; });
-    let numVarStr = renderVars(Object.fromEntries(Object.entries(allVars).filter(([k, v]) => v > 0)));
-    let denVarStr = renderVars(Object.fromEntries(Object.entries(allVars).filter(([k, v]) => v < 0).map(([k, v]) => [k, -v])));
-    let numerator = numAnalysis.numProduct;
-    let denominator = denAnalysis.numProduct;
-    let numDisplay = [numerator !== 1 ? numerator : '', numVarStr].filter(Boolean).join(' ') || '1';
-    let denDisplay = [denominator !== 1 ? denominator : '', denVarStr].filter(Boolean).join(' ') || '1';
-    if (denDisplay === '1') {
-      prettyOutput1 = numDisplay;
-    } else {
-      prettyOutput1 = `\\displaystyle\\frac{${numDisplay}}{${denDisplay}}`;
-    }
-  } else {
-    let allFactors = input.replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
-    let { numProduct, vars } = analyzeFactors(allFactors);
-    let varStr = renderVars(vars);
-    prettyOutput1 = [numProduct !== 1 ? numProduct : '', varStr].filter(Boolean).join(' ') || '1';
-  }
-  if (!prettyOutput1) prettyOutput1 = "\\text{(empty)}";
+  // Pretty, literal input (left side)
+  let prettyInput = `\\(${prettyInputRaw(inputRaw)}\\)`;
+  // Math-combined output (right side)
+  let prettyOutput1 = `\\(${prettyOutputCombined(inputRaw)}\\)`;
   let outputs = [
-    `\\(${prettyOutput1}\\)`,
+    prettyOutput1,
     '\\(\\text{Output 2}\\)',
     '\\(\\text{Output 3}\\)'
   ];
@@ -403,5 +307,6 @@ window.onload = function() {
   updateUnitOptions && updateUnitOptions();
 };
 </script>
+
 </body>
 </html>
