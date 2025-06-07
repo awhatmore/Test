@@ -195,11 +195,17 @@ function updateUnitOptions() {
 }
 // Insert * for things like 5y or y5 or )x or x(
 function insertImplicitMultiplication(str) {
-  // 5y -> 5*y, y5 -> y*5, y( -> y*(, )y -> )*y, but NOT xy
+  // Only insert * for: number followed by (, ) followed by number/letter/(, letter followed by (
   return str
-    .replace(/([0-9])([a-zA-Z(])/g, '$1*$2')   // 5y, 5(
-    .replace(/([a-zA-Z)])([0-9(])/g, '$1*$2'); // y5, y(, )5, )(
+    // Number followed by (
+    .replace(/([0-9])\(/g, '$1*(')
+    // ) followed by number, letter, or (
+    .replace(/\)([0-9a-zA-Z(])/g, ')*$1')
+    // Letter followed by (
+    .replace(/([a-zA-Z])\(/g, '$1*(');
+    // Do NOT insert between number and letter
 }
+
 
 // Only collapse repeated letters into exponents. Never interpret variable+number as an exponent.
 function expandAdjacentVariables(str) {
