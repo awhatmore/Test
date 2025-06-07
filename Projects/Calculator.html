@@ -448,17 +448,44 @@ function calculate() {
   let prettyOutput1 = '';
 try {
   let mathInput = insertExplicitMultiplication(input);
-  let simplified = math.simplify(mathInput, {expand: true});
-  let latex = simplified.toTex({parenthesis: 'keep'});
-
-  // Clean up unnecessary \cdot between number and variables
-  latex = latex.replace(/(\d+)\s*\\cdot\s*([a-zA-Z]+)/g, '$1$2');
-  latex = latex.replace(/([a-zA-Z])\s*\\cdot\s*([a-zA-Z])/g, '$1$2');
-
-  prettyOutput1 = `\\(${latex}\\)`;
+  // Custom: Check if we have something like 5xy(5/z+5)
+  let match = mathInput.match(/^(\d+)\*([a-zA-Z]+)\*\((.+)\)$/);
+  if (match) {
+    let num = parseFloat(match[1]);
+    let vars = match[2];
+    let inner = match[3];
+    // Simplify inner part
+    let simplifiedInner = math.simplify(inner);
+    // See if inner is common factorable
+    // Try to factor out the leading coefficient if it exists
+    // But your example: 5/z+5 = 5(1/z+1)
+    let innerMatch = inner.match(/^(\d+)\s*\/\s*([a-zA-Z]+)\s*\+\s*(\d+)$/);
+    if (innerMatch) {
+      let c = parseFloat(innerMatch[1]);
+      let v = innerMatch[2];
+      let c2 = parseFloat(innerMatch[3]);
+      // Only handle cases like 5/z + 5 → 5(1/z + 1)
+      if (c === c2) {
+        let output = `${num * c}${vars}(1/${v} + 1)`;
+        prettyOutput1 = `\\(${num * c}${vars}\\left(\\frac{1}{${v}} + 1\\right)\\)`;
+      }
+    } else {
+      // Otherwise: just show as factor * vars * (simplified inner)
+      let latexInner = simplifiedInner.toTex({parenthesis:'keep'});
+      prettyOutput1 = `\\(${num}${vars}\\left(${latexInner}\\right)\\)`;
+    }
+  } else {
+    // Default
+    let simplified = math.simplify(mathInput);
+    let latex = simplified.toTex({parenthesis: 'keep'});
+    latex = latex.replace(/(\d+)\s*\\cdot\s*([a-zA-Z]+)/g, '$1$2');
+    latex = latex.replace(/([a-zA-Z])\s*\\cdot\s*([a-zA-Z])/g, '$1$2');
+    prettyOutput1 = `\\(${latex}\\)`;
+  }
 } catch (e) {
   prettyOutput1 = `\\(${formatInputForPrettyLatex(input)}\\)`;
 }
+
 
   // === "Breakdown" pretty, your custom/LaTeX logic as 2nd output ===
   let breakdownOutput = '';
