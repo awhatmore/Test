@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,26 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Smart SI Unit Calculator | Whatmore Industries</title>
   <style>
-    body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 2rem; }
-    h2 { text-align: center; }
-    #pretty-input-output { display: none; }
+    body { background: #121824; color: #fff; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 1rem; }
+    h2 { text-align: center; margin-bottom: 1.2em; color: #7efeff; text-shadow: 0 2px 12px #122  }
     .eq-steps-container { width: 100%; max-width: 600px; margin: 0 auto 1.2em auto; position: relative; }
-    .steps-eq-row { min-height: 2.4em; height: 2.4em; display: flex; align-items: center; justify-content: center; width: 100%; margin-bottom: 0.8em; }
-    .steps-side { flex: 1 1 0; min-width: 140px; max-width: 320px; display: flex; align-items: center; justify-content: flex-end; font-size: 1.4em; word-break: break-all; white-space: normal; padding-right: 0.4em; box-sizing: border-box; }
+    .steps-eq-row { min-height: 2.2em; height: 2.2em; display: flex; align-items: center; justify-content: center; width: 100%; margin-bottom: 0.5em; }
+    .steps-side { flex: 1 1 0; min-width: 90px; max-width: 320px; display: flex; align-items: center; justify-content: flex-end; font-size: 1.15em; word-break: break-all; white-space: normal; padding-right: 0.4em; box-sizing: border-box; }
     .steps-side.right { justify-content: flex-start; padding-right: 0; padding-left: 0.4em; }
-    .eq-label { font-size: 1.6em; color: #fff; flex: none; margin: 0 0.18em; z-index: 1; background: #111; padding: 0 0.1em; position: relative; min-width: 1.4em; text-align: center; }
+    .eq-label { font-size: 1.4em; color: #fff; flex: none; margin: 0 0.18em; z-index: 1; background: #121824; padding: 0 0.12em; position: relative; min-width: 1.4em; text-align: center; }
     .steps-eq-latex { font-size: 1em; color: #fff;}
-    #input-box { width: 100%; font-size: 1.25rem; padding: 0.5rem 1rem; background: #181818; color: #0f0; border: 1px solid #444; border-radius: 0.5rem; margin-bottom: 1rem; box-sizing: border-box; }
-    #result-panel { background: #222; padding: 1rem; border-radius: 0.9rem; font-size: 1rem; margin-top: 1rem; min-height: 60px; }
-    .section-label { font-weight: bold; color: #0ff; margin-top: 0.5em; }
-    .calculator { display: grid; grid-template-columns: repeat(3, 60px); gap: 5px; }
-    button { width: 60px; height: 60px; font-size: 1.2em; }
-    .wide { grid-column: span 2; }
-    .output-row { margin-bottom: 0.3em; }
-    .unit-breakdown { color: #6cf; font-family: 'Consolas', monospace; }
-    .sigfig-active { background: #0ff; color: #111; }
+    #input-box { width: 100%; font-size: 1.22rem; padding: 0.62rem 1rem; background: #19233c; color: #fff; border: 2px solid #44eaff; border-radius: 0.7rem; margin-bottom: 1rem; box-sizing: border-box; letter-spacing: 0.03em;}
+    #input-box:focus { outline: 2px solid #44eaff;}
+    #result-panel { background: #23314a; padding: 1rem; border-radius: 0.9rem; font-size: 1rem; margin-top: 1rem; min-height: 60px; }
+    .section-label { font-weight: bold; color: #44eaff; margin-top: 0.5em; }
+    .calc-area { width: 100%; max-width: 430px; margin: 1.3em auto 0 auto;}
+    .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5em; }
+    .calc-btn {
+      background: linear-gradient(180deg,#2250a0,#102442 80%);
+      color: #fff;
+      border: none;
+      border-radius: 1em;
+      font-size: 1.15em;
+      height: 3.1em;
+      margin: 0;
+      font-weight: 500;
+      box-shadow: 0 2px 8px #0004;
+      transition: background .15s;
+    }
+    .calc-btn:active { background: #182e4a; }
+    .calc-btn.wide { grid-column: span 2; }
+    .calc-btn.accent { background: #44eaff; color: #001327; font-weight: 600; }
+    .calc-btn.unit { background: #0b2e52; color: #7efeff; font-size: 1em;}
+    .sigfig-btn { background: #182e4a; color: #44eaff; border: none; border-radius: 0.6em; font-size: 1em; margin-right: 0.22em; padding: 0.36em 1.2em; }
+    .sigfig-active { background: #44eaff; color: #001327; }
+    #copy-latex-btn { background: #44eaff; color: #001327; border-radius: 0.4em; border: none;}
+    select, label { font-size: 1em; color: #fff; background: #23314a;}
+    @media (max-width:500px) {
+      .calc-area { max-width: 98vw;}
+      .calc-grid { grid-template-columns: repeat(4, 1fr);}
+      #input-box { font-size: 1.05rem; }
+      .steps-side { min-width: 55px;}
+    }
   </style>
-  <!--<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>-->
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@12.4.2/dist/math.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
@@ -36,20 +57,16 @@
   <div style="display:flex;align-items:center;margin-bottom:0.7em;">
     <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
   </div>
-  <input id="input-box"
-  readonly
-  placeholder="Enter calculation (e.g. 5 / 9xxx)"
-  autocomplete="off"
-  oninput="calculate();"
-  onkeydown="if(event.key==='Enter'){calculate(); return false;}">
+  <input id="input-box" readonly placeholder="Enter calculation (e.g. 5 / 9xxx)" autocomplete="off"
+    oninput="calculate();" onkeydown="if(event.key==='Enter'){calculate(); return false;}">
 
-  <div style="margin-bottom:0.5em;">
-    Significant figures: 
+  <div style="margin-bottom:0.6em;">
+    Significant figures:
     <button class="sigfig-btn" onclick="setSigFigs(3)">3</button>
     <button class="sigfig-btn" onclick="setSigFigs(6)">6</button>
     <button class="sigfig-btn" onclick="setSigFigs(10)">10</button>
   </div>
-  <div style="margin-bottom: 1em;">
+  <div style="margin-bottom: 0.7em;">
     <label for="unit-system">Unit System:</label>
     <select id="unit-system" onchange="updateUnitOptions()">
       <option value="metric">Metric (SI)</option>
@@ -57,100 +74,63 @@
     </select>
     <label for="discipline" style="margin-left: 1em;">Discipline:</label>
     <select id="discipline" onchange="updateUnitOptions()">
-    <option value="common">Common</option>
-    <option value="mechanical">Mechanical</option>
-    <option value="electrical">Electrical</option>
-    <option value="aerospace">Aerospace</option>
-    <option value="medical">Medical</option>
-    <option value="chemistry">Chemistry</option>
-    <option value="astrophysics">Astrophysics</option>
-    <option value="trigonometry">Trigonometry</option>
-    <option value="algebra">Algebra</option>
-    <option value="calculus1">Calculus 1</option>
-    <option value="calculus2">Calculus 2</option>
-    <option value="calculus3">Calculus 3</option>
-    <option value="diff_eq">Differential Equations</option>
-    <option value="statics">Statics</option>
-    <option value="solids">Solids</option>
-     <!-- <option value="mechanical"></option>-->
+      <option value="common">Common</option>
+      <option value="mechanical">Mechanical</option>
+      <option value="electrical">Electrical</option>
+      <option value="aerospace">Aerospace</option>
+      <option value="medical">Medical</option>
+      <option value="chemistry">Chemistry</option>
+      <option value="astrophysics">Astrophysics</option>
+      <option value="trigonometry">Trigonometry</option>
+      <option value="algebra">Algebra</option>
+      <option value="calculus1">Calculus 1</option>
+      <option value="calculus2">Calculus 2</option>
+      <option value="calculus3">Calculus 3</option>
+      <option value="diff_eq">Differential Equations</option>
+      <option value="statics">Statics</option>
+      <option value="solids">Solids</option>
     </select>
   </div>
-  <div id="unit-buttons-area" style="margin-bottom: 1.2em;"></div>
-  <div class="calculator">
-    <button onclick="appendCalc('1')">1</button>
-    <button onclick="appendCalc('2')">2</button>
-    <button onclick="appendCalc('3')">3</button>
-    <button onclick="appendCalc('4')">4</button>
-    <button onclick="appendCalc('5')">5</button>
-    <button onclick="appendCalc('6')">6</button>
-    <button onclick="appendCalc('7')">7</button>
-    <button onclick="appendCalc('8')">8</button>
-    <button onclick="appendCalc('9')">9</button>
-    <button onclick="appendCalc('.')">.</button>
-    <button onclick="appendCalc('0')">0</button>
-    <button onclick="calculate()">=</button>
-    <button class="wide" onclick="backspace()">Backspace</button>
-    <button class="wide" onclick="clearCalc()">Clear</button>
+
+  <div class="calc-area">
+    <div class="calc-grid" style="margin-bottom:0.5em;">
+      <button class="calc-btn" onclick="appendCalc('7')">7</button>
+      <button class="calc-btn" onclick="appendCalc('8')">8</button>
+      <button class="calc-btn" onclick="appendCalc('9')">9</button>
+      <button class="calc-btn accent" onclick="backspace()">⌫</button>
+      <button class="calc-btn" onclick="appendCalc('4')">4</button>
+      <button class="calc-btn" onclick="appendCalc('5')">5</button>
+      <button class="calc-btn" onclick="appendCalc('6')">6</button>
+      <button class="calc-btn accent" onclick="appendCalc('^')">xʸ</button>
+      <button class="calc-btn" onclick="appendCalc('1')">1</button>
+      <button class="calc-btn" onclick="appendCalc('2')">2</button>
+      <button class="calc-btn" onclick="appendCalc('3')">3</button>
+      <button class="calc-btn accent" onclick="appendCalc('(')">(</button>
+      <button class="calc-btn" onclick="appendCalc('0')">0</button>
+      <button class="calc-btn" onclick="appendCalc('.')">.</button>
+      <button class="calc-btn accent" onclick="appendCalc(')')">)</button>
+      <button class="calc-btn accent" onclick="clearCalc()">C</button>
+    </div>
+    <div class="calc-grid" style="margin-bottom:0.5em;">
+      <button class="calc-btn" onclick="appendCalc('+')">+</button>
+      <button class="calc-btn" onclick="appendCalc('-')">−</button>
+      <button class="calc-btn" onclick="appendCalc('*')">×</button>
+      <button class="calc-btn" onclick="appendCalc('/')">÷</button>
+      <button class="calc-btn unit" onclick="appendCalc('g')">g<br><span style='font-size:.7em;'>gravity</span></button>
+      <button class="calc-btn unit" onclick="appendCalc('m')">m<br><span style='font-size:.7em;'>meter</span></button>
+      <button class="calc-btn unit" onclick="appendCalc('s')">s<br><span style='font-size:.7em;'>second</span></button>
+      <button class="calc-btn unit" onclick="appendCalc('kg')">kg<br><span style='font-size:.7em;'>kilogram</span></button>
+    </div>
+    <div class="calc-grid">
+      <button class="calc-btn unit" onclick="appendCalc('nano')">n<br><span style='font-size:.7em;'>nano</span></button>
+      <button class="calc-btn unit" onclick="appendCalc('mega')">M<br><span style='font-size:.7em;'>mega</span></button>
+      <button class="calc-btn unit" onclick="appendCalc('Ω')">Ω<br><span style='font-size:.7em;'>ohm</span></button>
+      <button class="calc-btn accent wide" onclick="calculate()">=</button>
+    </div>
   </div>
-  <div class="calculator" style="margin-bottom: 8px;">
-    <button onclick="appendCalc('x')">x</button>
-    <button onclick="appendCalc('y')">y</button>
-    <button onclick="appendCalc('z')">z</button>
-    <button onclick="appendCalc('a')">a</button>
-    <button onclick="appendCalc('b')">b</button>
-    <button onclick="appendCalc('c')">c</button>
-    <button onclick="appendCalc('^')">^</button>
-  </div>
-  <div style="margin:1rem 0;">
-    <button onclick="appendCalc(' + ')">+</button>
-    <button onclick="appendCalc(' - ')">-</button>
-    <button onclick="appendCalc(' * ')">*</button>
-    <button onclick="appendCalc(' / ')">/</button>
-  </div>
-  <!-- Example unit buttons, add your own as needed -->
-  <!--<div>
-    <strong>Length</strong><br>
-    <button onclick="appendCalc(' nm ')">nm</button>
-    <button onclick="appendCalc(' μm ')">μm</button>
-    <button onclick="appendCalc(' mm ')">mm</button>
-    <button onclick="appendCalc(' cm ')">cm</button>
-    <button onclick="appendCalc(' m ')">m</button>
-    <button onclick="appendCalc(' km ')">km</button>
-    <button onclick="appendCalc(' in ')">in</button>
-    <button onclick="appendCalc(' ft ')">ft</button>
-    <button onclick="appendCalc(' yd ')">yd</button>
-    <button onclick="appendCalc(' mi ')">mi</button>
-  </div>
-  <div>
-    <strong>Mass</strong><br>
-    <button onclick="appendCalc(' mg ')">mg</button>
-    <button onclick="appendCalc(' g ')">g</button>
-    <button onclick="appendCalc(' kg ')">kg</button>
-    <button onclick="appendCalc(' t ')">t</button>
-    <button onclick="appendCalc(' oz ')">oz</button>
-    <button onclick="appendCalc(' lb ')">lb</button>
-    <button onclick="appendCalc(' st ')">st</button>
-  </div>
-  <div>
-    <strong>Time</strong><br>
-    <button onclick="appendCalc(' ns ')">ns</button>
-    <button onclick="appendCalc(' μs ')">μs</button>
-    <button onclick="appendCalc(' ms ')">ms</button>
-    <button onclick="appendCalc(' s ')">s</button>
-    <button onclick="appendCalc(' min ')">min</button>
-    <button onclick="appendCalc(' hr ')">hr</button>
-    <button onclick="appendCalc(' day ')">day</button>
-  </div>
-  <div>
-    <strong>Electricity</strong><br>
-    <button onclick="appendCalc(' A ')">A</button>
-    <button onclick="appendCalc(' V ')">V</button>
-    <button onclick="appendCalc(' W ')">W</button>
-    <button onclick="appendCalc(' F ')">F</button>
-    <button onclick="appendCalc(' Ω ')">Ω</button>
-    <button onclick="appendCalc(' C ')">C</button>
-  </div>-->
+
   <div id="result-panel"></div>
+
 <script>
 let currentSigFigs = 3;
 function setSigFigs(n) {
@@ -160,35 +140,14 @@ function setSigFigs(n) {
   });
   calculate();
 }
-  // Splits something like '2vf' into ['2', 'v', 'f']
-function splitNumberAndVars(factor) {
-  let match = factor.match(/^(\d+)([a-zA-ZμΩ].*)$/);
-  if (match) {
-    // Split number and vars
-    return [match[1], ...match[2].split('')];
-  }
-  return [factor];
-}
-
-window.onload = function() {
-  const box = document.getElementById('input-box');
-  box.setAttribute('readonly', true);
-  box.addEventListener('focus', function() {
-    box.removeAttribute('readonly');
-  });
-  calculate();
-  updateUnitOptions && updateUnitOptions();
-};
-
 function appendCalc(val) {
   const box = document.getElementById('input-box');
-  box.setAttribute('readonly', true); // Close keyboard after button press
+  box.setAttribute('readonly', true);
   const start = box.selectionStart;
   const end = box.selectionEnd;
   const text = box.value;
   box.value = text.slice(0, start) + val + text.slice(end);
-  const caretPos = start + val.length;
-  box.setSelectionRange(caretPos, caretPos);
+  box.setSelectionRange(start + val.length, start + val.length);
   calculate();
 }
 function clearCalc() {
@@ -211,89 +170,41 @@ function backspace() {
   box.focus();
   calculate();
 }
-function updateUnitOptions() {
-  // Your custom unit button code can go here
-}
+function updateUnitOptions() { /* ...unit logic placeholder... */ }
+
 // Insert * for things like 5y or y5 or )x or x(
 function insertImplicitMultiplication(str) {
   // Number followed by (
-  str = str.replace(/([0-9])\(/g, '$1*(');
+  str = str.replace(/([0-9])/g, '$1*(');
   // ) followed by number, letter, or (
-  str = str.replace(/\)([0-9a-zA-Z(])/g, ')*$1');
+  str = str.replace(/([0-9a-zA-Z(])/g, ')*$1');
   // Letter or variable followed by (, but NOT if function name!
-  // We'll skip adding * for things like f(x), g(x), sin(x), etc.
-  str = str.replace(/([a-zA-Z])\(/g, (match, p1, offset, s) => {
-    // Check if previous char is not a letter (to allow multi-letter function names)
-    // If previous char is not a letter, don't insert *, treat as function
-    if (offset === 0 || !/[a-zA-Z]/.test(s[offset - 1])) return match; // leave as is (function)
-    // If previous char is also a letter or number, insert *
+  str = str.replace(/([a-zA-Z])/g, (match, p1, offset, s) => {
+    if (offset === 0 || !/[a-zA-Z]/.test(s[offset - 1])) return match; // function call
     return `${p1}*(`;
   });
   return str;
 }
 function insertExplicitMultiplication(expr) {
-  // Insert * between a number and a letter, and between two letters
-  return expr
-    .replace(/([0-9])([a-zA-Z])/g, '$1*$2')
-    .replace(/([a-zA-Z])([a-zA-Z])/g, '$1*$2');
+  return expr.replace(/([0-9])([a-zA-Z])/g, '$1*$2').replace(/([a-zA-Z])([a-zA-Z])/g, '$1*$2');
 }
-
-
-// Only collapse repeated letters into exponents. Never interpret variable+number as an exponent.
 function expandAdjacentVariables(str) {
-  // yyy → y^3, but skip already exponentiated things and mixed xyz
-  // We'll avoid touching any letter that is followed by a ^ or a digit
   return str.replace(/([a-zA-Z])\1{1,}/g, (match, p1, offset, string) => {
-    // Don't touch if already followed by ^ or digit
     const nextChar = string[offset + match.length];
     if (nextChar === '^' || /\d/.test(nextChar)) return match;
     return `${p1}^${match.length}`;
   });
 }
-function findTopLevelFraction(expr) {
-  // Returns index of top-level '/' or -1 if none
-  let depth = 0;
-  for (let i = 0; i < expr.length; ++i) {
-    if (expr[i] === '(') depth++;
-    if (expr[i] === ')') depth--;
-    if (expr[i] === '/' && depth === 0) return i;
-  }
-  return -1;
-}
- function splitTopLevel(expr) {
-    let parts = [];
-    let current = '';
-    let depth = 0;
-    for (let i = 0; i < expr.length; ++i) {
-      let c = expr[i];
-      if (c === '(') depth++;
-      if (c === ')') depth--;
-      if ((c === '+' || c === '-' || c === '*' || c === '/') && depth === 0) {
-        if (current !== '') parts.push(current);
-        parts.push(c); // keep operator as separate part
-        current = '';
-        } else {
-        current += c;
-      }
-    }
-    if (current !== '') parts.push(current);
-    return parts;
-  }
-  // Helper to check if a string has balanced outer parentheses
 function isBalancedParens(s) {
   let depth = 0;
   for (let i = 0; i < s.length; ++i) {
     if (s[i] === '(') depth++;
     if (s[i] === ')') depth--;
-    // If we close all parens before the end, they're not balanced
     if (depth === 0 && i < s.length - 1) return false;
   }
   return depth === 0;
 }
-
-// LaTeX grouping for pretty input
 function needsBrackets(expr) {
-  // Returns true if the expr contains any top-level +, -, or more than one operator
   let depth = 0, hasOp = false;
   for (let i = 0; i < expr.length; ++i) {
     if (expr[i] === '(') depth++;
@@ -303,31 +214,22 @@ function needsBrackets(expr) {
   }
   return hasOp;
 }
-
 function splitTopLevelParens(str) {
   let result = [];
   let i = 0, n = str.length;
   while (i < n) {
     if (str[i] === '(') {
-      let depth = 1;
-      let j = i + 1;
+      let depth = 1, j = i + 1;
       while (j < n && depth > 0) {
         if (str[j] === '(') depth++;
         if (str[j] === ')') depth--;
         j++;
       }
-      if (depth === 0) {
-        result.push(str.slice(i, j));
-        i = j;
-      } else {
-        result.push(str.slice(i));
-        break;
-      }
+      if (depth === 0) { result.push(str.slice(i, j)); i = j; }
+      else { result.push(str.slice(i)); break; }
     } else {
-      let j = i;
-      while (j < n && str[j] !== '(') j++;
-      if (j > i) result.push(str.slice(i, j));
-      i = j;
+      let j = i; while (j < n && str[j] !== '(') j++;
+      if (j > i) result.push(str.slice(i, j)); i = j;
     }
   }
   return result.filter(s => s.length > 0);
