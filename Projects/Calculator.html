@@ -449,9 +449,9 @@ function calculate() {
     let mathInput = insertExplicitMultiplication(input);
 
     // FULLY GENERAL PATTERN
-    let match = mathInput.match(
-      /^(\d+)((?:\*[a-zA-Z]+)+)\*\(\s*(\d+)\s*\/\s*([a-zA-Z]+)\s*\+\s*(\d+)\s*\)$/
-    );
+let match = mathInput.match(
+  /^(\d+)((?:\*[a-zA-Z]+)+)\*\(\s*(\d+)\s*\/\s*([a-zA-Z]+)\s*\+\s*(\d+)\s*\)$/
+);
     if (
       match &&
       match[1] === match[3] &&   // Outer and inner numbers equal
