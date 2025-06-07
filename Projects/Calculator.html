@@ -296,34 +296,33 @@ function calculate() {
     stepsDiv.innerHTML = '';
     return;
   }
- // let stepsDiv = document.getElementById('steps-math-output');
- // stepsDiv.innerHTML = '👋 If you see this, output is working!';
-
 
   const knownUnits = [ "kg", "A", "W", "V", "VA" ];
   function analyzeFactors(factors) {
     let numProduct = 1;
     let vars = {};
-for (let f of factors) {
-  // Split number+vars, e.g. 2vf -> 2, v, f
-  let subfactors = splitNumberAndVars(f);
-  for (let sf of subfactors) {
-    if (!isNaN(Number(sf))) {
-      numProduct *= Number(sf);
-    } else {
-      let match = sf.match(/^([a-zA-ZμΩ]+)(?:\^(-?\d+))?$/);
-      if (match) {
-        let base = match[1];
-        let exp = match[2] ? parseInt(match[2]) : 1;
-        vars[base] = (vars[base] || 0) + exp;
-      } else {
-        for (let ch of sf) {
-          if (/[a-zA-ZμΩ]/.test(ch)) vars[ch] = (vars[ch] || 0) + 1;
+    for (let f of factors) {
+      // Split number+vars, e.g. 2vf -> 2, v, f
+      let subfactors = splitNumberAndVars(f);
+      for (let sf of subfactors) {
+        if (!isNaN(Number(sf))) {
+          numProduct *= Number(sf);
+        } else {
+          let match = sf.match(/^([a-zA-ZμΩ]+)(?:\^(-?\d+))?$/);
+          if (match) {
+            let base = match[1];
+            let exp = match[2] ? parseInt(match[2]) : 1;
+            vars[base] = (vars[base] || 0) + exp;
+          } else {
+            for (let ch of sf) {
+              if (/[a-zA-ZμΩ]/.test(ch)) vars[ch] = (vars[ch] || 0) + 1;
+            }
+          }
         }
       }
     }
+    return { numProduct, vars };
   }
-}
 
   function renderVars(vars) {
     return Object.entries(vars)
@@ -333,6 +332,7 @@ for (let f of factors) {
           : (exp === 1 ? v : `${v}^{${exp}}`)
       ).join(' ');
   }
+
   let prettyInput = `\\(${formatInputForPrettyLatex(input)}\\)`;
   let prettyOutput1 = '';
   let fracMatch = input.replace(/\s+/g, '').match(/^(.+?)\/(.+)$/);
@@ -388,7 +388,8 @@ for (let f of factors) {
   }
   stepsDiv.innerHTML = steps.join('');
   MathJax.typesetPromise([stepsDiv]);
-}
+} // <---- THIS IS THE CLOSING BRACE YOU NEED!
+
 document.getElementById('copy-latex-btn').onclick = function() {
   let stepsDiv = document.getElementById('steps-math-output');
   if (!stepsDiv.textContent) return;
