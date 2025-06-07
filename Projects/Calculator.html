@@ -302,10 +302,10 @@ function splitTopLevelParens(str) {
   return result.filter(s => s.length > 0);
 }
 
-function formatInputForPrettyLatex(input) {
+function formatInputForPrettyLatex(input, inOuterParens = false) {
   let clean = input.replace(/\s+/g, '');
 
-  // PATCH: Sequence of adjacent top-level parentheses
+  // PATCH: Adjacent top-level parens as before...
   let topParens = splitTopLevelParens(clean);
   if (
     topParens.length > 1 &&
@@ -338,7 +338,8 @@ function formatInputForPrettyLatex(input) {
 
   // Handle single outermost parenthesis
   if (clean.startsWith('(') && clean.endsWith(')') && isBalancedParens(clean)) {
-    return `\\left(${formatInputForPrettyLatex(clean.slice(1, -1))}\\right)`;
+    // Pass inOuterParens=true to the inner call
+    return `\\left(${formatInputForPrettyLatex(clean.slice(1, -1), true)}\\right)`;
   }
 
   // Top-level +/-
@@ -362,13 +363,21 @@ function formatInputForPrettyLatex(input) {
         }
       }
       if (current) parts.push(current);
-      return parts.map((p, idx) =>
-        (p === '+' || p === '-') ? ` ${p} ` :
-        needsBrackets(p) ? `\\left(${formatInputForPrettyLatex(p)}\\right)` : formatInputForPrettyLatex(p)
-      ).join('');
+
+      // Only wrap each term if we're NOT inside outer parens
+      if (inOuterParens) {
+        return parts.map((p, idx) =>
+          (p === '+' || p === '-') ? ` ${p} ` : formatInputForPrettyLatex(p)
+        ).join('');
+      } else {
+        return parts.map((p, idx) =>
+          (p === '+' || p === '-') ? ` ${p} ` :
+          needsBrackets(p) ? `\\left(${formatInputForPrettyLatex(p)}\\right)` : formatInputForPrettyLatex(p)
+        ).join('');
+      }
     }
   }
-  // Now look for * or / at top level, and handle
+  // Now look for * or / at top level, and handle (leave as is)
   depth = 0;
   for (let i = 0; i < clean.length; ++i) {
     if (clean[i] === '(') depth++;
