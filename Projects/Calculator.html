@@ -862,14 +862,19 @@ function calculate() {
 
   // === Math.js output as "main" answer ===
   let prettyOutput1 = '';
-  try {
-    let mathInput = insertExplicitMultiplication(input);
-    let simplified = math.simplify(mathInput);
-    let latex = simplified.toTex({parenthesis: 'keep'});
-    prettyOutput1 = `\\(${latex}\\)`;
-  } catch (e) {
-    prettyOutput1 = `\\(${formatInputForPrettyLatex(input)}\\)`;
-  }
+try {
+  let mathInput = insertExplicitMultiplication(input);
+  let simplified = math.simplify(mathInput);
+  let latex = simplified.toTex({parenthesis: 'keep'});
+
+  // Put these two lines RIGHT HERE:
+  latex = latex.replace(/(\d+)\s*\\cdot\s*([a-zA-Z]+)/g, '$1$2');
+  latex = latex.replace(/([a-zA-Z])\s*\\cdot\s*([a-zA-Z])/g, '$1$2');
+
+  prettyOutput1 = `\\(${latex}\\)`;
+} catch (e) {
+  prettyOutput1 = `\\(${formatInputForPrettyLatex(input)}\\)`;
+}
 
   // === "Breakdown" pretty, your custom/LaTeX logic as 2nd output ===
   let breakdownOutput = '';
