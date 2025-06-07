@@ -253,64 +253,6 @@ function formatInputForPrettyLatex(input) {
   return clean.replace(/\*/g, ' \\cdot ');
 }
 
-  // Helper to process group (fraction or not)
-  function processGroup(group) {
-    // If it's wrapped in parenthesis, remove them
-    if (group.startsWith('(') && group.endsWith(')')) {
-      // Only strip if they are a matching pair for the whole group
-      let d = 0;
-      for (let i = 0; i < group.length; ++i) {
-        if (group[i] === '(') d++;
-        if (group[i] === ')') d--;
-        if (d === 0 && i < group.length - 1) {
-          // Found a closing paren before end, don't strip
-          return processMath(group);
-        }
-      }
-      // Strip one pair
-      group = group.substring(1, group.length - 1);
-      return `\\left(${processMath(group)}\\right)`;
-    }
-    return processMath(group);
-  }
-
-  // Helper to process math group for fraction
-  function processMath(group) {
-    let fracMatch = group.match(/^(.+?)\/(.+)$/);
-    if (fracMatch) {
-      let num = fracMatch[1].replace(/\*/g, ' \\cdot ');
-      let den = fracMatch[2].replace(/\*/g, ' \\cdot ');
-      return `\\displaystyle\\frac{${num}}{${den}}`;
-    } else {
-      let pretty = group.replace(/\*/g, ' \\cdot ');
-      return pretty;
-    }
-
-  }
-
-  // Main logic: split at top-level ops, recursively handle each group
-  let topLevelParts = splitTopLevel(clean);
-
-  // If more than one part, recursively process
-  if (topLevelParts.length > 1) {
-    let latexParts = [];
-    for (let i = 0; i < topLevelParts.length; ++i) {
-      let part = topLevelParts[i];
-      if (['+', '-', '*', '/'].includes(part)) {
-        // Pretty print operators
-        if (part === '*') latexParts.push(' \\cdot ');
-        else if (part === '/') latexParts.push(' \\div ');
-        else latexParts.push(' ' + part + ' ');
-      } else {
-        latexParts.push(processGroup(part));
-      }
-    }
-    return latexParts.join('');
-  }
-
-  // Fallback: just process as single group
-  return processGroup(clean);
-}
 
 // Math core for pretty output
 function calculate() {
