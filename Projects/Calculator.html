@@ -228,7 +228,16 @@ function expandAdjacentVariables(str) {
     return `${p1}^${match.length}`;
   });
 }
-
+function findTopLevelFraction(expr) {
+  // Returns index of top-level '/' or -1 if none
+  let depth = 0;
+  for (let i = 0; i < expr.length; ++i) {
+    if (expr[i] === '(') depth++;
+    if (expr[i] === ')') depth--;
+    if (expr[i] === '/' && depth === 0) return i;
+  }
+  return -1;
+}
  function splitTopLevel(expr) {
     let parts = [];
     let current = '';
@@ -457,10 +466,28 @@ function calculate() {
 
   let prettyInput = `\\(${formatInputForPrettyLatex(input)}\\)`;
   let prettyOutput1 = '';
-  let fracMatch = input.replace(/\s+/g, '').match(/^(.+?)\/(.+)$/);
-  if (fracMatch) {
-    let numFactors = fracMatch[1].replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
-    let denFactors = fracMatch[2].replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
+  let cleanInput = input.replace(/\s+/g, '');
+let slashIdx = findTopLevelFraction(cleanInput);
+
+if (slashIdx !== -1) {
+  let numPart = cleanInput.slice(0, slashIdx);
+  let denPart = cleanInput.slice(slashIdx + 1);
+
+  // Only treat as a fraction if there are no top-level + or - in either part
+  function hasTopLevelAddSub(s) {
+    let depth = 0;
+    for (let i = 0; i < s.length; ++i) {
+      if (s[i] === '(') depth++;
+      if (s[i] === ')') depth--;
+      if ((s[i] === '+' || s[i] === '-') && depth === 0) return true;
+    }
+    return false;
+  }
+
+  if (!hasTopLevelAddSub(numPart) && !hasTopLevelAddSub(denPart)) {
+    // Simple fraction case (old logic)
+    let numFactors = numPart.replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
+    let denFactors = denPart.replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
     let numAnalysis = analyzeFactors(numFactors);
     let denAnalysis = analyzeFactors(denFactors);
     let allVars = { ...numAnalysis.vars };
@@ -480,11 +507,18 @@ function calculate() {
       prettyOutput1 = `\\displaystyle\\frac{${numDisplay}}{${denDisplay}}`;
     }
   } else {
-    let allFactors = input.replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
-    let { numProduct, vars } = analyzeFactors(allFactors);
-    let varStr = renderVars(vars);
-    prettyOutput1 = [numProduct !== 1 ? numProduct : '', varStr].filter(Boolean).join(' ') || '1';
+    // Fallback to just displaying the input as formatted LaTeX
+    prettyOutput1 = formatInputForPrettyLatex(input);
   }
+}
+else {
+  // No top-level fraction: fallback to old logic (or better: actually parse/evaluate sum!)
+  let allFactors = input.replace(/\((\d+)\)/g, '$1').split('*').map(s => s.trim()).filter(Boolean);
+  let { numProduct, vars } = analyzeFactors(allFactors);
+  let varStr = renderVars(vars);
+  prettyOutput1 = [numProduct !== 1 ? numProduct : '', varStr].filter(Boolean).join(' ') || '1';
+}
+
   if (!prettyOutput1) prettyOutput1 = "\\text{(empty)}";
   let outputs = [
     `\\(${prettyOutput1}\\)`,
