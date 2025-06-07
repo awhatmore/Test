@@ -24,7 +24,7 @@
     .unit-breakdown { color: #6cf; font-family: 'Consolas', monospace; }
     .sigfig-active { background: #0ff; color: #111; }
   </style>
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <!--<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>-->
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
@@ -303,10 +303,11 @@ function calculate() {
   let inputRaw = document.getElementById('input-box').value.trim();
   let expandedVars = expandAdjacentVariables(inputRaw);    // yyy -> y^3
   let input = insertImplicitMultiplication(expandedVars);  // 5y -> 5*y
-  let stepsDiv = document.getElementById('steps-math-output'); // <--- THIS LINE!
+  let stepsDiv = document.getElementById('steps-math-output');
   if (!input) {
-   stepsDiv.innerHTML = '';
-   return;
+    stepsDiv.innerHTML = '';
+    return;
+  }
  // let stepsDiv = document.getElementById('steps-math-output');
  // stepsDiv.innerHTML = '👋 If you see this, output is working!';
 
