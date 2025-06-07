@@ -316,16 +316,33 @@ function formatInputForPrettyLatex(input) {
       .join(' \\cdot ');
   }
 
+  // PATCH: Sequence of top-level multiplications (including * inserted by insertImplicitMultiplication)
+  let parts = [];
+  let depth = 0, last = 0;
+  for (let i = 0; i < clean.length; ++i) {
+    if (clean[i] === '(') depth++;
+    if (clean[i] === ')') depth--;
+    if (clean[i] === '*' && depth === 0) {
+      parts.push(clean.slice(last, i));
+      last = i + 1;
+    }
+  }
+  if (last === 0) {
+    // not split, continue
+  } else {
+    parts.push(clean.slice(last));
+    return parts.map(p =>
+      needsBrackets(p) ? `\\left(${formatInputForPrettyLatex(p)}\\right)` : formatInputForPrettyLatex(p)
+    ).join(' \\cdot ');
+  }
+
   // Handle single outermost parenthesis
   if (clean.startsWith('(') && clean.endsWith(')') && isBalancedParens(clean)) {
     return `\\left(${formatInputForPrettyLatex(clean.slice(1, -1))}\\right)`;
   }
 
-  // Your existing handling for +, -, *, /
-  // (leave the rest of your function as-is)
-  // ...
-  // Now look for top-level +, -, *, /
-  let depth = 0;
+  // Top-level +/-
+  depth = 0;
   for (let i = 0; i < clean.length; ++i) {
     if (clean[i] === '(') depth++;
     if (clean[i] === ')') depth--;
