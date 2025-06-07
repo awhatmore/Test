@@ -206,15 +206,20 @@ function updateUnitOptions() {
 }
 // Insert * for things like 5y or y5 or )x or x(
 function insertImplicitMultiplication(str) {
-  // Only insert * for: number followed by (, ) followed by number/letter/(, letter followed by (
-  return str
-    // Number followed by (
-    .replace(/([0-9])\(/g, '$1*(')
-    // ) followed by number, letter, or (
-    .replace(/\)([0-9a-zA-Z(])/g, ')*$1')
-    // Letter followed by (
-    .replace(/([a-zA-Z])\(/g, '$1*(');
-    // Do NOT insert between number and letter
+  // Number followed by (
+  str = str.replace(/([0-9])\(/g, '$1*(');
+  // ) followed by number, letter, or (
+  str = str.replace(/\)([0-9a-zA-Z(])/g, ')*$1');
+  // Letter or variable followed by (, but NOT if function name!
+  // We'll skip adding * for things like f(x), g(x), sin(x), etc.
+  str = str.replace(/([a-zA-Z])\(/g, (match, p1, offset, s) => {
+    // Check if previous char is not a letter (to allow multi-letter function names)
+    // If previous char is not a letter, don't insert *, treat as function
+    if (offset === 0 || !/[a-zA-Z]/.test(s[offset - 1])) return match; // leave as is (function)
+    // If previous char is also a letter or number, insert *
+    return `${p1}*(`;
+  });
+  return str;
 }
 function insertExplicitMultiplication(expr) {
   // Insert * between a number and a letter, and between two letters
