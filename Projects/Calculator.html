@@ -232,7 +232,7 @@ function formatInputForPrettyLatex(input) {
         if (current !== '') parts.push(current);
         parts.push(c); // keep operator as separate part
         current = '';
-      } else {
+        } else {
         current += c;
       }
     }
@@ -300,15 +300,15 @@ function formatInputForPrettyLatex(input) {
 
 // Math core for pretty output
 function calculate() {
-  //let inputRaw = document.getElementById('input-box').value.trim();
-  //let expandedVars = expandAdjacentVariables(inputRaw);    // yyy -> y^3
-  //let input = insertImplicitMultiplication(expandedVars);  // 5y -> 5*y
- // let stepsDiv = document.getElementById('steps-math-output'); // <--- THIS LINE!
- // if (!input) {
- //   stepsDiv.innerHTML = '';
- //   return;
-  let stepsDiv = document.getElementById('steps-math-output');
-  stepsDiv.innerHTML = '👋 If you see this, output is working!';
+  let inputRaw = document.getElementById('input-box').value.trim();
+  let expandedVars = expandAdjacentVariables(inputRaw);    // yyy -> y^3
+  let input = insertImplicitMultiplication(expandedVars);  // 5y -> 5*y
+  let stepsDiv = document.getElementById('steps-math-output'); // <--- THIS LINE!
+  if (!input) {
+   stepsDiv.innerHTML = '';
+   return;
+ // let stepsDiv = document.getElementById('steps-math-output');
+ // stepsDiv.innerHTML = '👋 If you see this, output is working!';
 
 
   const knownUnits = [ "kg", "A", "W", "V", "VA" ];
