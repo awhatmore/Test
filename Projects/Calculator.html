@@ -167,38 +167,7 @@ function splitNumberAndVars(factor) {
   }
   return [factor];
 }
-  function splitTopLevelParens(str) {
-  // Splits input into ['(...)', '(...)', ...] for adjacent top-level parens.
-  let result = [];
-  let i = 0, n = str.length;
-  while (i < n) {
-    if (str[i] === '(') {
-      let depth = 1;
-      let j = i + 1;
-      while (j < n && depth > 0) {
-        if (str[j] === '(') depth++;
-        if (str[j] === ')') depth--;
-        j++;
-      }
-      if (depth === 0) {
-        result.push(str.slice(i, j));
-        i = j;
-      } else {
-        // Unmatched paren; just push rest
-        result.push(str.slice(i));
-        break;
-      }
-    } else {
-      // Find next '(' or end
-      let j = i;
-      while (j < n && str[j] !== '(') j++;
-      result.push(str.slice(i, j));
-      i = j;
-    }
-  }
-  // Remove empty strings from result
-  return result.filter(s => s.length > 0);
-}
+
 function appendCalc(val) {
   const box = document.getElementById('input-box');
   if (!box) return;
@@ -304,10 +273,39 @@ function needsBrackets(expr) {
   return hasOp;
 }
 
+function splitTopLevelParens(str) {
+  let result = [];
+  let i = 0, n = str.length;
+  while (i < n) {
+    if (str[i] === '(') {
+      let depth = 1;
+      let j = i + 1;
+      while (j < n && depth > 0) {
+        if (str[j] === '(') depth++;
+        if (str[j] === ')') depth--;
+        j++;
+      }
+      if (depth === 0) {
+        result.push(str.slice(i, j));
+        i = j;
+      } else {
+        result.push(str.slice(i));
+        break;
+      }
+    } else {
+      let j = i;
+      while (j < n && str[j] !== '(') j++;
+      if (j > i) result.push(str.slice(i, j));
+      i = j;
+    }
+  }
+  return result.filter(s => s.length > 0);
+}
+
 function formatInputForPrettyLatex(input) {
   let clean = input.replace(/\s+/g, '');
 
-  // Parentheses: if outermost, wrap result in \left( ... \right)
+  // PATCH: Sequence of adjacent top-level parentheses
   let topParens = splitTopLevelParens(clean);
   if (
     topParens.length > 1 &&
@@ -315,15 +313,18 @@ function formatInputForPrettyLatex(input) {
   ) {
     return topParens
       .map(s => `\\left(${formatInputForPrettyLatex(s.slice(1, -1))}\\right)`)
-      .join('');
+      .join(' \\cdot ');
   }
 
-  // ORIGINAL SINGLE OUTERMOST PARENS HANDLER
+  // Handle single outermost parenthesis
   if (clean.startsWith('(') && clean.endsWith(')') && isBalancedParens(clean)) {
     return `\\left(${formatInputForPrettyLatex(clean.slice(1, -1))}\\right)`;
   }
 
-  // Look for top-level (not inside parentheses) operators
+  // Your existing handling for +, -, *, /
+  // (leave the rest of your function as-is)
+  // ...
+  // Now look for top-level +, -, *, /
   let depth = 0;
   for (let i = 0; i < clean.length; ++i) {
     if (clean[i] === '(') depth++;
@@ -373,6 +374,7 @@ function formatInputForPrettyLatex(input) {
   // Otherwise, just print inline (replace * with \cdot for LaTeX)
   return clean.replace(/\*/g, ' \\cdot ');
 }
+
 
 
 
