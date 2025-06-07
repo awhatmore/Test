@@ -402,6 +402,7 @@ function formatInputForPrettyLatex(input, inOuterParens = false) {
       let op = clean[i];
       let left = clean.slice(0, i);
       let right = clean.slice(i + 1);
+
       if (op === '*') {
         return [
           needsBrackets(left) ? `\\left(${formatInputForPrettyLatex(left)}\\right)` : formatInputForPrettyLatex(left),
@@ -409,13 +410,19 @@ function formatInputForPrettyLatex(input, inOuterParens = false) {
           needsBrackets(right) ? `\\left(${formatInputForPrettyLatex(right)}\\right)` : formatInputForPrettyLatex(right)
         ].join('');
       } else { // '/'
-        return `\\displaystyle\\frac{${needsBrackets(left) ? `\\left(${formatInputForPrettyLatex(left)}\\right)` : formatInputForPrettyLatex(left)}}{${needsBrackets(right) ? `\\left(${formatInputForPrettyLatex(right)}\\right)` : formatInputForPrettyLatex(right)}}`;
+        // --- PATCH: Wrap denominator in curly braces if needed ---
+        let denomLatex = formatInputForPrettyLatex(right);
+        if (/[+\-*]/.test(right) && !right.startsWith('{') && !right.startsWith('\\left')) {
+          denomLatex = `{${denomLatex}}`;
+        }
+        return `\\displaystyle\\frac{${needsBrackets(left) ? `\\left(${formatInputForPrettyLatex(left)}\\right)` : formatInputForPrettyLatex(left)}}{${denomLatex}}`;
       }
     }
   }
   // Otherwise, just print inline (replace * with \cdot for LaTeX)
   return clean.replace(/\*/g, ' \\cdot ');
 }
+
 
 
 
