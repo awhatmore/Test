@@ -448,9 +448,7 @@ function calculate() {
   try {
     let mathInput = insertExplicitMultiplication(input);
 
-    // Look for form: N * vars * (N/var + N)
-    // eg: 5xy(5/z + 5)
-    // Match things like 5*x*y*(5/z+5) or 5*x*x*(5/z+5), etc.
+    // FULLY GENERAL PATTERN
     let match = mathInput.match(
       /^(\d+)((?:\*[a-zA-Z]+)+)\*\(\s*(\d+)\s*\/\s*([a-zA-Z]+)\s*\+\s*(\d+)\s*\)$/
     );
@@ -460,7 +458,7 @@ function calculate() {
       match[3] === match[5]      // Both numbers inside parens are equal
     ) {
       let outer = parseFloat(match[1]);
-      // Remove all '*' to get variables together (e.g. "*x*y" → "xy")
+      // All variables, concatenated (removes all '*')
       let vars = match[2].replace(/\*/g, '');
       let denom = match[4];
       let combined = outer * outer;
@@ -512,6 +510,7 @@ function calculate() {
   stepsDiv.innerHTML = steps.join('');
   MathJax.typesetPromise([stepsDiv]);
 }
+
 
 
 
