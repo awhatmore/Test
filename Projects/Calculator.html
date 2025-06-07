@@ -170,22 +170,25 @@ function splitNumberAndVars(factor) {
   return [factor];
 }
 
+window.onload = function() {
+  const box = document.getElementById('input-box');
+  box.setAttribute('readonly', true);
+  box.addEventListener('focus', function() {
+    box.removeAttribute('readonly');
+  });
+  calculate();
+  updateUnitOptions && updateUnitOptions();
+};
+
 function appendCalc(val) {
   const box = document.getElementById('input-box');
-  // Make input readonly so the keyboard closes on mobile
-  box.setAttribute('readonly', true);
-
-  // Insert value at caret (standard logic)
+  box.setAttribute('readonly', true); // Close keyboard after button press
   const start = box.selectionStart;
   const end = box.selectionEnd;
   const text = box.value;
   box.value = text.slice(0, start) + val + text.slice(end);
   const caretPos = start + val.length;
   box.setSelectionRange(caretPos, caretPos);
-
-  // Remove focus to force keyboard to close
-  box.blur();
-
   calculate();
 }
 function clearCalc() {
