@@ -237,21 +237,38 @@ function expandAdjacentVariables(str) {
 function formatInputForPrettyLatex(input) {
   let clean = input.replace(/\s+/g, '');
 
-  // If the top-level (not inside parentheses) operator is '/', use frac
+  // If wrapped in parentheses, unwrap for further processing
+  if (clean.startsWith('(') && clean.endsWith(')')) {
+    // Only strip outermost if they're balanced
+    let depth = 0;
+    let balanced = true;
+    for (let i = 0; i < clean.length; ++i) {
+      if (clean[i] === '(') depth++;
+      if (clean[i] === ')') depth--;
+      if (depth === 0 && i < clean.length - 1) balanced = false;
+    }
+    if (balanced) {
+      // Remove only the outermost parentheses and recurse
+      return `\\left(${formatInputForPrettyLatex(clean.slice(1, -1))}\\right)`;
+    }
+  }
+
+  // Find top-level division
   let depth = 0;
   for (let i = 0; i < clean.length; ++i) {
     if (clean[i] === '(') depth++;
     if (clean[i] === ')') depth--;
     if (clean[i] === '/' && depth === 0) {
-      // Split into numerator and denominator at this position
       let num = clean.slice(0, i);
       let den = clean.slice(i + 1);
       return `\\displaystyle\\frac{${formatInputForPrettyLatex(num)}}{${formatInputForPrettyLatex(den)}}`;
     }
   }
-  // Otherwise, show normally, with implicit multiplication as cdot
+
+  // Otherwise, just pretty-print with cdot for *
   return clean.replace(/\*/g, ' \\cdot ');
 }
+
 
 
 // Math core for pretty output
