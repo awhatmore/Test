@@ -358,13 +358,12 @@ function formatInputForPrettyLatex(input, inOuterParens = false) {
     return `\\left(${formatInputForPrettyLatex(clean.slice(1, -1), true)}\\right)`;
   }
 
-  // Top-level +/-
+  // Top-level +/- 
   depth = 0;
   for (let i = 0; i < clean.length; ++i) {
     if (clean[i] === '(') depth++;
     if (clean[i] === ')') depth--;
     if ((clean[i] === '+' || clean[i] === '-') && depth === 0) {
-      // Split at each top-level +/-, and recursively process parts
       let parts = [], current = '';
       depth = 0;
       for (let j = 0; j < clean.length; ++j) {
@@ -380,7 +379,6 @@ function formatInputForPrettyLatex(input, inOuterParens = false) {
       }
       if (current) parts.push(current);
 
-      // Only wrap each term if we're NOT inside outer parens
       if (inOuterParens) {
         return parts.map((p, idx) =>
           (p === '+' || p === '-') ? ` ${p} ` : formatInputForPrettyLatex(p)
@@ -422,6 +420,7 @@ function formatInputForPrettyLatex(input, inOuterParens = false) {
   // Otherwise, just print inline (replace * with \cdot for LaTeX)
   return clean.replace(/\*/g, ' \\cdot ');
 }
+
 
 
 
