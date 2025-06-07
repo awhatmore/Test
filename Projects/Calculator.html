@@ -220,26 +220,25 @@ function formatInputForPrettyLatex(input) {
   let clean = input.replace(/\s+/g, '');
 
   // Helper: Split at top-level operators (+ - * /) (ignoring those inside parentheses)
-  function splitTopLevel(expr) {
-    let parts = [];
-    let current = '';
-    let depth = 0;
-    for (let i = 0; i < expr.length; ++i) {
-      let c = expr[i];
-      if (c === '(') depth++;
-      if (c === ')') depth--;
-      if ((c === '+' || c === '-' || c === '*' || c === '/') && depth === 0) {
-        if (current !== '') parts.push(current);
-        parts.push(c); // keep operator as separate part
-        current = '';
-        } else {
-        current += c;
-      }
+function formatInputForPrettyLatex(input) {
+  let clean = input.replace(/\s+/g, '');
+
+  // If the top-level (not inside parentheses) operator is '/', use frac
+  let depth = 0;
+  for (let i = 0; i < clean.length; ++i) {
+    if (clean[i] === '(') depth++;
+    if (clean[i] === ')') depth--;
+    if (clean[i] === '/' && depth === 0) {
+      // Split into numerator and denominator at this position
+      let num = clean.slice(0, i);
+      let den = clean.slice(i + 1);
+      return `\\displaystyle\\frac{${formatInputForPrettyLatex(num)}}{${formatInputForPrettyLatex(den)}}`;
     }
-    if (current !== '') parts.push(current);
-    return parts;
   }
 
+  // Otherwise, show normally, with implicit multiplication as cdot
+  return clean.replace(/\*/g, ' \\cdot ');
+}
   // Helper to process group (fraction or not)
   function processGroup(group) {
     // If it's wrapped in parenthesis, remove them
@@ -272,6 +271,7 @@ function formatInputForPrettyLatex(input) {
       let pretty = group.replace(/\*/g, ' \\cdot ');
       return pretty;
     }
+
   }
 
   // Main logic: split at top-level ops, recursively handle each group
