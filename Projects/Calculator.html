@@ -252,7 +252,16 @@ function expandAdjacentVariables(str) {
 function formatInputForPrettyLatex(input) {
   let clean = input.replace(/\s+/g, '');
 
-  // Find top-level division (recursively, even inside parentheses)
+  // If wrapped in outermost balanced parentheses, unwrap for further processing
+  if (
+    clean.startsWith('(') && clean.endsWith(')') &&
+    isBalancedParens(clean)
+  ) {
+    // Remove outermost parentheses only
+    return `\\left(${formatInputForPrettyLatex(clean.slice(1, -1))}\\right)`;
+  }
+
+  // Find top-level division (recursively, even inside groups)
   let depth = 0;
   for (let i = 0; i < clean.length; ++i) {
     if (clean[i] === '(') depth++;
@@ -263,15 +272,6 @@ function formatInputForPrettyLatex(input) {
       // Recursively pretty both numerator and denominator
       return `\\displaystyle\\frac{${formatInputForPrettyLatex(num)}}{${formatInputForPrettyLatex(den)}}`;
     }
-  }
-
-  // If wrapped in parentheses, pretty-print the inside and add \left(...\right)
-  if (
-    clean.startsWith('(') && clean.endsWith(')')
-    && isBalancedParens(clean)
-  ) {
-    // Remove outermost parentheses only
-    return `\\left(${formatInputForPrettyLatex(clean.slice(1, -1))}\\right)`;
   }
 
   // Otherwise, print inline (replace * with \cdot for LaTeX)
@@ -288,6 +288,7 @@ function isBalancedParens(s) {
   }
   return depth === 0;
 }
+
 
 
 
