@@ -201,11 +201,18 @@ function insertImplicitMultiplication(str) {
     .replace(/([a-zA-Z)])([0-9(])/g, '$1*$2'); // y5, y(, )5, )(
 }
 
-// Expand things like yy -> y*y, xyz -> x*y*z
+// Only collapse repeated letters into exponents. Never interpret variable+number as an exponent.
 function expandAdjacentVariables(str) {
-  // Replace yyy -> y^3, xxx -> x^3, but leave xyz alone
-  return str.replace(/([a-zA-Z])\1{1,}/g, (m, p1) => `${p1}^${m.length}`);
+  // yyy → y^3, but skip already exponentiated things and mixed xyz
+  // We'll avoid touching any letter that is followed by a ^ or a digit
+  return str.replace(/([a-zA-Z])\1{1,}/g, (match, p1, offset, string) => {
+    // Don't touch if already followed by ^ or digit
+    const nextChar = string[offset + match.length];
+    if (nextChar === '^' || /\d/.test(nextChar)) return match;
+    return `${p1}^${match.length}`;
+  });
 }
+
 
   
 // LaTeX grouping for pretty input
@@ -293,10 +300,9 @@ function formatInputForPrettyLatex(input) {
 
 // Math core for pretty output
 function calculate() {
-let inputRaw = document.getElementById('input-box').value.trim();
-let expandedVars = expandAdjacentVariables(inputRaw);    // yyy -> y^3
-let withExponents = expandExponents(expandedVars);       // y10 -> y^10
-let input = insertImplicitMultiplication(withExponents); // 5y -> 5*y
+  let inputRaw = document.getElementById('input-box').value.trim();
+  let expandedVars = expandAdjacentVariables(inputRaw);    // yyy -> y^3
+  let input = insertImplicitMultiplication(expandedVars);  // 5y -> 5*y
   if (!input) {
     stepsDiv.innerHTML = '';
     return;
