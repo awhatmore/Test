@@ -247,7 +247,18 @@ function expandAdjacentVariables(str) {
     if (current !== '') parts.push(current);
     return parts;
   }
-  
+  // Helper to check if a string has balanced outer parentheses
+function isBalancedParens(s) {
+  let depth = 0;
+  for (let i = 0; i < s.length; ++i) {
+    if (s[i] === '(') depth++;
+    if (s[i] === ')') depth--;
+    // If we close all parens before the end, they're not balanced
+    if (depth === 0 && i < s.length - 1) return false;
+  }
+  return depth === 0;
+}
+
 // LaTeX grouping for pretty input
 function formatInputForPrettyLatex(input) {
   let clean = input.replace(/\s+/g, '');
