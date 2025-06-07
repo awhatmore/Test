@@ -252,7 +252,19 @@ function expandAdjacentVariables(str) {
 function formatInputForPrettyLatex(input) {
   let clean = input.replace(/\s+/g, '');
 
-  // If wrapped in parentheses, unwrap for further processing
+  // First, look for a top-level division, even inside parentheses
+  let depth = 0;
+  for (let i = 0; i < clean.length; ++i) {
+    if (clean[i] === '(') depth++;
+    if (clean[i] === ')') depth--;
+    if (clean[i] === '/' && depth === 0) {
+      let num = clean.slice(0, i);
+      let den = clean.slice(i + 1);
+      return `\\displaystyle\\frac{${formatInputForPrettyLatex(num)}}{${formatInputForPrettyLatex(den)}}`;
+    }
+  }
+
+  // Then, if wrapped in parentheses, render with \left( ... \right)
   if (clean.startsWith('(') && clean.endsWith(')')) {
     // Only strip outermost if they're balanced
     let depth = 0;
@@ -268,21 +280,10 @@ function formatInputForPrettyLatex(input) {
     }
   }
 
-  // Find top-level division
-  let depth = 0;
-  for (let i = 0; i < clean.length; ++i) {
-    if (clean[i] === '(') depth++;
-    if (clean[i] === ')') depth--;
-    if (clean[i] === '/' && depth === 0) {
-      let num = clean.slice(0, i);
-      let den = clean.slice(i + 1);
-      return `\\displaystyle\\frac{${formatInputForPrettyLatex(num)}}{${formatInputForPrettyLatex(den)}}`;
-    }
-  }
-
   // Otherwise, just pretty-print with cdot for *
   return clean.replace(/\*/g, ' \\cdot ');
 }
+
 
 
 
