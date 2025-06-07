@@ -37,10 +37,11 @@
     <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
   </div>
   <input id="input-box"
-    placeholder="Enter calculation (e.g. 5 / 9xxx)"
-    autocomplete="off"
-    oninput="calculate();"
-    onkeydown="if(event.key==='Enter'){calculate(); return false;}">
+  readonly
+  placeholder="Enter calculation (e.g. 5 / 9xxx)"
+  autocomplete="off"
+  oninput="calculate();"
+  onkeydown="if(event.key==='Enter'){calculate(); return false;}">
 
   <div style="margin-bottom:0.5em;">
     Significant figures: 
@@ -171,14 +172,20 @@ function splitNumberAndVars(factor) {
 
 function appendCalc(val) {
   const box = document.getElementById('input-box');
-  if (!box) return;
+  // Make input readonly so the keyboard closes on mobile
+  box.setAttribute('readonly', true);
+
+  // Insert value at caret (standard logic)
   const start = box.selectionStart;
   const end = box.selectionEnd;
   const text = box.value;
   box.value = text.slice(0, start) + val + text.slice(end);
   const caretPos = start + val.length;
   box.setSelectionRange(caretPos, caretPos);
-  box.focus();
+
+  // Remove focus to force keyboard to close
+  box.blur();
+
   calculate();
 }
 function clearCalc() {
@@ -533,6 +540,17 @@ window.onload = function() {
   calculate();
   updateUnitOptions && updateUnitOptions();
 };
+  const inputBox = document.getElementById('input-box');
+
+// Show keyboard when user taps input box
+inputBox.addEventListener('focus', function () {
+  inputBox.removeAttribute('readonly');
+});
+
+// Hide keyboard after leaving input box (small delay for button clicks)
+inputBox.addEventListener('blur', function () {
+  setTimeout(() => inputBox.setAttribute('readonly', true), 100);
+});
 </script>
 </body>
 </html>
