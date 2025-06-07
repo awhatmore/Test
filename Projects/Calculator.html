@@ -260,32 +260,74 @@ function isBalancedParens(s) {
 }
 
 // LaTeX grouping for pretty input
+function needsBrackets(expr) {
+  // Returns true if the expr contains any top-level +, -, or more than one operator
+  let depth = 0, hasOp = false;
+  for (let i = 0; i < expr.length; ++i) {
+    if (expr[i] === '(') depth++;
+    if (expr[i] === ')') depth--;
+    if ((expr[i] === '+' || expr[i] === '-') && depth === 0) return true;
+    if ((expr[i] === '*' || expr[i] === '/') && depth === 0) hasOp = true;
+  }
+  return hasOp;
+}
+
 function formatInputForPrettyLatex(input) {
   let clean = input.replace(/\s+/g, '');
 
-  // 1. First, search for a top-level division
+  // Parentheses: if outermost, wrap result in \left( ... \right)
+  if (clean.startsWith('(') && clean.endsWith(')') && isBalancedParens(clean)) {
+    return `\\left(${formatInputForPrettyLatex(clean.slice(1, -1))}\\right)`;
+  }
+
+  // Look for top-level (not inside parentheses) operators
   let depth = 0;
   for (let i = 0; i < clean.length; ++i) {
     if (clean[i] === '(') depth++;
     if (clean[i] === ')') depth--;
-    // Only split at the first '/' that's not nested
-    if (clean[i] === '/' && depth === 0) {
-      let num = clean.slice(0, i);
-      let den = clean.slice(i + 1);
-      return `\\displaystyle\\frac{${formatInputForPrettyLatex(num)}}{${formatInputForPrettyLatex(den)}}`;
+    if ((clean[i] === '+' || clean[i] === '-') && depth === 0) {
+      // Split at each top-level +/-, and recursively process parts
+      let parts = [], current = '';
+      depth = 0;
+      for (let j = 0; j < clean.length; ++j) {
+        if (clean[j] === '(') depth++;
+        if (clean[j] === ')') depth--;
+        if ((clean[j] === '+' || clean[j] === '-') && depth === 0) {
+          parts.push(current);
+          parts.push(clean[j]);
+          current = '';
+        } else {
+          current += clean[j];
+        }
+      }
+      if (current) parts.push(current);
+      return parts.map((p, idx) =>
+        (p === '+' || p === '-') ? ` ${p} ` :
+        needsBrackets(p) ? `\\left(${formatInputForPrettyLatex(p)}\\right)` : formatInputForPrettyLatex(p)
+      ).join('');
     }
   }
-
-  // 2. If no top-level division, see if we're wrapped in outermost balanced parens
-  if (
-    clean.startsWith('(') && clean.endsWith(')') &&
-    isBalancedParens(clean)
-  ) {
-    // Remove only the outermost parentheses and pretty the inside
-    return `\\left(${formatInputForPrettyLatex(clean.slice(1, -1))}\\right)`;
+  // Now look for * or / at top level, and handle
+  depth = 0;
+  for (let i = 0; i < clean.length; ++i) {
+    if (clean[i] === '(') depth++;
+    if (clean[i] === ')') depth--;
+    if ((clean[i] === '*' || clean[i] === '/') && depth === 0) {
+      let op = clean[i];
+      let left = clean.slice(0, i);
+      let right = clean.slice(i + 1);
+      if (op === '*') {
+        return [
+          needsBrackets(left) ? `\\left(${formatInputForPrettyLatex(left)}\\right)` : formatInputForPrettyLatex(left),
+          ' \\cdot ',
+          needsBrackets(right) ? `\\left(${formatInputForPrettyLatex(right)}\\right)` : formatInputForPrettyLatex(right)
+        ].join('');
+      } else { // '/'
+        return `\\displaystyle\\frac{${needsBrackets(left) ? `\\left(${formatInputForPrettyLatex(left)}\\right)` : formatInputForPrettyLatex(left)}}{${needsBrackets(right) ? `\\left(${formatInputForPrettyLatex(right)}\\right)` : formatInputForPrettyLatex(right)}}`;
+      }
+    }
   }
-
-  // 3. Otherwise, print inline (replace * with \cdot for LaTeX)
+  // Otherwise, just print inline (replace * with \cdot for LaTeX)
   return clean.replace(/\*/g, ' \\cdot ');
 }
 
