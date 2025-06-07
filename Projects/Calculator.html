@@ -344,13 +344,23 @@ function formatInputForPrettyLatex(input, inOuterParens = false) {
     }
   }
   if (last === 0) {
-    // not split, continue
-  } else {
-    parts.push(clean.slice(last));
-    return parts.map(p =>
-      needsBrackets(p) ? `\\left(${formatInputForPrettyLatex(p)}\\right)` : formatInputForPrettyLatex(p)
-    ).join(' \\cdot ');
-  }
+  // not split, continue
+} else {
+  parts.push(clean.slice(last));
+  return parts.map((p, i, arr) => {
+    let formatted = needsBrackets(p) ? `\\left(${formatInputForPrettyLatex(p)}\\right)` : formatInputForPrettyLatex(p);
+    // Don't add dot before ( on the right
+    if (i < arr.length - 1) {
+      const next = arr[i+1];
+      // If next part starts with '('
+      if (next.trim().startsWith('(')) return formatted;
+      // If both current and next are variables or numbers (e.g., 5x or xy), no dot
+      if (/^[a-zA-Z0-9]+$/.test(p.slice(-1)) && /^[a-zA-Z]/.test(next)) return formatted;
+      return formatted + ' \\cdot ';
+    }
+    return formatted;
+  }).join('');
+}
 
   // Handle single outermost parenthesis
   if (clean.startsWith('(') && clean.endsWith(')') && isBalancedParens(clean)) {
