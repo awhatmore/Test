@@ -158,6 +158,15 @@ function setSigFigs(n) {
   });
   calculate();
 }
+  // Splits something like '2vf' into ['2', 'v', 'f']
+function splitNumberAndVars(factor) {
+  let match = factor.match(/^(\d+)([a-zA-ZμΩ].*)$/);
+  if (match) {
+    // Split number and vars
+    return [match[1], ...match[2].split('')];
+  }
+  return [factor];
+}
 function appendCalc(val) {
   const box = document.getElementById('input-box');
   if (!box) return;
@@ -295,26 +304,27 @@ function calculate() {
   function analyzeFactors(factors) {
     let numProduct = 1;
     let vars = {};
-    for (let f of factors) {
-      // Remove parentheses from numbers, e.g., (5) → 5
-      f = f.replace(/^\((\d+)\)$/, '$1');
-      if (!isNaN(Number(f))) {
-        numProduct *= Number(f);
+for (let f of factors) {
+  // Split number+vars, e.g. 2vf -> 2, v, f
+  let subfactors = splitNumberAndVars(f);
+  for (let sf of subfactors) {
+    if (!isNaN(Number(sf))) {
+      numProduct *= Number(sf);
+    } else {
+      let match = sf.match(/^([a-zA-ZμΩ]+)(?:\^(-?\d+))?$/);
+      if (match) {
+        let base = match[1];
+        let exp = match[2] ? parseInt(match[2]) : 1;
+        vars[base] = (vars[base] || 0) + exp;
       } else {
-        let match = f.match(/^([a-zA-ZμΩ]+)(?:\^(-?\d+))?$/);
-        if (match) {
-          let base = match[1];
-          let exp = match[2] ? parseInt(match[2]) : 1;
-          vars[base] = (vars[base] || 0) + exp;
-        } else {
-          for (let ch of f) {
-            if (/[a-zA-ZμΩ]/.test(ch)) vars[ch] = (vars[ch] || 0) + 1;
-          }
+        for (let ch of sf) {
+          if (/[a-zA-ZμΩ]/.test(ch)) vars[ch] = (vars[ch] || 0) + 1;
         }
       }
     }
-    return { numProduct, vars };
   }
+}
+
   function renderVars(vars) {
     return Object.entries(vars)
       .map(([v, exp]) =>
