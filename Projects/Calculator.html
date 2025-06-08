@@ -182,7 +182,6 @@ function splitNumberAndVars(factor) {
 
 window.onload = function() {
   const box = document.getElementById('input-box');
-  box.setAttribute('readonly', true);
   box.addEventListener('focus', function() {
     box.removeAttribute('readonly');
   });
@@ -192,15 +191,17 @@ window.onload = function() {
 
 function appendCalc(val) {
   const box = document.getElementById('input-box');
-  box.setAttribute('readonly', true); // Close keyboard after button press
+  // Do NOT set readonly here!
   const start = box.selectionStart;
   const end = box.selectionEnd;
   const text = box.value;
   box.value = text.slice(0, start) + val + text.slice(end);
   const caretPos = start + val.length;
   box.setSelectionRange(caretPos, caretPos);
+  box.focus(); // optional, keeps focus after button press
   calculate();
 }
+
 function clearCalc() {
   document.getElementById('input-box').value = '';
   document.getElementById('result-panel').innerHTML = '';
