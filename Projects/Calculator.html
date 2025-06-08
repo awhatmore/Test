@@ -458,45 +458,45 @@ function formatInputForPrettyLatex(input, inOuterParens = false) {
 
 
 
+
 function calculate() {
   let inputRaw = document.getElementById('input-box').value.trim();
   let expandedVars = expandAdjacentVariables(inputRaw);
   let input = insertImplicitMultiplication(expandedVars);
   let stepsDiv = document.getElementById('steps-math-output');
-  if (!input) {
-    // Keep layout stable
-    stepsDiv.innerHTML = `
-      <div class="steps-eq-row">
-        <span class="steps-side">&nbsp;</span>
-        <span class="eq-label">&nbsp;</span>
-        <span class="steps-side right">&nbsp;</span>
-      </div>
-      <div class="steps-eq-row">
-        <span class="steps-side">&nbsp;</span>
-        <span class="eq-label">&nbsp;</span>
-        <span class="steps-side right">&nbsp;</span>
-      </div>
-      <div class="steps-eq-row">
-        <span class="steps-side">&nbsp;</span>
-        <span class="eq-label">&nbsp;</span>
-        <span class="steps-side right">&nbsp;</span>
-      </div>
-    `;
-    return;
-  }
+if (!input) {
+  // When input is empty, keep a blank row so the height stays the same
+  stepsDiv.innerHTML = `
+    <div class="steps-eq-row">
+      <span class="steps-side">&nbsp;</span>
+      <span class="eq-label">&nbsp;</span>
+      <span class="steps-side right">&nbsp;</span>
+    </div>
+    <div class="steps-eq-row">
+      <span class="steps-side">&nbsp;</span>
+      <span class="eq-label">&nbsp;</span>
+      <span class="steps-side right">&nbsp;</span>
+    </div>
+    <div class="steps-eq-row">
+      <span class="steps-side">&nbsp;</span>
+      <span class="eq-label">&nbsp;</span>
+      <span class="steps-side right">&nbsp;</span>
+    </div>
+  `;
+  return;
+}
+
 
   let prettyOutput1 = '';
-  try {
-    let mathInput = insertExplicitMultiplication(input);
+try {
+  let mathInput = insertExplicitMultiplication(input);
+  // If input contains any variable letters, just pretty-print it as-is
+  if (/[a-zA-Z]/.test(mathInput)) {
+    prettyOutput1 = `\\(${formatInputForPrettyLatex(input)}\\)`;
+  } else {
+    let result = math.evaluate(mathInput); // EVALUATE only if no variables
 
-    // Set all letters a-z to 1 by default
-    let scope = {};
-    for (let code = 97; code <= 122; code++) { // ASCII codes for a-z
-      scope[String.fromCharCode(code)] = 1;
-    }
-
-    let result = math.evaluate(mathInput, scope);
-
+    // Format result with currentSigFigs
     let formattedResult;
     if (typeof result === "number") {
       if (typeof currentSigFigs === 'number' && currentSigFigs > 0) {
@@ -507,14 +507,12 @@ function calculate() {
     } else {
       formattedResult = result.toString();
     }
-    prettyOutput1 = `\\(${formattedResult}\\)`;
-  } catch (e) {
-    if (/Undefined symbol/.test(e.message)) {
-      prettyOutput1 = '\\(\\text{Unknown variable}\\)';
-    } else {
-      prettyOutput1 = '\\(\\text{Error}\\)';
-    }
+    prettyOutput1 = `\\(${formattedResult}\\)`; // Show result as LaTeX
   }
+} catch (e) {
+  prettyOutput1 = `\\(\\text{Error}\\)`;
+}
+
 
   let prettyInput = `\\(${formatInputForPrettyLatex(input)}\\)`;
   let outputs = [
