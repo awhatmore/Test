@@ -153,14 +153,21 @@
   </div>-->
   <div id="result-panel"></div>
 <script>
-let currentSigFigs = 3;
+let currentSigFigs = null; // null = OFF
 function setSigFigs(n) {
-  currentSigFigs = n;
+  // If clicking same already-active button, turn OFF
+  if (currentSigFigs === n) {
+    currentSigFigs = null;
+  } else {
+    currentSigFigs = n;
+  }
+
   document.querySelectorAll('.sigfig-btn').forEach(btn => {
-    btn.classList.toggle('sigfig-active', btn.textContent == n);
+    btn.classList.toggle('sigfig-active', btn.textContent == n && currentSigFigs === n);
   });
   calculate();
 }
+
   // Splits something like '2vf' into ['2', 'v', 'f']
 function splitNumberAndVars(factor) {
   let match = factor.match(/^(\d+)([a-zA-ZμΩ].*)$/);
