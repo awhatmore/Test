@@ -463,40 +463,17 @@ function calculate() {
   let prettyOutput1 = '';
   try {
     let mathInput = insertExplicitMultiplication(input);
+    let result = math.evaluate(mathInput); // EVALUATE
 
-    // FULLY GENERAL PATTERN
-let match = mathInput.match(
-  /^(\d+)((?:\*[a-zA-Z]+)+)\*\(\s*(\d+)\s*\/\s*([a-zA-Z]+)\s*\+\s*(\d+)\s*\)$/
-);
-    if (
-      match &&
-      match[1] === match[3] &&   // Outer and inner numbers equal
-      match[3] === match[5]      // Both numbers inside parens are equal
-    ) {
-      let outer = parseFloat(match[1]);
-      // All variables, concatenated (removes all '*')
-      let vars = match[2].replace(/\*/g, '');
-      let denom = match[4];
-      let combined = outer * outer;
-      prettyOutput1 = `\\(${combined}${vars}\\left(\\frac{1}{${denom}}+1\\right)\\)`;
-    } else {
-      // Default behavior
-      let simplified = math.simplify(mathInput);
-      let latex = simplified.toTex({parenthesis: 'keep'});
-      latex = latex.replace(/(\d+)\s*\\cdot\s*([a-zA-Z]+)/g, '$1$2');
-      latex = latex.replace(/([a-zA-Z])\s*\\cdot\s*([a-zA-Z])/g, '$1$2');
-      prettyOutput1 = `\\(${latex}\\)`;
-    }
-  } catch (e) {
-    prettyOutput1 = `\\(${formatInputForPrettyLatex(input)}\\)`;
-  }
+    // Format result with currentSigFigs
+    let formattedResult =
+      typeof result === "number"
+        ? Number(result).toPrecision(currentSigFigs)
+        : result.toString();
 
-  // Your breakdown/other output logic
-  let breakdownOutput = '';
-  try {
-    breakdownOutput = `\\(${formatInputForPrettyLatex(input)}\\)`;
+    prettyOutput1 = `\\(${formattedResult}\\)`; // Show result as LaTeX
   } catch (e) {
-    breakdownOutput = '';
+    prettyOutput1 = `\\(\\text{Error}\\)`;
   }
 
   let prettyInput = `\\(${formatInputForPrettyLatex(input)}\\)`;
@@ -526,6 +503,7 @@ let match = mathInput.match(
   stepsDiv.innerHTML = steps.join('');
   MathJax.typesetPromise([stepsDiv]);
 }
+
 
 
 
