@@ -175,11 +175,12 @@ function updateUnitOptions() { /* ...unit logic placeholder... */ }
 // Insert * for things like 5y or y5 or )x or x(
 function insertImplicitMultiplication(str) {
   // Number followed by (
-  str = str.replace(/([0-9])/g, '$1*(');
+  str = str.replace(/([0-9])\(/g, '$1*(');
   // ) followed by number, letter, or (
-  str = str.replace(/([0-9a-zA-Z(])/g, ')*$1');
+  str = str.replace(/\)([0-9a-zA-Z(])/g, ')*$1');
   // Letter or variable followed by (, but NOT if function name!
-  str = str.replace(/([a-zA-Z])/g, (match, p1, offset, s) => {
+  str = str.replace(/([a-zA-Z])\(/g, (match, p1, offset, s) => {
+    // If previous char is not a letter, treat as function (f(x)), so don't insert *
     if (offset === 0 || !/[a-zA-Z]/.test(s[offset - 1])) return match; // function call
     return `${p1}*(`;
   });
@@ -344,13 +345,6 @@ function formatInputForPrettyLatex(input, inOuterParens = false) {
   return clean.replace(/\*/g, ' \\cdot ');
 }
 
-
-
-
-
-
-
-
 function calculate() {
   let inputRaw = document.getElementById('input-box').value.trim();
   let expandedVars = expandAdjacentVariables(inputRaw);
@@ -366,9 +360,9 @@ function calculate() {
     let mathInput = insertExplicitMultiplication(input);
 
     // FULLY GENERAL PATTERN
-let match = mathInput.match(
-  /^(\d+)((?:\*[a-zA-Z]+)+)\*\(\s*(\d+)\s*\/\s*([a-zA-Z]+)\s*\+\s*(\d+)\s*\)$/
-);
+    let match = mathInput.match(
+      /^(\d+)((?:\*[a-zA-Z]+)+)\*\(\s*(\d+)\s*\/\s*([a-zA-Z]+)\s*\+\s*(\d+)\s*\)$/
+    );
     if (
       match &&
       match[1] === match[3] &&   // Outer and inner numbers equal
@@ -428,9 +422,6 @@ let match = mathInput.match(
   MathJax.typesetPromise([stepsDiv]);
 }
 
-
-
-
 document.getElementById('copy-latex-btn').onclick = function() {
   let stepsDiv = document.getElementById('steps-math-output');
   if (!stepsDiv.textContent) return;
@@ -441,22 +432,22 @@ document.getElementById('copy-latex-btn').onclick = function() {
       setTimeout(() => btn.textContent = '📋', 800);
     });
 };
+
+// Enable/disable keyboard based on input focus
 window.onload = function() {
   calculate();
   updateUnitOptions && updateUnitOptions();
-};
+
   const inputBox = document.getElementById('input-box');
-
-// Show keyboard when user taps input box
-inputBox.addEventListener('focus', function () {
-  inputBox.removeAttribute('readonly');
-});
-
-// Hide keyboard after leaving input box (small delay for button clicks)
-inputBox.addEventListener('blur', function () {
-  setTimeout(() => inputBox.setAttribute('readonly', true), 100);
-});
+  // Show keyboard when user taps input box
+  inputBox.addEventListener('focus', function () {
+    inputBox.removeAttribute('readonly');
+  });
+  // Hide keyboard after leaving input box (small delay for button clicks)
+  inputBox.addEventListener('blur', function () {
+    setTimeout(() => inputBox.setAttribute('readonly', true), 100);
+  });
+};
 </script>
 </body>
 </html>
-
