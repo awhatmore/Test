@@ -463,10 +463,28 @@ function calculate() {
   let expandedVars = expandAdjacentVariables(inputRaw);
   let input = insertImplicitMultiplication(expandedVars);
   let stepsDiv = document.getElementById('steps-math-output');
-  if (!input) {
-    stepsDiv.innerHTML = '';
-    return;
-  }
+if (!input) {
+  // When input is empty, keep a blank row so the height stays the same
+  stepsDiv.innerHTML = `
+    <div class="steps-eq-row">
+      <span class="steps-side">&nbsp;</span>
+      <span class="eq-label">&nbsp;</span>
+      <span class="steps-side right">&nbsp;</span>
+    </div>
+    <div class="steps-eq-row">
+      <span class="steps-side">&nbsp;</span>
+      <span class="eq-label">&nbsp;</span>
+      <span class="steps-side right">&nbsp;</span>
+    </div>
+    <div class="steps-eq-row">
+      <span class="steps-side">&nbsp;</span>
+      <span class="eq-label">&nbsp;</span>
+      <span class="steps-side right">&nbsp;</span>
+    </div>
+  `;
+  return;
+}
+
 
   let prettyOutput1 = '';
   try {
