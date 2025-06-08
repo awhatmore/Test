@@ -1,64 +1,133 @@
-<div class="ti-calc">
-  <input id="input-box" readonly placeholder="Enter calculation" />
-  <div class="ti-row">
-    <button>2nd</button> <button>MODE</button> <button>DEL</button> <button>ON</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Super TI Calculator UI</title>
+  <style>
+    body {
+      background: #10161a;
+      color: #fff;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0; padding: 2rem;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .calc-title { font-size: 2em; margin-bottom: 0.7em; }
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 80px);
+      gap: 10px;
+      margin: 0 auto;
+      background: #181d23;
+      padding: 1.3em;
+      border-radius: 1.2em;
+      box-shadow: 0 2px 24px #000a;
+    }
+    .calc-row {
+      display: contents;
+    }
+    .calc-btn {
+      font-size: 1.3em;
+      min-width: 80px; min-height: 70px;
+      background: #222;
+      border: none; border-radius: 0.5em;
+      color: #eee;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.12s;
+      box-shadow: 0 2px 8px #0002;
+    }
+    .calc-btn:active { background: #353f50; }
+    .btn-2nd { background: #35eb5c; color: #222; font-weight: bold; }
+    .btn-3rd { background: #47b9ff; color: #222; font-weight: bold; }
+    .btn-on { background: #ffe066; color: #111; font-weight: bold; }
+    .btn-off { background: #ee6666; color: #fff; }
+    .btn-op, .btn-func { background: #181a1f; }
+    .btn-num { background: #333; color: #fff; }
+    .wide { grid-column: span 2; }
+    .calc-btn[disabled] { opacity: 0.5; pointer-events: none; }
+    @media (max-width: 650px) {
+      .calc-grid { grid-template-columns: repeat(7, 1fr); }
+      .calc-btn { min-width: 0; font-size: 1.05em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="calc-title">TI-30Xa Inspired Calculator</div>
+  <div class="calc-grid">
+    <!-- ON/C Row -->
+    <button class="calc-btn btn-on wide" style="grid-column: 1 / span 7;">ON/C</button>
+
+    <!-- Row 1 -->
+    <button class="calc-btn btn-2nd">2nd</button>
+    <button class="calc-btn btn-3rd">3rd</button>
+    <button class="calc-btn btn-func">DRG</button>
+    <button class="calc-btn btn-func">LOG</button>
+    <button class="calc-btn btn-func">LN</button>
+    <button class="calc-btn btn-func">eˣ</button>
+    <button class="calc-btn btn-off">OFF</button>
+
+    <!-- Row 2 -->
+    <button class="calc-btn btn-func">x!</button>
+    <button class="calc-btn btn-func">HYP</button>
+    <button class="calc-btn btn-func">SIN</button>
+    <button class="calc-btn btn-func">COS</button>
+    <button class="calc-btn btn-func">TAN</button>
+    <button class="calc-btn btn-func">yˣ</button>
+    <button class="calc-btn btn-func">√x</button>
+
+    <!-- Row 3 -->
+    <button class="calc-btn btn-func">%</button>
+    <button class="calc-btn btn-func">π</button>
+    <button class="calc-btn btn-func">1/x</button>
+    <button class="calc-btn btn-func">x²</button>
+    <button class="calc-btn btn-func">%</button>
+    <button class="calc-btn btn-func">(</button>
+    <button class="calc-btn btn-func">)</button>
+
+    <!-- Row 4 -->
+    <button class="calc-btn btn-func">SCI</button>
+    <button class="calc-btn btn-func">Σ+</button>
+    <button class="calc-btn btn-func">EE</button>
+    <button class="calc-btn btn-func">(-)</button>
+    <button class="calc-btn btn-func">nCr</button>
+    <button class="calc-btn btn-func">nPr</button>
+    <button class="calc-btn btn-func">,</button>
+
+    <!-- Row 5 -->
+    <button class="calc-btn btn-func">FLO</button>
+    <button class="calc-btn btn-func">STO</button>
+    <button class="calc-btn btn-num">7</button>
+    <button class="calc-btn btn-num">8</button>
+    <button class="calc-btn btn-num">9</button>
+    <button class="calc-btn btn-op">÷</button>
+    <button class="calc-btn btn-func">M</button>
+
+    <!-- Row 6 -->
+    <button class="calc-btn btn-func">CSR</button>
+    <button class="calc-btn btn-func">RCL</button>
+    <button class="calc-btn btn-num">4</button>
+    <button class="calc-btn btn-num">5</button>
+    <button class="calc-btn btn-num">6</button>
+    <button class="calc-btn btn-op">×</button>
+    <button class="calc-btn btn-func">FLO</button>
+
+    <!-- Row 7 -->
+    <button class="calc-btn btn-func">nCr</button>
+    <button class="calc-btn btn-func">a b/c</button>
+    <button class="calc-btn btn-num">1</button>
+    <button class="calc-btn btn-num">2</button>
+    <button class="calc-btn btn-num">3</button>
+    <button class="calc-btn btn-op">−</button>
+    <button class="calc-btn btn-func">SCI</button>
+
+    <!-- Row 8 -->
+    <button class="calc-btn btn-func">nPr</button>
+    <button class="calc-btn btn-num">0</button>
+    <button class="calc-btn btn-num">.</button>
+    <button class="calc-btn btn-op">+</button>
+    <button class="calc-btn btn-op">=</button>
+    <button class="calc-btn btn-func">DMS→D</button>
+    <button class="calc-btn btn-func">DD→DMS</button>
   </div>
-  <div class="ti-row">
-    <button onclick="appendCalc('7')">7</button>
-    <button onclick="appendCalc('8')">8</button>
-    <button onclick="appendCalc('9')">9</button>
-    <button onclick="appendCalc(' / ')">÷</button>
-  </div>
-  <div class="ti-row">
-    <button onclick="appendCalc('4')">4</button>
-    <button onclick="appendCalc('5')">5</button>
-    <button onclick="appendCalc('6')">6</button>
-    <button onclick="appendCalc(' * ')">×</button>
-  </div>
-  <div class="ti-row">
-    <button onclick="appendCalc('1')">1</button>
-    <button onclick="appendCalc('2')">2</button>
-    <button onclick="appendCalc('3')">3</button>
-    <button onclick="appendCalc(' - ')">−</button>
-  </div>
-  <div class="ti-row">
-    <button onclick="appendCalc('0')">0</button>
-    <button onclick="appendCalc('.')">.</button>
-    <button onclick="appendCalc('EXP')">EXP</button>
-    <button onclick="appendCalc(' + ')">+</button>
-  </div>
-  <div class="ti-row">
-    <button onclick="appendCalc('(')">(</button>
-    <button onclick="appendCalc(')')">)</button>
-    <button onclick="appendCalc('^')">^</button>
-    <button onclick="calculate()">=</button>
-  </div>
-  <div class="ti-row">
-    <button onclick="appendCalc('sin(')">SIN</button>
-    <button onclick="appendCalc('cos(')">COS</button>
-    <button onclick="appendCalc('tan(')">TAN</button>
-    <button onclick="appendCalc('pi')">π</button>
-  </div>
-  <div class="ti-row">
-    <button onclick="appendCalc('log(')">LOG</button>
-    <button onclick="appendCalc('ln(')">LN</button>
-    <button onclick="appendCalc('E')">EE</button>
-    <button onclick="appendCalc('STO')">STO</button>
-  </div>
-  <div class="ti-row">
-    <button onclick="appendCalc('RCL')">RCL</button>
-    <button onclick="appendCalc('SCI')">SCI</button>
-    <button onclick="appendCalc('ENG')">ENG</button>
-    <button onclick="appendCalc('DRG')">DRG</button>
-  </div>
-  <div class="ti-row physics-row">
-    <button onclick="appendCalc('M')">M</button>
-    <button onclick="appendCalc('L')">L</button>
-    <button onclick="appendCalc('T')">T</button>
-    <button onclick="appendCalc('F')">F</button>
-    <button onclick="appendCalc('a_c')">a<sub>c</sub></button>
-    <button onclick="appendCalc('v')">v</button>
-    <button onclick="appendCalc('J')">J</button>
-    <button onclick="appendCalc('g')">g</button>
-  </div>
-</div>
+</body>
+</html>
