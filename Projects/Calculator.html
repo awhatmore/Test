@@ -44,6 +44,8 @@
   </div>
   <div style="display:flex;align-items:center;margin-bottom:0.7em;">
     <button id="copy-latex-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">📋</button>
+    <button id="copy-output1-btn" style="margin-left:8px;padding:4px 8px;font-size:1em;cursor:pointer;">Copy Output 1</button>
+
   </div>
   <input id="input-box"
   readonly
@@ -519,6 +521,8 @@ try {
   prettyOutput1 = `\\(\\text{Error}\\)`;
 }
 
+console.log("DEBUG Output 1 (prettyOutput1):", prettyOutput1);
+window.lastOutput1 = prettyOutput1;
 
   let prettyInput = `\\(${formatInputForPrettyLatex(input)}\\)`;
   let outputs = [
@@ -551,7 +555,10 @@ try {
 
 
 
-
+document.getElementById('copy-output1-btn').onclick = function() {
+  // Use the last calculated value
+  navigator.clipboard.writeText(window.lastOutput1 || "No Output 1 yet");
+};
 document.getElementById('copy-latex-btn').onclick = function() {
   let stepsDiv = document.getElementById('steps-math-output');
   if (!stepsDiv.textContent) return;
