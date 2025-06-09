@@ -502,18 +502,15 @@ let prettyOutput1 = '';
 try {
   let mathInput = insertExplicitMultiplication(input);
   if (/[a-zA-Z]/.test(mathInput)) {
-    // Add flatten rules to always get a flat fraction
     const flattenRules = [
-      'n1 / (n2 / d2) -> (n1 * d2) / n2',
-      '(n1 / d1) / n2 -> n1 / (d1 * n2)',
-      'n1 * (n2 / d2) -> (n1 * n2) / d2'
+      'a / (b / c) -> (a * c) / b',
+      '(a / b) / c -> a / (b * c)',
+      'a * (b / c) -> (a * b) / c'
     ];
-    // Flatten deeply, just in case:
     let simplifiedNode = math.simplify(mathInput, flattenRules);
     let flattened = math.simplify(simplifiedNode.toString(), flattenRules);
     flattened = math.simplify(flattened.toString(), flattenRules);
     prettyOutput1 = `\\(${flattened.toTex()}\\)`;
-
   } else {
     // Numeric: as before
     let result = math.evaluate(mathInput);
