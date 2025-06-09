@@ -505,7 +505,11 @@ try {
     // Add flatten rules to always get a flat fraction
     const flattenRules = [
       'n1 / (n2 / d2) -> (n1 * d2) / n2',
-      '(n1 / d1) / n2 -> n1 / (d1 * n2)'
+      '(n1 / d1) / n2 -> n1 / (d1 * n2)',
+      '(n1 * n2) / d1 -> (n1 / d1) * (n2 / d1)',
+      '(n1 / d1) * (n2 / d1) -> (n1 * n2) / (d1 * d1)',
+      '(n1 / d1) * n2 -> (n1 * n2) / d1',
+      'n1 * (n2 / d2) -> (n1 * n2) / d2'
     ];
     let simplifiedNode = math.simplify(mathInput, flattenRules);
     let flattened = math.simplify(simplifiedNode.toString(), flattenRules);
