@@ -494,16 +494,15 @@ if (!input) {
 }
 
 
-  let prettyOutput1 = '';
+ let prettyOutput1 = '';
 try {
   let mathInput = insertExplicitMultiplication(input);
-  // If input contains any variable letters, just pretty-print it as-is
   if (/[a-zA-Z]/.test(mathInput)) {
-    prettyOutput1 = `\\(${formatInputForPrettyLatex(input)}\\)`;
+    // Instead of just pretty-printing, try simplifying first:
+    let simplified = math.simplify(mathInput).toString();
+    prettyOutput1 = `\\(${formatInputForPrettyLatex(simplified)}\\)`;
   } else {
-    let result = math.evaluate(mathInput); // EVALUATE only if no variables
-
-    // Format result with currentSigFigs
+    let result = math.evaluate(mathInput); // Evaluate only if no variables
     let formattedResult;
     if (typeof result === "number") {
       if (typeof currentSigFigs === 'number' && currentSigFigs > 0) {
