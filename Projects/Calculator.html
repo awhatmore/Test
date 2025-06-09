@@ -498,14 +498,13 @@ if (!input) {
   //(5x/a)*(3y/2z)
   //Output 1
   //\frac{15 x y}{2 a z}
-let prettyOutput1 = '';
 try {
   let mathInput = insertExplicitMultiplication(input);
   if (/[a-zA-Z]/.test(mathInput)) {
     const flattenRules = [
-      'a / (b / c) -> (a * c) / b',
-      '(a / b) / c -> a / (b * c)',
-      'a * (b / c) -> (a * b) / c'
+      'α / (β / γ) -> (α * γ) / β',
+      '(α / β) / γ -> α / (β * γ)',
+      'α * (β / γ) -> (α * β) / γ'
     ];
     let simplifiedNode = math.simplify(mathInput, flattenRules);
     let flattened = math.simplify(simplifiedNode.toString(), flattenRules);
