@@ -502,13 +502,17 @@ let prettyOutput1 = '';
 try {
   let mathInput = insertExplicitMultiplication(input);
   if (/[a-zA-Z]/.test(mathInput)) {
-    // FULLY FLATTEN symbolic output
-    let simplifiedNode = math.simplify(mathInput);
-    let flattened = math.simplify(simplifiedNode.toString());
+    // Add flatten rules to always get a flat fraction
+    const flattenRules = [
+      'n1 / (n2 / d2) -> (n1 * d2) / n2',
+      '(n1 / d1) / n2 -> n1 / (d1 * n2)'
+    ];
+    let simplifiedNode = math.simplify(mathInput, flattenRules);
+    let flattened = math.simplify(simplifiedNode.toString(), flattenRules);
     prettyOutput1 = `\\(${flattened.toTex()}\\)`;
   } else {
-    let result = math.evaluate(mathInput); // Evaluate only if no variables
-
+    // Numeric: as before
+    let result = math.evaluate(mathInput);
     let formattedResult;
     if (typeof result === "number") {
       if (typeof currentSigFigs === 'number' && currentSigFigs > 0) {
@@ -524,6 +528,7 @@ try {
 } catch (e) {
   prettyOutput1 = `\\(\\text{Error}\\)`;
 }
+
 
 
 
