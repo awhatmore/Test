@@ -494,17 +494,19 @@ if (!input) {
   `;
   return;
 }
-
-
+  //Input
+  //(5x/a)*(3y/2z)
+  //Output 1
+  //\frac{15 x y}{2 a z}
  let prettyOutput1 = '';
 try {
   let mathInput = insertExplicitMultiplication(input);
   // Try to simplify *all* symbolic expressions
   if (/[a-zA-Z]/.test(mathInput)) {
     // math.simplify auto-flattens nested fractions, handles all canonical forms
-    let simplified = math.simplify(mathInput).toString();
-    // Optionally, format for pretty LaTeX
-    prettyOutput1 = `\\(${formatInputForPrettyLatex(simplified)}\\)`;
+    let simplifiedNode = math.simplify(mathInput);         // returns a Node, not just string!
+    prettyOutput1 = `\\(${simplifiedNode.toTex()}\\)`;     // toTex() generates the canonical LaTeX
+
   } else {
     // Numeric evaluation for plain numbers
     let result = math.evaluate(mathInput);
