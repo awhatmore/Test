@@ -501,17 +501,10 @@ if (!input) {
 try {
   let mathInput = insertExplicitMultiplication(input);
   if (/[a-zA-Z]/.test(mathInput)) {
-    const flattenRules = [
-      'α / (β / γ) -> (α * γ) / β',
-      '(α / β) / γ -> α / (β * γ)',
-      'α * (β / γ) -> (α * β) / γ'
-    ];
-    let simplifiedNode = math.simplify(mathInput, flattenRules);
-    let flattened = math.simplify(simplifiedNode.toString(), flattenRules);
-    flattened = math.simplify(flattened.toString(), flattenRules);
-    prettyOutput1 = `\\(${flattened.toTex()}\\)`;
+    let simplified = math.simplify(mathInput);
+    simplified = math.simplify(simplified.toString()); // sometimes a second pass helps!
+    prettyOutput1 = `\\(${simplified.toTex()}\\)`;
   } else {
-    // Numeric: as before
     let result = math.evaluate(mathInput);
     let formattedResult;
     if (typeof result === "number") {
@@ -529,6 +522,7 @@ try {
   prettyOutput1 = `\\(\\text{Error}\\)`;
   console.error("Calculation Error:", e);
 }
+
 
 
 
