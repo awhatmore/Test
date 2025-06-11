@@ -196,7 +196,34 @@ window.onload = function() {
   calculate();
   updateUnitOptions && updateUnitOptions();
 };
+function parenthesizeDenominator(expr) {
+  // Find all / that are not followed by (
+  let out = '';
+  let i = 0;
+  while (i < expr.length) {
+    if (expr[i] === '/') {
+      out += '/(';
+      i++;
+      // Add everything after / up to next top-level operator
+      let depth = 0;
+      while (i < expr.length) {
+        if (expr[i] === '(') depth++;
+        if (expr[i] === ')') depth--;
+        // Stop at next top-level operator (except ^)
+        if ((expr[i] === '+' || expr[i] === '-' || expr[i] === '*' || expr[i] === '/') && depth === 0) break;
+        out += expr[i];
+        i++;
+      }
+      out += ')';
+    } else {
+      out += expr[i];
+      i++;
+    }
+  }
+  return out;
+}
 
+  
 function appendCalc(val) {
   const box = document.getElementById('input-box');
   // Do NOT set readonly here!
@@ -478,6 +505,8 @@ function calculate() {
   console.log("[3] input after implicit multiplication:", input);
 
   let mathInput = insertExplicitMultiplication(input);
+  mathInput = parenthesizeDenominator(mathInput); // <-- Add this line here!
+
   console.log("[4] mathInput after explicit multiplication:", mathInput);
   
   // Smartly wrap denominators
