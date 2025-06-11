@@ -479,11 +479,11 @@ function calculate() {
 
   let mathInput = insertExplicitMultiplication(input);
   console.log("[4] mathInput after explicit multiplication:", mathInput);
-
-  // Now patch mathInput!
-  mathInput = mathInput.replace(/\/([a-zA-Z][a-zA-Z0-9]*)/g, '/($1)');
+  
+  // Smartly wrap denominators
+  mathInput = mathInput.replace(/\/([0-9]*[a-zA-Z]+(\*[a-zA-Z0-9]+)+)/g, '/($1)');
   mathInput = mathInput.replace(/\/([0-9]+[a-zA-Z]+)/g, '/($1)');
-  mathInput = mathInput.replace(/\/([0-9]+)/g, '/($1)');
+  mathInput = mathInput.replace(/\/([a-zA-Z]+)/g, '/($1)');
   console.log("[4.1] mathInput after denominator parenthesis patch:", mathInput);
 
   let stepsDiv = document.getElementById('steps-math-output');
