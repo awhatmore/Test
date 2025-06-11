@@ -473,68 +473,64 @@ function calculate() {
   let expandedVars = expandAdjacentVariables(inputRaw);
   let input = insertImplicitMultiplication(expandedVars);
   let stepsDiv = document.getElementById('steps-math-output');
-if (!input) {
-  // When input is empty, keep a blank row so the height stays the same
-  stepsDiv.innerHTML = `
-    <div class="steps-eq-row">
-      <span class="steps-side">&nbsp;</span>
-      <span class="eq-label">&nbsp;</span>
-      <span class="steps-side right">&nbsp;</span>
-    </div>
-    <div class="steps-eq-row">
-      <span class="steps-side">&nbsp;</span>
-      <span class="eq-label">&nbsp;</span>
-      <span class="steps-side right">&nbsp;</span>
-    </div>
-    <div class="steps-eq-row">
-      <span class="steps-side">&nbsp;</span>
-      <span class="eq-label">&nbsp;</span>
-      <span class="steps-side right">&nbsp;</span>
-    </div>
-  `;
-  return;
-}
-  //Input
-  //(5x/a)*(3y/2z)
-  //Output 1
-  //\frac{15 x y}{2 a z}
-let prettyOutput1 = '';
-try {
-  let mathInput = insertExplicitMultiplication(input);
+  let prettyOutput1 = '';  // <--- Move this UP here!
 
-  if (/[a-zA-Z]/.test(mathInput)) {
-    let simplified = math.simplify(mathInput);
-    simplified = math.simplify(simplified.toString());
-    let tex = simplified.toTex();              // <-- always declared here
-    tex = tex.replace(/\\cdot\s*/g, '');       // <-- remove all \cdot (dots)
-    prettyOutput1 = `\\(${tex}\\)`;
-  } else {
-    let result = math.evaluate(mathInput);
-    let formattedResult;
-    if (typeof result === "number") {
-      if (typeof currentSigFigs === 'number' && currentSigFigs > 0) {
-        formattedResult = Number(result).toPrecision(currentSigFigs);
+  if (!input) {
+    // When input is empty, keep a blank row so the height stays the same
+    stepsDiv.innerHTML = `
+      <div class="steps-eq-row">
+        <span class="steps-side">&nbsp;</span>
+        <span class="eq-label">&nbsp;</span>
+        <span class="steps-side right">&nbsp;</span>
+      </div>
+      <div class="steps-eq-row">
+        <span class="steps-side">&nbsp;</span>
+        <span class="eq-label">&nbsp;</span>
+        <span class="steps-side right">&nbsp;</span>
+      </div>
+      <div class="steps-eq-row">
+        <span class="steps-side">&nbsp;</span>
+        <span class="eq-label">&nbsp;</span>
+        <span class="steps-side right">&nbsp;</span>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    let mathInput = insertExplicitMultiplication(input);
+
+    console.log("Input to math.js:", mathInput);
+
+    if (/[a-zA-Z]/.test(mathInput)) {
+      let simplified = math.simplify(mathInput);
+      simplified = math.simplify(simplified.toString());
+      console.log("After simplification:", simplified.toString());
+      let tex = simplified.toTex();
+      console.log("LaTeX output:", tex);
+      tex = tex.replace(/\\cdot\s*/g, '');
+      prettyOutput1 = `\\(${tex}\\)`;
+    } else {
+      let result = math.evaluate(mathInput);
+      let formattedResult;
+      if (typeof result === "number") {
+        if (typeof currentSigFigs === 'number' && currentSigFigs > 0) {
+          formattedResult = Number(result).toPrecision(currentSigFigs);
+        } else {
+          formattedResult = result.toString();
+        }
       } else {
         formattedResult = result.toString();
       }
-    } else {
-      formattedResult = result.toString();
+      prettyOutput1 = `\\(${formattedResult}\\)`;
     }
-    prettyOutput1 = `\\(${formattedResult}\\)`;
+  } catch (e) {
+    prettyOutput1 = `\\(\\text{Error}\\)`;
+    console.error("Calculation Error:", e);
   }
-} catch (e) {
-  prettyOutput1 = `\\(\\text{Error}\\)`;
-  console.error("Calculation Error:", e);
-}
 
-
-
-
-
-
-
-console.log("DEBUG Output 1 (prettyOutput1):", prettyOutput1);
-window.lastOutput1 = prettyOutput1;
+  console.log("DEBUG Output 1 (prettyOutput1):", prettyOutput1);
+  window.lastOutput1 = prettyOutput1;
 
   let prettyInput = `\\(${formatInputForPrettyLatex(input)}\\)`;
   let outputs = [
@@ -563,6 +559,7 @@ window.lastOutput1 = prettyOutput1;
   stepsDiv.innerHTML = steps.join('');
   MathJax.typesetPromise([stepsDiv]);
 }
+
 
 
 
