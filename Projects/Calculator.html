@@ -502,8 +502,11 @@ try {
   let mathInput = insertExplicitMultiplication(input);
   if (/[a-zA-Z]/.test(mathInput)) {
     let simplified = math.simplify(mathInput);
-    simplified = math.simplify(simplified.toString());
-    let tex = simplified.toTex();
+    math.simplify('(5*x/z)*(3*y/(2*z))').toString()
+    // Should give '15*x*y/(2*z^2)'
+    math.simplify('(5*x/z)*(3*y/(2*z))').toTex()
+    // Should give the correct LaTeX: '\frac{15 x y}{2 z^{2}}'
+
     tex = tex.replace(/\\cdot\s*/g, ''); // Strip ALL dots
     prettyOutput1 = `\\(${tex}\\)`;
   } else {
