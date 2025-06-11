@@ -499,67 +499,31 @@ function formatInputForPrettyLatex(input, inOuterParens = false) {
 
 function calculate() {
   let inputRaw = document.getElementById('input-box').value.trim();
-  console.log("[1] inputRaw:", inputRaw);
 
+  // 1. Expand variables if needed (y y y → y^3)
   let expandedVars = expandAdjacentVariables(inputRaw);
-  console.log("[2] expandedVars:", expandedVars);
 
+  // 2. Insert implicit * (5x → 5*x, xy → x*y, etc)
   let input = insertImplicitMultiplication(expandedVars);
-  console.log("[3] input after implicit multiplication:", input);
 
-let mathInput = insertExplicitMultiplication(input);
-mathInput = parenthesizeDenominator(mathInput);
+  // 3. Insert explicit * between letters and numbers
+  let mathInput = insertExplicitMultiplication(input);
 
-console.log("[4] mathInput after parenthesizeDenominator:", mathInput);
+  // 4. Parenthesize denominator, so (5x/2z) → (5*x/(2*z))
+  mathInput = parenthesizeDenominator(mathInput);
 
-
+  // 5. Send this to math.js
   let stepsDiv = document.getElementById('steps-math-output');
   let prettyOutput1 = '';
 
-  if (!input) {
-    stepsDiv.innerHTML = `<div class="steps-eq-row">
-      <span class="steps-side">&nbsp;</span>
-      <span class="eq-label">&nbsp;</span>
-      <span class="steps-side right">&nbsp;</span>
-    </div>
-    <div class="steps-eq-row">
-      <span class="steps-side">&nbsp;</span>
-      <span class="eq-label">&nbsp;</span>
-      <span class="steps-side right">&nbsp;</span>
-    </div>
-    <div class="steps-eq-row">
-      <span class="steps-side">&nbsp;</span>
-      <span class="eq-label">&nbsp;</span>
-      <span class="steps-side right">&nbsp;</span>
-    </div>`;
-    return;
-  }
-
   try {
     let node = math.parse(mathInput);
-    console.log("[5] math.js parse node:", node.toString());
 
-    let simplified = math.simplify(node);
-    console.log("[6] simplified node:", simplified.toString());
-
-    let num = simplified.numerator ? simplified.numerator : simplified;
-    let den = simplified.denominator ? simplified.denominator : math.parse('1');
-    console.log("[7] numerator:", num.toString());
-    console.log("[8] denominator:", den.toString());
-
-    let texNum = num.toTex().replace(/\\cdot\s*/g, '');
-    let texDen = den.toTex().replace(/\\cdot\s*/g, '');
-    console.log("[9] tex numerator:", texNum);
-    console.log("[10] tex denominator:", texDen);
-
-    let tex;
-    if (texDen === '1') {
-      tex = texNum;
-    } else {
-      tex = `\\frac{${texNum}}{${texDen}}`;
-    }
+    // DO NOT SIMPLIFY!
+    // let simplified = math.simplify(node); // ← REMOVE THIS LINE
+    // Just display as written:
+    let tex = node.toTex().replace(/\\cdot\s*/g, '');
     prettyOutput1 = `\\(${tex}\\)`;
-    console.log("[11] prettyOutput1:", prettyOutput1);
 
   } catch (e) {
     prettyOutput1 = `\\(\\text{Error}\\)`;
