@@ -469,75 +469,76 @@ function formatInputForPrettyLatex(input, inOuterParens = false) {
 
 function calculate() {
   let inputRaw = document.getElementById('input-box').value.trim();
+  console.log("[1] inputRaw:", inputRaw);
+
   let expandedVars = expandAdjacentVariables(inputRaw);
+  console.log("[2] expandedVars:", expandedVars);
+
   let input = insertImplicitMultiplication(expandedVars);
+  console.log("[3] input after implicit multiplication:", input);
+
+  let mathInput = insertExplicitMultiplication(input);
+  console.log("[4] mathInput after explicit multiplication:", mathInput);
+
   let stepsDiv = document.getElementById('steps-math-output');
-  let prettyOutput1 = '';  // <--- Move this UP here!
+  let prettyOutput1 = '';
 
   if (!input) {
-    // When input is empty, keep a blank row so the height stays the same
-    stepsDiv.innerHTML = `
-      <div class="steps-eq-row">
-        <span class="steps-side">&nbsp;</span>
-        <span class="eq-label">&nbsp;</span>
-        <span class="steps-side right">&nbsp;</span>
-      </div>
-      <div class="steps-eq-row">
-        <span class="steps-side">&nbsp;</span>
-        <span class="eq-label">&nbsp;</span>
-        <span class="steps-side right">&nbsp;</span>
-      </div>
-      <div class="steps-eq-row">
-        <span class="steps-side">&nbsp;</span>
-        <span class="eq-label">&nbsp;</span>
-        <span class="steps-side right">&nbsp;</span>
-      </div>
-    `;
+    stepsDiv.innerHTML = `<div class="steps-eq-row">
+      <span class="steps-side">&nbsp;</span>
+      <span class="eq-label">&nbsp;</span>
+      <span class="steps-side right">&nbsp;</span>
+    </div>
+    <div class="steps-eq-row">
+      <span class="steps-side">&nbsp;</span>
+      <span class="eq-label">&nbsp;</span>
+      <span class="steps-side right">&nbsp;</span>
+    </div>
+    <div class="steps-eq-row">
+      <span class="steps-side">&nbsp;</span>
+      <span class="eq-label">&nbsp;</span>
+      <span class="steps-side right">&nbsp;</span>
+    </div>`;
     return;
   }
 
- try {
-  let mathInput = insertExplicitMultiplication(input);
-
-  // Symbolic output if variables detected
-  if (/[a-zA-Z]/.test(mathInput)) {
-    // Expand the product to make all denominators explicit
+  try {
+    // 1. Parse input as math.js node
     let node = math.parse(mathInput);
-    let expanded = math.simplify(node, [], {expandFractions: true});
+    console.log("[5] math.js parse node:", node.toString());
 
-    // math.simplify with {expandFractions: true} helps flatten things
-    let flat = math.simplify(expanded.toString());
-    let tex = flat.toTex();
+    // 2. Simplify
+    let simplified = math.simplify(node);
+    console.log("[6] simplified node:", simplified.toString());
 
-    // Clean up \cdot and fix formatting
-    tex = tex.replace(/\\cdot\s*/g, '');
+    // 3. Extract numerator/denominator if possible
+    let num = simplified.numerator ? simplified.numerator : simplified;
+    let den = simplified.denominator ? simplified.denominator : math.parse('1');
+    console.log("[7] numerator:", num.toString());
+    console.log("[8] denominator:", den.toString());
 
-    prettyOutput1 = `\\(${tex}\\)`;
-  } else {
-    // Numeric calculation
-    let result = math.evaluate(mathInput);
-    let formattedResult;
-    if (typeof result === "number") {
-      if (typeof currentSigFigs === 'number' && currentSigFigs > 0) {
-        formattedResult = Number(result).toPrecision(currentSigFigs);
-      } else {
-        formattedResult = result.toString();
-      }
+    // 4. ToTex for numerator/denominator
+    let texNum = num.toTex().replace(/\\cdot\s*/g, '');
+    let texDen = den.toTex().replace(/\\cdot\s*/g, '');
+    console.log("[9] tex numerator:", texNum);
+    console.log("[10] tex denominator:", texDen);
+
+    // 5. Build output
+    let tex;
+    if (texDen === '1') {
+      tex = texNum;
     } else {
-      formattedResult = result.toString();
+      tex = `\\frac{${texNum}}{${texDen}}`;
     }
-    prettyOutput1 = `\\(${formattedResult}\\)`;
+    prettyOutput1 = `\\(${tex}\\)`;
+    console.log("[11] prettyOutput1:", prettyOutput1);
+
+  } catch (e) {
+    prettyOutput1 = `\\(\\text{Error}\\)`;
+    console.error("Calculation Error:", e);
   }
-} catch (e) {
-  prettyOutput1 = `\\(\\text{Error}\\)`;
-  console.error("Calculation Error:", e);
-}
 
-
-
-  console.log("DEBUG Output 1 (prettyOutput1):", prettyOutput1);
   window.lastOutput1 = prettyOutput1;
-
   let prettyInput = `\\(${formatInputForPrettyLatex(input)}\\)`;
   let outputs = [
     prettyOutput1,
@@ -546,25 +547,22 @@ function calculate() {
   ];
 
   let steps = [];
-  steps.push(`
-    <div class="steps-eq-row">
+  steps.push(`<div class="steps-eq-row">
       <span class="steps-side">${prettyInput}</span>
       <span class="eq-label">=</span>
       <span class="steps-side right"><span class="steps-eq-latex">${outputs[0]}</span></span>
-    </div>
-  `);
+    </div>`);
   for (let i = 1; i < outputs.length; i++) {
-    steps.push(`
-      <div class="steps-eq-row">
+    steps.push(`<div class="steps-eq-row">
         <span class="steps-side">&nbsp;</span>
         <span class="eq-label">=</span>
         <span class="steps-side right"><span class="steps-eq-latex">${outputs[i]}</span></span>
-      </div>
-    `);
+      </div>`);
   }
   stepsDiv.innerHTML = steps.join('');
   MathJax.typesetPromise([stepsDiv]);
 }
+
 
 
 
