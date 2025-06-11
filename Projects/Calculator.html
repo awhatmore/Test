@@ -497,37 +497,33 @@ function calculate() {
     return;
   }
 
-  try {
-    let mathInput = insertExplicitMultiplication(input);
+ try {
+  let mathInput = insertExplicitMultiplication(input);
+  let node = math.simplify(mathInput);
 
-    console.log("Input to math.js:", mathInput);
+  // Always force as a single fraction:
+  let num = node.numerator ? node.numerator : node;
+  let den = node.denominator ? node.denominator : math.parse('1');
+  // mathjs sometimes doesn't create .numerator/.denominator if not fraction, so fallback
 
-    if (/[a-zA-Z]/.test(mathInput)) {
-      let simplified = math.simplify(mathInput);
-      simplified = math.simplify(simplified.toString());
-      console.log("After simplification:", simplified.toString());
-      let tex = simplified.toTex();
-      console.log("LaTeX output:", tex);
-      tex = tex.replace(/\\cdot\s*/g, '');
-      prettyOutput1 = `\\(${tex}\\)`;
-    } else {
-      let result = math.evaluate(mathInput);
-      let formattedResult;
-      if (typeof result === "number") {
-        if (typeof currentSigFigs === 'number' && currentSigFigs > 0) {
-          formattedResult = Number(result).toPrecision(currentSigFigs);
-        } else {
-          formattedResult = result.toString();
-        }
-      } else {
-        formattedResult = result.toString();
-      }
-      prettyOutput1 = `\\(${formattedResult}\\)`;
-    }
-  } catch (e) {
-    prettyOutput1 = `\\(\\text{Error}\\)`;
-    console.error("Calculation Error:", e);
+  // Clean up \cdot for aesthetics
+  let texNum = num.toTex().replace(/\\cdot\s*/g, '');
+  let texDen = den.toTex().replace(/\\cdot\s*/g, '');
+
+  // If denominator is 1, show just numerator
+  let tex;
+  if (texDen === '1') {
+    tex = texNum;
+  } else {
+    tex = `\\frac{${texNum}}{${texDen}}`;
   }
+
+  prettyOutput1 = `\\(${tex}\\)`;
+} catch (e) {
+  prettyOutput1 = `\\(\\text{Error}\\)`;
+  console.error("Calculation Error:", e);
+}
+
 
   console.log("DEBUG Output 1 (prettyOutput1):", prettyOutput1);
   window.lastOutput1 = prettyOutput1;
