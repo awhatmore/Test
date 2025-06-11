@@ -251,10 +251,9 @@ function insertImplicitMultiplication(str) {
   return str;
 }
 function insertExplicitMultiplication(expr) {
-  // Insert * between a number and a letter, and between two letters
   return expr
     .replace(/([0-9])([a-zA-Z])/g, '$1*$2')
-   // .replace(/([a-zA-Z])([a-zA-Z])/g, '$1*$2');
+    .replace(/([a-zA-Z])([a-zA-Z])/g, '$1*$2');
 }
 
 
