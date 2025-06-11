@@ -480,6 +480,12 @@ function calculate() {
   let mathInput = insertExplicitMultiplication(input);
   console.log("[4] mathInput after explicit multiplication:", mathInput);
 
+  // Now patch mathInput!
+  mathInput = mathInput.replace(/\/([a-zA-Z][a-zA-Z0-9]*)/g, '/($1)');
+  mathInput = mathInput.replace(/\/([0-9]+[a-zA-Z]+)/g, '/($1)');
+  mathInput = mathInput.replace(/\/([0-9]+)/g, '/($1)');
+  console.log("[4.1] mathInput after denominator parenthesis patch:", mathInput);
+
   let stepsDiv = document.getElementById('steps-math-output');
   let prettyOutput1 = '';
 
@@ -503,27 +509,22 @@ function calculate() {
   }
 
   try {
-    // 1. Parse input as math.js node
     let node = math.parse(mathInput);
     console.log("[5] math.js parse node:", node.toString());
 
-    // 2. Simplify
     let simplified = math.simplify(node);
     console.log("[6] simplified node:", simplified.toString());
 
-    // 3. Extract numerator/denominator if possible
     let num = simplified.numerator ? simplified.numerator : simplified;
     let den = simplified.denominator ? simplified.denominator : math.parse('1');
     console.log("[7] numerator:", num.toString());
     console.log("[8] denominator:", den.toString());
 
-    // 4. ToTex for numerator/denominator
     let texNum = num.toTex().replace(/\\cdot\s*/g, '');
     let texDen = den.toTex().replace(/\\cdot\s*/g, '');
     console.log("[9] tex numerator:", texNum);
     console.log("[10] tex denominator:", texDen);
 
-    // 5. Build output
     let tex;
     if (texDen === '1') {
       tex = texNum;
@@ -562,6 +563,7 @@ function calculate() {
   stepsDiv.innerHTML = steps.join('');
   MathJax.typesetPromise([stepsDiv]);
 }
+
 
 
 
