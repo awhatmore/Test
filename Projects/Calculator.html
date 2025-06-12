@@ -500,42 +500,39 @@ function formatInputForPrettyLatex(input, inOuterParens = false) {
 function calculate() {
   let inputRaw = document.getElementById('input-box').value.trim();
 
-  // 1. Expand variables if needed (y y y → y^3)
+  // 1. Expand variables if needed (e.g., yyy → y^3)
   let expandedVars = expandAdjacentVariables(inputRaw);
 
-  // 2. Insert implicit * (5x → 5*x, xy → x*y, etc)
+  // 2. Insert implicit * (e.g., 5x → 5*x, xy → x*y)
   let input = insertImplicitMultiplication(expandedVars);
 
   // 3. Insert explicit * between letters and numbers
   let mathInput = insertExplicitMultiplication(input);
 
-  // 4. Parenthesize denominator, so (5x/2z) → (5*x/(2*z))
+  // 4. Parenthesize denominator for correct order of operations
   mathInput = parenthesizeDenominator(mathInput);
 
-  // 5. Send this to math.js
+  // 5. Parse and display
   let stepsDiv = document.getElementById('steps-math-output');
   let prettyOutput1 = '';
-
   try {
     let node = math.parse(mathInput);
 
-    // DO NOT SIMPLIFY!
-    // let simplified = math.simplify(node); // ← REMOVE THIS LINE
-    // Just display as written:
-    let tex = node.toTex().replace(/\\cdot\s*/g, '');
-    prettyOutput1 = `\\(${tex}\\)`;
+    // **DO NOT SIMPLIFY!** Just display as written
+    let tex = node.toTex();  // <<-- Don't remove \cdot!
+    prettyOutput1 = `\${tex}\`;
 
   } catch (e) {
-    prettyOutput1 = `\\(\\text{Error}\\)`;
+    prettyOutput1 = `\\\text{Error}\`;
     console.error("Calculation Error:", e);
   }
 
   window.lastOutput1 = prettyOutput1;
-  let prettyInput = `\\(${formatInputForPrettyLatex(input)}\\)`;
+  let prettyInput = `\${formatInputForPrettyLatex(input)}\`;
   let outputs = [
     prettyOutput1,
-    '\\(\\text{Output 2}\\)',
-    '\\(\\text{Output 3}\\)'
+    '\\\text{Output 2}\',
+    '\\\text{Output 3}\'
   ];
 
   let steps = [];
