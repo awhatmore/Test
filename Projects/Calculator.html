@@ -121,6 +121,7 @@ function parenthesizeDenominator(expr) {
 }
 function calculate() {
   let inputRaw = document.getElementById('input-box').value.trim();
+
   let expandedVars = expandAdjacentVariables(inputRaw);
   let input = insertImplicitMultiplication(expandedVars);
   let mathInput = insertExplicitMultiplication(input);
@@ -128,17 +129,30 @@ function calculate() {
 
   let stepsDiv = document.getElementById('steps-math-output');
   let prettyOutput1 = '';
+
+  // Detect if purely numeric
+  let isNumeric = /^[\d\s\+\-\*\/\.]+$/.test(mathInput);
+
   try {
     let node = math.parse(mathInput);
-    let tex = node.toTex(); // keeps multiplication as \cdot
-    prettyOutput1 = `\${tex}\`;
+
+    if (isNumeric) {
+      // Numeric only, evaluate and show the result
+      let value = math.evaluate(mathInput);
+      prettyOutput1 = `\${value}\`;
+    } else {
+      // Variables present, just format nicely, no dots!
+      let tex = node.toTex().replace(/\\cdot\s*/g, '');
+      prettyOutput1 = `\${tex}\`;
+    }
+
   } catch (e) {
     prettyOutput1 = `\\\text{Error}\`;
     console.error("Calculation Error:", e);
   }
 
   window.lastOutput1 = prettyOutput1;
-  let prettyInput = `\${input}\`;
+  let prettyInput = `\${formatInputForPrettyLatex(input)}\`;
   let outputs = [
     prettyOutput1,
     '\\\text{Output 2}\',
