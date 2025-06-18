@@ -259,6 +259,51 @@
         <li>Designed for immediate real-world pilots, but engineered to scale into the next era of disaster response robotics.</li>
       </ul>
     </section>
+    <!-- ADDENDUM NOTES -->
+<section>
+  <h2>ADDENDUM NOTES</h2>
+
+  <h3>Fire Resistance Coefficient (FRC) System</h3>
+  <div class="accent">
+    <p>
+      <b>We 'coefficient' fire resistance—no time variables, just direct ratio:</b><br>
+      Assign each fire line segment a density value (<i>e.g.</i>, fire = 10). Assign each drone or drone group a suppression value (<i>e.g.</i>, drone = 1).<br>
+      <b>Fire Resistance Coefficient (FRC) = Drone Suppression Value / Fire Density Value</b><br>
+      If fire = 10, drone = 1, you need 10 drones for full suppression.<br>
+      <b>FRC = 1</b>: holding the line. <b>FRC &lt; 1</b>: fire wins. <b>FRC &gt; 1</b>: drones roll back the fire.<br>
+      <i>Simple, fast decision metric—no explicit time variable, for instant planning.</i>
+    </p>
+  </div>
+
+  <h3>SDR & Navigation System Integration</h3>
+  <div class="accent">
+    <ul>
+      <li>
+        <b>SDR (Software-Defined Radio) research and plans</b> will be included in the public documentation for transparency and technical credibility.
+      </li>
+      <li>
+        Anchor or beacon drones emit visible/infrared signals at fixed points to create a 3D “world map” of navigation references.
+      </li>
+      <li>
+        Firefighting drones use triangulation with at least 3 anchors, skipping full real-time mapping unless references are lost.
+      </li>
+      <li>
+        Anchor signals may be optimized for smoke penetration (NIR/SWIR/thermal, or even RF/ultrasound), maximizing visibility and battery life.
+      </li>
+      <li>
+        SDR and mesh communication further reinforce navigation, anchor ID, and robust, low-latency command relay.
+      </li>
+    </ul>
+  </div>
+
+  <h3>Living Lab and Launchpad</h3>
+  <div class="accent">
+    <p>
+      <b>This platform serves as a living lab and launchpad</b> for robotics, wildfire defense, and next-generation communication technologies. Ideas, technical logs, and field notes will be openly documented to accelerate innovation and invite meaningful collaboration.
+    </p>
+  </div>
+</section>
+
   </div>
 </body>
 </html>
